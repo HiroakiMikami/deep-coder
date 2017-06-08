@@ -6,6 +6,7 @@ enable_testing()
 
 # C++ settings
 set(CMAKE_CXX_STANDARD 14)
+include_directories(${PROJECT_SOURCE_DIR}/include)
 
 # Add subdirectories
 add_subdirectory(lib)
