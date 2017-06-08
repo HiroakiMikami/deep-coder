@@ -4,12 +4,15 @@
 ## source files
 !*.cc
 !lib
+!lib/dsl
 !test
+!test/dsl
 
 
 ## header files
 !*.h
 !include
+!include/dsl
 
 ## Other files
 !.gitignore
