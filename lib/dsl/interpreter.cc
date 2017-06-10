@@ -28,6 +28,7 @@ namespace dsl {
             case TwoArgumentsLambda::Minus: return std::minus<int>();
             case TwoArgumentsLambda::Multiply: return std::multiplies<int>();
             case TwoArgumentsLambda::Min: return [](const int& x, const int& y) { return min(x, y); };
+            case TwoArgumentsLambda::Max: return [](const int& x, const int& y) { return max(x, y); };
         }
     }
     function<bool(const int&)> get_predicate_lambda(PredicateLambda lambda) {
