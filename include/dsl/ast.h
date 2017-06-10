@@ -43,6 +43,8 @@ namespace dsl {
         Variable variable;
         Function function;
         std::vector<Argument> arguments;
+
+        Statement(Variable variable, Function function, const std::vector<Argument> &arguments);
     };
 
     using Program = std::vector<Statement>;

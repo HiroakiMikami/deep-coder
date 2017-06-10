@@ -35,3 +35,6 @@ std::experimental::optional<Variable> Argument::variable() const {
         return static_cast<uint16_t>(this->m_argument & 0xffff);
     }
 }
+
+Statement::Statement(Variable variable, Function function, const std::vector<Argument> &arguments)
+        : variable(variable), function(function), arguments(arguments) {}
