@@ -79,6 +79,8 @@ namespace dsl {
                 return "*";
             case TwoArgumentsLambda::Min:
                 return "MIN";
+            case TwoArgumentsLambda::Max:
+                return "MAX";
         }
     }
 
