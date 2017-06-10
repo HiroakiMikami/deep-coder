@@ -25,3 +25,17 @@ TEST(OutputTest, ProgramOutputTest) {
 
     EXPECT_EQ("---\na <- head ab\n---\n", oss.str());
 }
+
+TEST(OutputTest, ValueOutputTest) {
+    ostringstream oss;
+    oss << Value({0, 1, 2});
+
+    EXPECT_EQ("[0,1,2]", oss.str());
+}
+
+TEST(OutputTest, InputOutputTest) {
+    ostringstream oss;
+    oss << Input({Value({0, 1, 2}), Value(0)});
+
+    EXPECT_EQ("---\n[0,1,2]\n0\n---\n", oss.str());
+}

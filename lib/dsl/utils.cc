@@ -148,4 +148,38 @@ namespace dsl {
 
         return stream;
     }
+
+    std::ostream &operator<<(std::ostream &stream, const Value &value) {
+        if (value.integer()) {
+            stream << value.integer().value();
+        } else if (value.list()) {
+            stream << "[";
+            auto l = value.list().value();
+
+            for (auto i = 0; i < l.size(); i++) {
+                if (i != 0) {
+                    stream << ",";
+                }
+                stream << l[i];
+            }
+
+            stream << "]";
+        } else {
+            stream << "NULL";
+        }
+
+        return stream;
+    }
+    std::ostream &operator<<(std::ostream &stream, const Input &input) {
+        stream << "---\n";
+
+        for (const auto& i: input) {
+            stream << i << "\n";
+        }
+
+        stream << "---\n";
+
+        return stream;
+    }
+
 }
