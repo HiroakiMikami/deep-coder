@@ -77,6 +77,8 @@ namespace dsl {
                 return "-";
             case TwoArgumentsLambda::Multiply:
                 return "*";
+            case TwoArgumentsLambda::Min:
+                return "MIN";
         }
     }
 

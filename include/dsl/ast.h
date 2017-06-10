@@ -16,7 +16,7 @@ namespace dsl {
     };
 
     enum class TwoArgumentsLambda : uint32_t {
-        Plus = 0x20000000, Minus, Multiply
+        Plus = 0x20000000, Minus, Multiply, Min
     };
 
     enum class OneArgumentLambda : uint32_t {
