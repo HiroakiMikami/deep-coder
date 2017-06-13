@@ -10,18 +10,22 @@ namespace dsl {
         Head, Last, Take, Drop, Access, Minimum, Maximum, Reverse, Sort, Sum,
         Map, Filter, Count, ZipWith, Scanl1, ReadInt, ReadList
     };
+    extern std::vector<Function> all_functions;
 
     enum class PredicateLambda {
         IsPositive = 0x40000000, IsNegative, IsEven, IsOdd
     };
+    extern std::vector<PredicateLambda> all_predicate_lambdas;
 
     enum class TwoArgumentsLambda : uint32_t {
         Plus = 0x20000000, Minus, Multiply, Min, Max
     };
+    extern std::vector<TwoArgumentsLambda> all_two_arguments_lambdas;
 
     enum class OneArgumentLambda : uint32_t {
         Plus1 = 0x10000000, Minus1, Multiply2, Divide2, MultiplyMinus1, Pow2, Multiply3, Divide3, Multiply4, Divide4
     };
+    extern std::vector<OneArgumentLambda> all_one_argument_lambdas;
 
     using Variable = uint16_t;
 

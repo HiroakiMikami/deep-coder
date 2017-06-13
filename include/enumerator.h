@@ -14,16 +14,6 @@ struct Restriction {
     const std::vector<dsl::TwoArgumentsLambda> two_arguments_lambda;
 };
 
-std::vector<dsl::PredicateLambda> all_predicate_lambdas = {dsl::PredicateLambda::IsPositive,
-                                                           dsl::PredicateLambda::IsNegative,
-                                                           dsl::PredicateLambda::IsEven,
-                                                           dsl::PredicateLambda::IsOdd};
-std::vector<dsl::TwoArgumentsLambda> all_two_arguments_lambdas = {dsl::TwoArgumentsLambda::Plus,
-                                                                  dsl::TwoArgumentsLambda::Minus,
-                                                                  dsl::TwoArgumentsLambda::Multiply,
-                                                                  dsl::TwoArgumentsLambda::Min,
-                                                                  dsl::TwoArgumentsLambda::Max};
-
 template <class CalcInformation, class Process, class Information>
 void enumerate(const Restriction &restriction, const CalcInformation & calc_information, const Process &process,
          const dsl::Program &program, const dsl::TypeEnvironment &tenv, const Information &info) {

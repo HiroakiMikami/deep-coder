@@ -2,7 +2,7 @@
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 
-file(GLOB files **/*.cc)
+file(GLOB files *.cc **/*.cc)
 
 # Compile the test files
 message(${PROJECT_BINARY_DIR})
