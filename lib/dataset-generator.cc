@@ -15,10 +15,22 @@ IntegerConstraint ListConstraint::generate_integer_constraint() const {
 
     c.min = this->min;
     c.max = this->max;
+
     uniform_int_distribution<> r1(0, this->sign.size() - 1);
-    c.sign = this->sign[r1(mt)];
+    auto x1 = r1(mt);
+    auto it1 = this->sign.begin();
+    for (auto i = 0; i < x1; i++) {
+        ++it1;
+    }
+    c.sign = *it1;
+
     uniform_int_distribution<> r2(0, this->is_even.size() - 1);
-    c.is_even = this->is_even[r2(mt)];
+    auto x2 = r2(mt);
+    auto it2 = this->is_even.begin();
+    for (auto i = 0; i < x1; i++) {
+        ++it2;
+    }
+    c.is_even = *it2;
 
     return c;
 }

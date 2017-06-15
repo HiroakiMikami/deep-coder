@@ -2,6 +2,7 @@
 
 #include <experimental/optional>
 #include <vector>
+#include <unordered_set>
 
 enum class Sign {
     Zero, Positive, Negative
@@ -21,8 +22,8 @@ struct ListConstraint {
     std::experimental::optional<int> max_length;
     std::experimental::optional<int> min;
     std::experimental::optional<int> max;
-    std::vector<std::experimental::optional<Sign>> sign;
-    std::vector<std::experimental::optional<bool>> is_even;
+    std::unordered_set<std::experimental::optional<Sign>> sign;
+    std::unordered_set<std::experimental::optional<bool>> is_even;
 
     ListConstraint();
     IntegerConstraint generate_integer_constraint() const;
