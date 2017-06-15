@@ -48,9 +48,9 @@ experimental::optional<int> generate_integer(const IntegerConstraint& constraint
 
     // sign
     if (constraint.sign) {
-        if (constraint.sign.value() > 0) {
+        if (constraint.sign.value() == Sign::Positive) {
             min = std::max(min, 1);
-        } else if (constraint.sign.value() < 0){
+        } else if (constraint.sign.value() == Sign::Negative){
             max = std::min(max, -1);
         } else {
             return 0;

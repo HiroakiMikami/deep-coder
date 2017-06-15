@@ -25,27 +25,27 @@ TEST(GenerateIntegerTest, SignTest) {
     c.min = -10;
     c.max = 20;
 
-    c.sign = 1;
+    c.sign = Sign::Positive;
     for (auto i = 0; i < 100; i++) {
         auto x = generate_integer(c);
         EXPECT_TRUE(x >= 1);
         EXPECT_TRUE(x <= 20);
     }
 
-    c.sign = -1;
+    c.sign = Sign::Negative;
     for (auto i = 0; i < 100; i++) {
         auto x = generate_integer(c);
         EXPECT_TRUE(x >= -10);
         EXPECT_TRUE(x <= -1);
     }
 
-    c.sign = 0;
+    c.sign = Sign::Zero;
     for (auto i = 0; i < 100; i++) {
         auto x = generate_integer(c);
         EXPECT_EQ(0, x);
     }
 
-    c.sign = 1;
+    c.sign = Sign::Positive;
     c.min = -100;
     c.max = -1;
     auto x = generate_integer(c);
@@ -111,7 +111,7 @@ TEST(GenerateListTest, IntegerConstraintTest) {
 
     c.min = -1;
     c.max = 0;
-    c.sign = {1};
+    c.sign = {Sign::Positive};
 
     auto x = generate_list(c);
     EXPECT_FALSE(x);
