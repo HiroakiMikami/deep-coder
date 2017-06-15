@@ -44,6 +44,12 @@ TEST(GenerateIntegerTest, SignTest) {
         auto x = generate_integer(c);
         EXPECT_EQ(0, x);
     }
+
+    c.sign = 1;
+    c.min = -100;
+    c.max = -1;
+    auto x = generate_integer(c);
+    EXPECT_FALSE(x);
 }
 
 TEST(GenerateIntegerTest, IsEvenTest) {
