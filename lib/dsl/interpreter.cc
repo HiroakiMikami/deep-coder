@@ -102,6 +102,11 @@ namespace dsl {
 
             if (n.integer() && list.list()) {
                 auto l = list.list().value();
+
+                if (n.integer().value() < 0) {
+                    return Value(vector<int>());
+                }
+
                 auto num = min(static_cast<size_t>(n.integer().value()), l.size());
                 vector<int> retval;
                 retval.reserve(num);
@@ -118,6 +123,11 @@ namespace dsl {
 
             if (n.integer() && list.list()) {
                 auto l = list.list().value();
+
+                if (n.integer().value() < 0) {
+                    return Value(vector<int>());
+                }
+
                 auto num = static_cast<size_t>(n.integer().value());
                 vector<int> retval;
                 if (l.size() > num) {
