@@ -3,6 +3,7 @@
 #include "dataset-generator.h"
 
 using namespace std;
+using namespace dsl;
 
 TEST(GenerateIntegerTest, MinMaxTest) {
     IntegerConstraint c;
@@ -115,4 +116,23 @@ TEST(GenerateListTest, IntegerConstraintTest) {
 
     auto x = generate_list(c);
     EXPECT_FALSE(x);
+}
+
+TEST(AnalyzeTest, SimpleAnalyzeTest) {
+    auto p = {
+            Statement(0, Function::ReadList, {}),
+            Statement(1, Function::ReadInt, {}),
+            Statement(2, Function::Map, {OneArgumentLambda::Plus1, 0}),
+            Statement(3, Function::Take, {1, 2})
+    };
+
+    auto c = analyze(p);
+    EXPECT_TRUE(c);
+
+    EXPECT_EQ(2, c.value().inputs.size());
+    EXPECT_EQ(0, c.value().inputs[0]);
+    EXPECT_EQ(1, c.value().inputs[1]);
+
+    EXPECT_TRUE(c.value().integer_variables.find(1)->second.min);
+    EXPECT_EQ(0, c.value().integer_variables.find(1)->second.min.value());
 }

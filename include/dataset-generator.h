@@ -3,6 +3,8 @@
 #include <experimental/optional>
 #include <vector>
 #include <unordered_set>
+#include <unordered_map>
+#include "dsl/ast.h"
 
 enum class Sign {
     Zero, Positive, Negative
@@ -32,6 +34,19 @@ struct ListConstraint {
     std::vector<IntegerConstraint> all_constraints() const;
 };
 
+struct Constraint {
+    std::unordered_map<dsl::Variable, IntegerConstraint> integer_variables;
+    std::unordered_map<dsl::Variable, ListConstraint> list_variables;
+
+    std::vector<dsl::Variable> inputs;
+};
+
+struct Example {
+    dsl::Input input;
+    dsl::Output output;
+};
+
 std::experimental::optional<int> generate_integer(const IntegerConstraint& constraint);
 std::experimental::optional<std::vector<int>> generate_list(const ListConstraint &constraint);
 
+std::experimental::optional<Constraint> analyze(const dsl::Program &p);

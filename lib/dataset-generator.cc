@@ -148,3 +148,279 @@ experimental::optional<vector<int>> generate_list(const ListConstraint &constrai
 
     return list;
 }
+
+experimental::optional<Constraint> analyze(const Program &p) {
+    auto tenv_ = generate_type_environment(p);
+    if (!tenv_) {
+        return {};
+    }
+
+    auto tenv = tenv_.value();
+    Constraint c;
+
+    auto list_constraint = [&c](const Argument& arg) -> ListConstraint& {
+        auto var = arg.variable().value();
+        if (c.list_variables.find(var) == c.list_variables.end()) {
+            c.list_variables.insert({var, ListConstraint()});
+        }
+        return c.list_variables.find(var)->second;
+    };
+    auto integer_constraint = [&](const Argument &arg) -> IntegerConstraint& {
+        auto var = arg.variable().value();
+        if (c.integer_variables.find(var) == c.integer_variables.end()) {
+            c.integer_variables.insert({var, IntegerConstraint()});
+        }
+        return c.integer_variables.find(var)->second;
+    };
+
+    for (auto it = p.rbegin(); it != p.rend(); it++) {
+        // Generate constraints of arguments from it->variable's constraint
+        auto var = it->variable;
+        auto t = tenv.find(var)->second;
+
+        if (t == Type::Integer) {
+            auto ic = integer_constraint(Argument(var));
+
+            if (it->function == Function::Head || it->function == Function::Last) {
+                auto &lc = list_constraint(it->arguments.at(0));
+                lc.sign.insert(ic.sign);
+                lc.is_even.insert(ic.is_even);
+                lc.min_length = max(lc.min_length.value_or(0), 1);
+            } else if (it->function == Function::Access) {
+                auto &nc = integer_constraint(it->arguments.at(0));
+                auto &lc = list_constraint(it->arguments.at(1));
+                nc.min = max(nc.min.value_or(0), 0);
+                lc.min_length = max(lc.min_length.value_or(0), nc.min.value_or(0));
+                lc.sign.insert(ic.sign);
+                lc.is_even.insert(ic.is_even);
+                lc.min_length = max(lc.min_length.value_or(0), 1);
+            } else if (it->function == Function::Maximum) {
+                auto &lc = list_constraint(it->arguments.at(0));
+                lc.min_length = max(lc.min_length.value_or(1), 1);
+                if (ic.max) {
+                    lc.max = min(lc.max.value_or(ic.max.value()), ic.max.value());
+                }
+            } else if (it->function == Function::Minimum) {
+                auto &lc = list_constraint(it->arguments.at(0));
+                lc.min_length = max(lc.min_length.value_or(1), 1);
+                if (ic.min) {
+                    lc.min = max(lc.min.value_or(ic.min.value()), ic.min.value());
+                }
+            } else if (it->function == Function::Sum) {
+                auto &lc = list_constraint(it->arguments.at(0));
+                auto range = ic.range();
+                if (range.first.value_or(0) > 0 || range.second.value_or(0) < 0) {
+                    lc.min_length = max(lc.min_length.value_or(0), 1);
+                }
+            } else if (it->function == Function::Count) {
+                auto lambda = it->arguments.at(0).predicate().value();
+                auto &lc = list_constraint(it->arguments.at(1));
+
+                if (ic.min) {
+                    lc.min_length = max(lc.min_length.value_or(0), ic.min.value());
+
+                    if (ic.min.value() >= 1) {
+                        switch (lambda) {
+                            case PredicateLambda::IsPositive:
+                                lc.sign.insert(Sign::Positive);
+                                break;
+                            case PredicateLambda::IsNegative:
+                                lc.sign.insert(Sign::Negative);
+                                break;
+                            case PredicateLambda::IsOdd:
+                                lc.is_even.insert(false);
+                                break;
+                            case PredicateLambda::IsEven:
+                                lc.is_even.insert(true);
+                                break;
+                        }
+                    }
+                }
+            } else if (it->function == Function::ReadInt) {
+                c.inputs.push_back(var);
+            } else {
+                cerr << "Implementation Error" << endl;
+            }
+        } else {
+            auto &lc = list_constraint(Argument(var));
+
+            if (it->function == Function::Take || it->function == Function::Drop) {
+                auto &nc = integer_constraint(it->arguments.at(0));
+                auto &lc2 = list_constraint(it->arguments.at(1));
+
+                nc.min = max(nc.min.value_or(0), 0);
+                for (const auto& x: lc.sign) {
+                    lc2.sign.insert(x);
+                }
+                for (const auto& x: lc.is_even) {
+                    lc2.is_even.insert(x);
+                }
+                if (lc.min_length) {
+                    lc2.min_length = max(lc.min_length.value(), lc2.min_length.value_or(0));
+                }
+            } else if (it->function == Function::Reverse || it->function == Function::Sort) {
+                auto &lc2 = list_constraint(it->arguments.at(0));
+                lc2 = lc;
+            } else if (it->function == Function::Map) {
+                auto lambda = it->arguments.at(0).one_argument_lambda().value();
+                auto &lc2 = list_constraint(it->arguments.at(1));
+
+                if (lc.min_length) {
+                    lc2.min_length = max(lc2.min_length.value_or(0), lc.min_length.value());
+                }
+
+                switch (lambda) {
+                    case OneArgumentLambda::Plus1:
+                        if (lc.min) {
+                            lc2.min = lc.min.value() - 1;
+                        }
+                        if (lc.max) {
+                            lc2.max = lc.max.value() - 1;
+                        }
+                        for (const auto &x: lc.is_even) {
+                            lc2.is_even.insert(!x);
+                        }
+                        break;
+                    case OneArgumentLambda::Minus1:
+                        if (lc.min) {
+                            lc2.min = lc.min.value() + 1;
+                        }
+                        if (lc.max) {
+                            lc2.max = lc.max.value() + 1;
+                        }
+
+                        lc2.is_even.clear();
+                        for (const auto &x: lc.is_even) {
+                            lc2.is_even.insert(!x);
+                        }
+                        break;
+                    case OneArgumentLambda::MultiplyMinus1:
+                        if (lc.max) {
+                            lc2.min = lc.max.value() * (-1);
+                        }
+                        if (lc.min) {
+                            lc2.max = lc.min.value() * (-1);
+                        }
+                        lc2.is_even = lc.is_even;
+                        for (const auto &x: lc.sign) {
+                            if (x == Sign::Positive) {
+                                lc2.sign.insert(Sign::Negative);
+                            } else if (x == Sign::Negative) {
+                                lc2.sign.insert(Sign::Positive);
+                            } else {
+                                lc2.sign.insert(x);
+                            }
+                        }
+                        break;
+                    case OneArgumentLambda::Multiply2:
+                        if (lc.min) {
+                            lc2.min = lc.min.value() / 2;
+                        }
+                        if (lc.min) {
+                            lc2.max = lc.max.value() / 2;
+                        }
+                        lc2.sign = lc.sign;
+                        break;
+                    case OneArgumentLambda::Multiply3:
+                        if (lc.min) {
+                            lc2.min = lc.min.value() / 3;
+                        }
+                        if (lc.min) {
+                            lc2.max = lc.max.value() / 3;
+                        }
+                        lc2.sign = lc.sign;
+                        lc2.is_even = lc.is_even;
+                        break;
+                    case OneArgumentLambda::Multiply4:
+                        if (lc.min) {
+                            lc2.min = lc.min.value() / 4;
+                        }
+                        if (lc.min) {
+                            lc2.max = lc.max.value() / 4;
+                        }
+                        lc2.sign = lc.sign;
+                        break;
+                    case OneArgumentLambda::Divide2:
+                        if (lc.min) {
+                            lc2.min = lc.min.value() / 2;
+                        }
+                        if (lc.min) {
+                            lc2.max = lc.max.value() / 2;
+                        }
+                        lc2.sign = lc.sign;
+                        break;
+                    case OneArgumentLambda::Divide3:
+                        if (lc.min) {
+                            lc2.min = lc.min.value() / 3;
+                        }
+                        if (lc.min) {
+                            lc2.max = lc.max.value() / 3;
+                        }
+                        lc2.sign = lc.sign;
+                        lc2.is_even = lc.is_even;
+                        break;
+                    case OneArgumentLambda::Divide4:
+                        if (lc.min) {
+                            lc2.min = lc.min.value() / 4;
+                        }
+                        if (lc.min) {
+                            lc2.max = lc.max.value() / 4;
+                        }
+                        lc2.sign = lc.sign;
+                        break;
+                    case OneArgumentLambda::Pow2:
+                        // TODO
+                        break;
+                    default:
+                        break;
+                }
+            } else if (it->function == Function::Filter) {
+                auto lambda = it->arguments.at(0).predicate().value();
+                auto &lc2 = list_constraint(it->arguments.at(1));
+
+                if (lc.min_length) {
+                    lc2.min_length = max(lc2.min_length.value_or(0), lc.min_length.value());
+
+                    if (lc.min_length.value() >= 1) {
+                        switch (lambda) {
+                            case PredicateLambda::IsPositive:
+                                lc2.sign.insert(Sign::Positive);
+                                break;
+                            case PredicateLambda::IsNegative:
+                                lc2.sign.insert(Sign::Negative);
+                                break;
+                            case PredicateLambda::IsOdd:
+                                lc2.is_even.insert(false);
+                                break;
+                            case PredicateLambda::IsEven:
+                                lc2.is_even.insert(true);
+                                break;
+                        }
+                    }
+                }
+            } else if (it->function == Function::ZipWith) {
+                auto &lc2 = list_constraint(it->arguments.at(1));
+                auto &lc3 = list_constraint(it->arguments.at(2));
+
+                if (lc.min_length) {
+                    lc2.min_length = max(lc2.min_length.value_or(0), lc.min_length.value());
+                    lc3.min_length = max(lc3.min_length.value_or(0), lc.min_length.value());
+                }
+            } else if (it->function == Function::Scanl1) {
+                auto &lc2 = list_constraint(it->arguments.at(1));
+
+                if (lc.min_length) {
+                    lc2.min_length = max(lc2.min_length.value_or(0), lc.min_length.value());
+                }
+            } else if (it->function == Function::ReadList) {
+                c.inputs.push_back(it->variable);
+            } else {
+                cerr << "Implementation Error" << endl;
+            }
+        }
+    }
+
+    reverse(c.inputs.begin(), c.inputs.end());
+
+    return c;
+}
