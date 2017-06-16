@@ -1,6 +1,6 @@
 #include <iostream>
 #include <gtest/gtest.h>
-#include "dataset-generator.h"
+#include "example-generator.h"
 
 using namespace std;
 using namespace dsl;

@@ -1,7 +1,7 @@
 #include <iostream>
 #include <random>
 #include <algorithm>
-#include "dataset-generator.h"
+#include "example-generator.h"
 #include "dsl/type.h"
 
 using namespace std;
