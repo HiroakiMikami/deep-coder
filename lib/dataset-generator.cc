@@ -75,8 +75,8 @@ vector<IntegerConstraint> ListConstraint::all_constraints() const {
 
 experimental::optional<int> generate_integer(const IntegerConstraint& constraint) {
     auto p = constraint.range();
-    auto min = p.first.value_or(-256);
-    auto max = p.second.value_or(255);
+    auto min = p.first.value_or(-10);
+    auto max = p.second.value_or(10);
 
     // sign
     if (constraint.sign) {
@@ -423,4 +423,54 @@ experimental::optional<Constraint> analyze(const Program &p) {
     reverse(c.inputs.begin(), c.inputs.end());
 
     return c;
+}
+
+experimental::optional<vector<Example>> generate_examples(const dsl::Program &p) {
+    auto c_ = analyze(p);
+    if (!c_) {
+        return {};
+    }
+
+    auto c = c_.value();
+
+    vector<Example> examples;
+    examples.reserve(5);
+
+    for (auto i = 0; i < 5 * 100; i++) {
+        // Generate inputs
+        Input input;
+
+        for (const auto& input_var: c.inputs) {
+            if (c.integer_variables.find(input_var) != c.integer_variables.end()) {
+                auto constraint = c.integer_variables.find(input_var)->second;
+                auto n = generate_integer(constraint);
+                if (n) {
+                    input.push_back(Value(n.value()));
+                } else {
+                    break;
+                }
+            } else {
+                auto constraint = c.list_variables.find(input_var)->second;
+                auto l = generate_list(constraint);
+                if (l) {
+                    input.push_back(Value(l.value()));
+                } else {
+                    break;
+                }
+            }
+        }
+
+        if (c.inputs.size() == input.size()) {
+            auto output = eval(p, input);
+            if (output && !output.value().is_null()) {
+                examples.push_back(Example{input, output.value()});
+
+                if (examples.size() >= 5) {
+                    break;
+                }
+            }
+        }
+    }
+
+    return examples;
 }

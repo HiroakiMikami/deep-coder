@@ -136,3 +136,23 @@ TEST(AnalyzeTest, SimpleAnalyzeTest) {
     EXPECT_TRUE(c.value().integer_variables.find(1)->second.min);
     EXPECT_EQ(0, c.value().integer_variables.find(1)->second.min.value());
 }
+
+TEST(GenerateExamplesTest, SimpleGenerationTest) {
+    auto p = {
+            Statement(0, Function::ReadList, {}),
+            Statement(1, Function::ReadInt, {}),
+            Statement(2, Function::Map, {OneArgumentLambda::Plus1, 0}),
+            Statement(3, Function::Take, {1, 2})
+    };
+
+
+    for (auto i = 0; i < 100; i++) {
+        auto examples = generate_examples(p);
+
+        EXPECT_TRUE(examples);
+        EXPECT_TRUE(examples.value().size() > 0);
+        for (auto &example: examples.value()) {
+            EXPECT_EQ(eval(p, example.input), example.output);
+        }
+    }
+}

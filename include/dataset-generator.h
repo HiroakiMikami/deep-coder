@@ -5,6 +5,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include "dsl/ast.h"
+#include "dsl/interpreter.h"
 
 enum class Sign {
     Zero, Positive, Negative
@@ -50,3 +51,5 @@ std::experimental::optional<int> generate_integer(const IntegerConstraint& const
 std::experimental::optional<std::vector<int>> generate_list(const ListConstraint &constraint);
 
 std::experimental::optional<Constraint> analyze(const dsl::Program &p);
+
+std::experimental::optional<std::vector<Example>> generate_examples(const dsl::Program &p);
