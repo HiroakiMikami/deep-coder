@@ -35,8 +35,8 @@ IntegerConstraint ListConstraint::generate_integer_constraint() const {
     return c;
 }
 
-std::vector<IntegerConstraint> ListConstraint::all_constraints() const {
-    std::vector<IntegerConstraint> cs;
+vector<IntegerConstraint> ListConstraint::all_constraints() const {
+    vector<IntegerConstraint> cs;
     cs.reserve(this->sign.size() * this->is_even.size());
 
     for (const auto& sign: this->sign) {
@@ -90,7 +90,7 @@ experimental::optional<int> generate_integer(const IntegerConstraint& constraint
     }
 }
 
-std::experimental::optional<std::vector<int>> generate_list(const ListConstraint &constraint) {
+experimental::optional<vector<int>> generate_list(const ListConstraint &constraint) {
     auto min_length = std::max(constraint.min_length.value_or(0), 0);
     auto max_length = std::max(constraint.max_length.value_or(10), 0);
 
@@ -101,7 +101,7 @@ std::experimental::optional<std::vector<int>> generate_list(const ListConstraint
     uniform_int_distribution<> l(min_length, max_length);
     auto length = l(mt);
 
-    std::vector<int> list(length);
+    vector<int> list(length);
     for (auto &elem: list) {
         bool is_initialized = false;
         auto c = constraint.generate_integer_constraint();
