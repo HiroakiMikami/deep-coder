@@ -1,13 +1,32 @@
+#include <iostream>
 #include <random>
 #include <algorithm>
 #include "dataset-generator.h"
+#include "dsl/type.h"
 
 using namespace std;
+using namespace dsl;
 
 static random_device rnd;
 static mt19937 mt(rnd());
 
 IntegerConstraint::IntegerConstraint() : min(), max(), sign(), is_even() {}
+pair<experimental::optional<int>, experimental::optional<int>> IntegerConstraint::range() const {
+    auto min = this->min;
+    auto max = this->max;
+
+    // sign
+    if (this->sign) {
+        if (this->sign.value() == Sign::Positive) {
+            min = std::max(min.value_or(1), 1);
+        } else if (this->sign.value() == Sign::Negative){
+            max = std::min(max.value_or(-1), -1);
+        } else {
+            return {0, 0};
+        }
+    }
+    return {min, max};
+};
 
 ListConstraint::ListConstraint() : min_length(), max_length(), min(), max(), sign({{}}), is_even({{}}) {}
 IntegerConstraint ListConstraint::generate_integer_constraint() const {
@@ -55,8 +74,9 @@ vector<IntegerConstraint> ListConstraint::all_constraints() const {
 }
 
 experimental::optional<int> generate_integer(const IntegerConstraint& constraint) {
-    auto min = constraint.min.value_or(-256);
-    auto max = constraint.max.value_or(255);
+    auto p = constraint.range();
+    auto min = p.first.value_or(-256);
+    auto max = p.second.value_or(255);
 
     // sign
     if (constraint.sign) {

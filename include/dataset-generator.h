@@ -15,6 +15,8 @@ struct IntegerConstraint {
     std::experimental::optional<bool> is_even;
 
     IntegerConstraint();
+
+    std::pair<std::experimental::optional<int>, std::experimental::optional<int>> range() const;
 };
 
 struct ListConstraint {
