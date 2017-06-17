@@ -46,7 +46,7 @@ IntegerConstraint ListConstraint::generate_integer_constraint() const {
     uniform_int_distribution<> r2(0, this->is_even.size() - 1);
     auto x2 = r2(mt);
     auto it2 = this->is_even.begin();
-    for (auto i = 0; i < x1; i++) {
+    for (auto i = 0; i < x2; i++) {
         ++it2;
     }
     c.is_even = *it2;
