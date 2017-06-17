@@ -1,3 +1,4 @@
+#include <iostream>
 #include <algorithm>
 #include <unordered_set>
 #include "dataset-generator.h"
@@ -58,6 +59,7 @@ void Dataset::insert(const Program &p, const vector<Example> &examples) {
     bool has_equivalent_program = false;
     vector<int> indexes_to_be_deleted;
     indexes_to_be_deleted.reserve(candidates->second.size());
+    size_t deleted_size = 0;
     for (auto i = 0; i < candidates->second.size(); i++) {
         const auto &candidate = candidates->second.at(i);
         bool is_equivalent = true;
@@ -75,6 +77,7 @@ void Dataset::insert(const Program &p, const vector<Example> &examples) {
         if (is_equivalent) {
             if (candidate.first.size() > p.size()) {
                 indexes_to_be_deleted.push_back(i);
+                deleted_size += candidate.second.size();
             } else {
                 has_equivalent_program = true;
             }
@@ -83,13 +86,13 @@ void Dataset::insert(const Program &p, const vector<Example> &examples) {
 
     if (!has_equivalent_program) {
         this->programs.find(type)->second.push_back({p, examples});
-        this->size += 1;
+        this->size += examples.size();
     }
 
     for_each(indexes_to_be_deleted.rbegin(), indexes_to_be_deleted.rend(), [&candidates](const auto &i) {
         candidates->second.erase(candidates->second.begin() + i);
     });
-    this->size -= indexes_to_be_deleted.size();
+    this->size -= deleted_size;
 }
 
 experimental::optional<Dataset> generate_dataset(size_t min_length, size_t max_length, size_t dataset_size) {
@@ -135,6 +138,8 @@ experimental::optional<Dataset> generate_dataset(size_t min_length, size_t max_l
 
                             dataset.insert(p, examples);
 
+                            cerr << "Generating dataset... " << dataset.size << " / " << dataset_size << endl;
+
                             return dataset.size < dataset_size;
                         },
                         i
@@ -144,4 +149,6 @@ experimental::optional<Dataset> generate_dataset(size_t min_length, size_t max_l
             },
             0
     );
+
+    return dataset;
 }

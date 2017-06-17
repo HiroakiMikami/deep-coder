@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 #include "dataset-generator.h"
+#include "dsl/utils.h"
 
 using namespace std;
 using namespace dsl;
@@ -62,11 +63,11 @@ TEST(DatasetTest, InsertTest) {
 
     dataset.insert(p2, examples2);
     EXPECT_EQ(1, dataset.programs.size());
-    EXPECT_EQ(1, dataset.size);
+    EXPECT_EQ(2, dataset.size);
 
     dataset.insert(p1, examples1);
     EXPECT_EQ(1, dataset.programs.size());
-    EXPECT_EQ(1, dataset.size);
+    EXPECT_EQ(2, dataset.size);
     for (auto &x: dataset.programs) {
         for (auto &y: x.second) {
             EXPECT_EQ(2, y.first.size());
@@ -75,21 +76,36 @@ TEST(DatasetTest, InsertTest) {
 
     dataset.insert(p3, examples3);
     EXPECT_EQ(1, dataset.programs.size());
-    EXPECT_EQ(2, dataset.size);
+    EXPECT_EQ(4, dataset.size);
 
     dataset.insert(p4, examples4);
     EXPECT_EQ(2, dataset.programs.size());
-    EXPECT_EQ(3, dataset.size);
+    EXPECT_EQ(5, dataset.size);
 
 
     Dataset dataset2;
     dataset2.insert(p1, examples1);
     dataset2.insert(p2, examples2);
     EXPECT_EQ(1, dataset2.programs.size());
-    EXPECT_EQ(1, dataset2.size);
+    EXPECT_EQ(2, dataset2.size);
     for (auto &x: dataset2.programs) {
         for (auto &y: x.second) {
             EXPECT_EQ(2, y.first.size());
+        }
+    }
+}
+
+TEST(GenerateDatasetTest, SimpleTest) {
+    auto x = generate_dataset(1, 2, 20);
+    EXPECT_TRUE(x);
+
+    EXPECT_TRUE(x.value().size >= 10);
+
+    for (auto &i: x.value().programs) {
+        for (auto &j: i.second) {
+            for (auto &k: j.second) {
+                cout << j.first << k.input << k.output << endl;
+            }
         }
     }
 }
