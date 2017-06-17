@@ -11,3 +11,4 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 # Add subdirectories
 add_subdirectory(lib)
 add_subdirectory(test)
+add_subdirectory(src)
