@@ -23,6 +23,20 @@ TEST(ValueTest, NullValueTest) {
     EXPECT_FALSE(v.list());
     EXPECT_TRUE(v.is_null());
 }
+TEST(ValueTest, EqualsTest) {
+    Value v1(0);
+    Value v2(0);
+    Value v3(1);
+    Value v4({0, 1});
+    Value v5({0, 1});
+    Value v6({0, 1, 2});
+
+    EXPECT_TRUE(v1 == v2);
+    EXPECT_FALSE(v1 == v3);
+    EXPECT_FALSE(v1 == v4);
+    EXPECT_TRUE(v4 == v5);
+    EXPECT_FALSE(v4 == v6);
+}
 
 TEST(ProceedTest, EvalHeadTest) {
     Environment e0({{0, Value({0, 1, 2})}, {1, Value(vector<int>(0))}}, {});
