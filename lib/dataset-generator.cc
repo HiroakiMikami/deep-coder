@@ -110,6 +110,9 @@ experimental::optional<Dataset> generate_dataset(size_t min_length, size_t max_l
     r.min_length = min_length;
     r.max_length = max_length;
     r.functions = all_functions;
+    r.predicates = all_predicate_lambdas;
+    r.one_argument_lambda = all_one_argument_lambdas;
+    r.two_arguments_lambda = all_two_arguments_lambdas;
 
     auto calc_info = [](const Program& p, const int &i) { return i; };
 
