@@ -138,14 +138,26 @@ experimental::optional<Dataset> generate_dataset(size_t min_length, size_t max_l
 
                             dataset.insert(p, examples);
 
-                            cerr << "Generating dataset... " << dataset.size << " / " << dataset_size << endl;
+                            cerr << "Generating dataset... " << dataset.size;
+                            if (dataset_size != 0) {
+                                cout << " / " << dataset_size;
+                            }
+                            cout << endl;
 
-                            return dataset.size < dataset_size;
+                            if (dataset_size == 0) {
+                                return true;
+                            } else {
+                                return dataset.size < dataset_size;
+                            }
                         },
                         i
                 );
 
-                return dataset.size < dataset_size;
+                if (dataset_size == 0) {
+                    return true;
+                } else {
+                    return dataset.size < dataset_size;
+                }
             },
             0
     );
