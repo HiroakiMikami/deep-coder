@@ -87,15 +87,19 @@ namespace dsl {
         return next;
     }
 
-    bool is_valid(const Program &program) {
+    std::experimental::optional<TypeEnvironment> generate_type_environment(const Program &program) {
         TypeEnvironment env;
         for (const auto &statement: program) {
             auto next_env = check(statement, env);
             if (!next_env) {
-                return false;
+                return {};
             }
             env = next_env.value();
         }
-        return true;
+        return env;
+    }
+
+    bool is_valid(const Program &program) {
+        return static_cast<bool>(generate_type_environment(program));
     }
 }

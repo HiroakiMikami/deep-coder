@@ -8,10 +8,10 @@
 struct Restriction {
     int min_length;
     int max_length;
-    const std::vector<dsl::Function> functions;
-    const std::vector<dsl::PredicateLambda> predicates;
-    const std::vector<dsl::OneArgumentLambda> one_argument_lambda;
-    const std::vector<dsl::TwoArgumentsLambda> two_arguments_lambda;
+    std::vector<dsl::Function> functions;
+    std::vector<dsl::PredicateLambda> predicates;
+    std::vector<dsl::OneArgumentLambda> one_argument_lambda;
+    std::vector<dsl::TwoArgumentsLambda> two_arguments_lambda;
 };
 
 template <class CalcInformation, class Process, class Information>

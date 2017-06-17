@@ -23,6 +23,20 @@ TEST(ValueTest, NullValueTest) {
     EXPECT_FALSE(v.list());
     EXPECT_TRUE(v.is_null());
 }
+TEST(ValueTest, EqualsTest) {
+    Value v1(0);
+    Value v2(0);
+    Value v3(1);
+    Value v4({0, 1});
+    Value v5({0, 1});
+    Value v6({0, 1, 2});
+
+    EXPECT_TRUE(v1 == v2);
+    EXPECT_FALSE(v1 == v3);
+    EXPECT_FALSE(v1 == v4);
+    EXPECT_TRUE(v4 == v5);
+    EXPECT_FALSE(v4 == v6);
+}
 
 TEST(ProceedTest, EvalHeadTest) {
     Environment e0({{0, Value({0, 1, 2})}, {1, Value(vector<int>(0))}}, {});
@@ -48,7 +62,7 @@ TEST(ProceedTest, EvalLastTest) {
 }
 
 TEST(ProceedTest, EvalTakeTest) {
-    Environment e0({{0, Value({0, 1, 2})}, {1, Value(1)}, {2, Value(5)}}, {});
+    Environment e0({{0, Value({0, 1, 2})}, {1, Value(1)}, {2, Value(5)}, {4, Value(-1)}}, {});
 
     auto e1 = proceed(Statement(3, Function::Take, {1, 0}), e0);
     EXPECT_TRUE(e1);
@@ -57,6 +71,10 @@ TEST(ProceedTest, EvalTakeTest) {
     auto e2 = proceed(Statement(3, Function::Take, {2, 0}), e0);
     EXPECT_TRUE(e2);
     EXPECT_EQ(Value({0, 1, 2}), e2.value().variables.find(3)->second);
+
+    auto e3 = proceed(Statement(3, Function::Take, {4, 0}), e0);
+    EXPECT_TRUE(e3);
+    EXPECT_EQ(Value(vector<int>()), e3.value().variables.find(3)->second);
 }
 TEST(ProceedTest, EvalDropTest) {
     Environment e0({{0, Value({0, 1, 2})}, {1, Value(1)}, {2, Value(5)}}, {});

@@ -20,7 +20,7 @@ TEST(EnumerateTest, EnumerateFunctionTest) {
     enumerate(r, [](const Program &p, const int &x) { return p.size(); }, process, 0);
 
     EXPECT_EQ(6, ps.size());
-    EXPECT_TRUE(find_if(ps.begin(), ps.end(), [](const Program& p) {
+    EXPECT_TRUE(find_if(ps.begin(), ps.end(), [](const Program& p) -> bool {
         return p[0].function == Function::ReadInt;
     }) != ps.end());
 }
@@ -41,7 +41,7 @@ TEST(EnumerateTest, EnumerateArgumentsTest) {
     enumerate(r, [](const Program &p, const int &x) { return p.size(); }, process, 0);
 
     EXPECT_EQ(3, ps.size());
-    EXPECT_TRUE(find_if(ps.begin(), ps.end(), [](const Program& p) {
+    EXPECT_TRUE(find_if(ps.begin(), ps.end(), [](const Program& p) -> bool {
         return p.size() == 2 && p[1].function == Function::Head && p[1].arguments[0].variable().value() == 0;
     }) != ps.end());
 }
@@ -62,11 +62,11 @@ TEST(EnumerateTest, EnumerateLambdaTest) {
     enumerate(r, [](const Program &p, const int &x) { return p.size(); }, process, 0);
 
     EXPECT_EQ(4, ps.size());
-    EXPECT_TRUE(find_if(ps.begin(), ps.end(), [](const Program& p) {
+    EXPECT_TRUE(find_if(ps.begin(), ps.end(), [](const Program& p) -> bool {
         return p.size() == 2 &&
                 p[1].function == Function::Count && p[1].arguments[0].predicate().value() == PredicateLambda::IsNegative;
     }) != ps.end());
-    EXPECT_TRUE(find_if(ps.begin(), ps.end(), [](const Program& p) {
+    EXPECT_TRUE(find_if(ps.begin(), ps.end(), [](const Program& p) -> bool {
         return p.size() == 2 &&
                p[1].function == Function::Count && p[1].arguments[0].predicate().value() == PredicateLambda::IsPositive;
     }) != ps.end());

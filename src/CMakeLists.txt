@@ -1,0 +1,2 @@
+add_executable(gen_dataset generate_dataset.cc)
+target_link_libraries(gen_dataset deepcoder)

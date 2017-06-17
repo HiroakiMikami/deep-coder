@@ -18,5 +18,6 @@ namespace dsl {
 
     Signature get_signature(Function function);
     std::experimental::optional<TypeEnvironment> check(const Statement& statement, const TypeEnvironment &env);
+    std::experimental::optional<TypeEnvironment> generate_type_environment(const Program &program);
     bool is_valid(const Program& program);
 }
