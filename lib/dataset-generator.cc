@@ -107,7 +107,7 @@ experimental::optional<Dataset> generate_dataset(size_t min_length, size_t max_l
     r_for_read.functions = { Function::ReadInt, Function::ReadList };
 
     Restriction r;
-    r.min_length = 1;
+    r.min_length = min_length;
     r.max_length = max_length;
     r.functions = all_functions;
 
