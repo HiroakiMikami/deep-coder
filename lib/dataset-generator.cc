@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <unordered_set>
 #include "dataset-generator.h"
-#include "example-generator.h"
 #include "enumerator.h"
 
 using namespace std;
@@ -134,6 +133,7 @@ experimental::optional<Dataset> generate_dataset(size_t min_length, size_t max_l
                             auto examples_ = generate_examples(p);
 
                             if (!examples_) {
+                                cerr << "Fail to generate examples" << endl;
                                 return true;
                             }
 
