@@ -1,6 +1,7 @@
 #include <iostream>
 #include <algorithm>
 #include <unordered_set>
+#include "dsl/utils.h"
 #include "dataset-generator.h"
 #include "enumerator.h"
 
@@ -84,6 +85,8 @@ void Dataset::insert(const Program &p, const vector<Example> &examples) {
         }
 
         if (is_equivalent) {
+            cerr << "Equivalent\n" << p << candidate.first << endl;
+
             if (candidate.first.size() > p.size()) {
                 indexes_to_be_deleted.push_back(i);
                 deleted_size += candidate.second.size();
