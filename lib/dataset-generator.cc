@@ -62,6 +62,16 @@ void Dataset::insert(const Program &p, const vector<Example> &examples) {
     for (auto i = 0; i < candidates->second.size(); i++) {
         const auto &candidate = candidates->second.at(i);
         bool is_equivalent = true;
+        for (const auto &example: candidate.second) {
+            auto output = eval(p, example.input);
+            if (!output) {
+                is_equivalent = false;
+            } else {
+                if (output.value() != example.output) {
+                    is_equivalent = false;
+                }
+            }
+        }
         for (const auto &example: examples) {
             auto output = eval(candidate.first, example.input);
             if (!output) {
