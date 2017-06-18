@@ -1,6 +1,7 @@
 #include <iostream>
 #include <algorithm>
 #include <unordered_set>
+#include "dsl/utils.h"
 #include "dataset-generator.h"
 #include "enumerator.h"
 
@@ -62,6 +63,16 @@ void Dataset::insert(const Program &p, const vector<Example> &examples) {
     for (auto i = 0; i < candidates->second.size(); i++) {
         const auto &candidate = candidates->second.at(i);
         bool is_equivalent = true;
+        for (const auto &example: candidate.second) {
+            auto output = eval(p, example.input);
+            if (!output) {
+                is_equivalent = false;
+            } else {
+                if (output.value() != example.output) {
+                    is_equivalent = false;
+                }
+            }
+        }
         for (const auto &example: examples) {
             auto output = eval(candidate.first, example.input);
             if (!output) {
@@ -74,6 +85,8 @@ void Dataset::insert(const Program &p, const vector<Example> &examples) {
         }
 
         if (is_equivalent) {
+            cerr << "Equivalent\n" << p << candidate.first << endl;
+
             if (candidate.first.size() > p.size()) {
                 indexes_to_be_deleted.push_back(i);
                 deleted_size += candidate.second.size();
@@ -102,7 +115,7 @@ experimental::optional<Dataset> generate_dataset(size_t min_length, size_t max_l
     // Enumerate read_{list, int}
     Restriction r_for_read;
     r_for_read.min_length = 1;
-    r_for_read.max_length = max_length - 1;
+    r_for_read.max_length = max_length;
     r_for_read.functions = { Function::ReadInt, Function::ReadList };
 
     Restriction r;
@@ -119,7 +132,9 @@ experimental::optional<Dataset> generate_dataset(size_t min_length, size_t max_l
 
     enumerate(
             r_for_read, calc_info,
-            [&r, &calc_info, &dataset, &dataset_size](const Program &p, const int &i) -> bool {
+            [&r, &calc_info, &dataset, &dataset_size, &min_length, &max_length](const Program &p, const int &i) -> bool {
+                r.min_length = min_length + p.size();
+                r.max_length = max_length + p.size();
                 enumerate(
                         r, calc_info,
                         [&dataset, &dataset_size](const Program &p, const int &i) -> bool {
@@ -153,7 +168,7 @@ experimental::optional<Dataset> generate_dataset(size_t min_length, size_t max_l
                                 return dataset.size < dataset_size;
                             }
                         },
-                        i
+                        p, i
                 );
 
                 if (dataset_size == 0) {
