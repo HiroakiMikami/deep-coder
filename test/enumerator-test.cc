@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 #include "enumerator.h"
 
+#include <iostream>
+#include "dsl/utils.h"
 using namespace std;
 using namespace dsl;
 
@@ -133,5 +135,45 @@ TEST(EnumerateTest, NoDuplicateProgramTest) {
 
     // ReadList -> Head
     EXPECT_EQ(1, ps.size());
+}
 
+TEST(EnumerateTest, NoDuplicateProgramTest2) {
+    Restriction r1 = {
+            2, 2,
+            { Function::ReadList },
+            {}, {}, {}
+    };
+    Restriction r2 = {
+            3, 3,
+            { Function::ZipWith },
+            {}, {}, {TwoArgumentsLambda::Plus}
+    };
+
+    std::vector<Program> ps;
+
+    enumerate(r1, [](const Program &p, const int &x) { return x; }, [&](const Program &p, const int &x) {
+        enumerate(r2, [](const Program &p, const int &x) { return x; }, [&](const Program &p, const int &x) {
+            ps.push_back(p);
+            return true;
+        }, p, 0);
+        return true;
+    }, 0);
+
+    // Case 1
+    //  a <- ReadList
+    //  b <- ReadList
+    //  c <-ZipWith + a b
+    // Case 2
+    //  a <- ReadList
+    //  b <- ReadList
+    //  c <-ZipWith + b a
+    // Case 3
+    //  a <- ReadList
+    //  b <- ReadList
+    //  c <-ZipWith + a a
+    // Case 4
+    //  a <- ReadList
+    //  b <- ReadList
+    //  c <-ZipWith + b b
+    EXPECT_EQ(4, ps.size());
 }
