@@ -166,7 +166,7 @@ experimental::optional<Dataset> generate_dataset(size_t min_length, size_t max_l
                                 return dataset.size < dataset_size;
                             }
                         },
-                        i
+                        p, i
                 );
 
                 if (dataset_size == 0) {
