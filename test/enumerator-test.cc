@@ -108,3 +108,30 @@ TEST(EnumerateTest, InformationTest) {
 
     EXPECT_EQ(4, ps.size());
 }
+
+TEST(EnumerateTest, NoDuplicateProgramTest) {
+    Restriction r1 = {
+            1, 1,
+            { Function::ReadInt, Function::ReadList },
+            {}, {}, {}
+    };
+    Restriction r2 = {
+            2, 2,
+            { Function::Head },
+            {}, {}, {}
+    };
+
+    std::vector<Program> ps;
+
+    enumerate(r1, [](const Program &p, const int &x) { return x; }, [&](const Program &p, const int &x) {
+        enumerate(r2, [](const Program &p, const int &x) { return x; }, [&](const Program &p, const int &x) {
+            ps.push_back(p);
+            return true;
+        }, p, 0);
+        return true;
+    }, 0);
+
+    // ReadList -> Head
+    EXPECT_EQ(1, ps.size());
+
+}

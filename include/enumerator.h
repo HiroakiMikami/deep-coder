@@ -140,5 +140,5 @@ void enumerate(const Restriction &restriction, const CalcInformation & calc_info
         tenv = tmp.value();
     }
 
-    enumerate(restriction, calc_information, process, initial_program, {}, initial_info);
+    enumerate(restriction, calc_information, process, initial_program, tenv, initial_info);
 }
