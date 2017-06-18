@@ -115,7 +115,7 @@ experimental::optional<Dataset> generate_dataset(size_t min_length, size_t max_l
     // Enumerate read_{list, int}
     Restriction r_for_read;
     r_for_read.min_length = 1;
-    r_for_read.max_length = max_length - 1;
+    r_for_read.max_length = max_length;
     r_for_read.functions = { Function::ReadInt, Function::ReadList };
 
     Restriction r;
@@ -132,7 +132,9 @@ experimental::optional<Dataset> generate_dataset(size_t min_length, size_t max_l
 
     enumerate(
             r_for_read, calc_info,
-            [&r, &calc_info, &dataset, &dataset_size](const Program &p, const int &i) -> bool {
+            [&r, &calc_info, &dataset, &dataset_size, &min_length, &max_length](const Program &p, const int &i) -> bool {
+                r.min_length = min_length + p.size();
+                r.max_length = max_length + p.size();
                 enumerate(
                         r, calc_info,
                         [&dataset, &dataset_size](const Program &p, const int &i) -> bool {
