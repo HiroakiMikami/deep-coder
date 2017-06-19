@@ -98,7 +98,7 @@ void enumerate(const Restriction &restriction, const CalcInformation & calc_info
 
                     if (new_tenv) {
                         if (p.size() >= restriction.min_length && p.size() <= restriction.max_length) {
-                            if (!process(p, info)) {
+                            if (!process(p, new_info)) {
                                 // Finish enumeration
                                 return;
                             }
