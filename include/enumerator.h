@@ -15,7 +15,7 @@ struct Restriction {
 };
 
 template <class CalcInformation, class Process, class Information>
-void enumerate(const Restriction &restriction, const CalcInformation & calc_information, const Process &process,
+bool enumerate(const Restriction &restriction, const CalcInformation & calc_information, const Process &process,
          const dsl::Program &program, const dsl::TypeEnvironment &tenv, const Information &info) {
     for (const auto &f: restriction.functions) {
         auto arg_types = dsl::get_signature(f).arguments_type;
@@ -72,16 +72,19 @@ void enumerate(const Restriction &restriction, const CalcInformation & calc_info
                 if (p.size() >= restriction.min_length && p.size() <= restriction.max_length) {
                     if (!process(p, info)) {
                         // Finish enumeration
-                        return;
+                        return false;
                     }
                 }
 
                 if (p.size() < restriction.max_length) {
-                    enumerate(restriction, calc_information, process, p, new_tenv.value(), new_info);
+                    if(!enumerate(restriction, calc_information, process, p, new_tenv.value(), new_info)) {
+                        return false;
+                    }
                 }
             }
         } else {
-            for (const auto& a: as[0]) {
+            for (auto it = as[0].rbegin(); it != as[0].rend(); ++it) {
+                auto a = *it;
                 s.push({a});
             }
 
@@ -100,16 +103,19 @@ void enumerate(const Restriction &restriction, const CalcInformation & calc_info
                         if (p.size() >= restriction.min_length && p.size() <= restriction.max_length) {
                             if (!process(p, new_info)) {
                                 // Finish enumeration
-                                return;
+                                return false;
                             }
                         }
 
                         if (p.size() < restriction.max_length) {
-                            enumerate(restriction, calc_information, process, p, new_tenv.value(), new_info);
+                            if (!enumerate(restriction, calc_information, process, p, new_tenv.value(), new_info)) {
+                                return false;
+                            }
                         }
                     }
                 } else {
-                    for (const auto a: as[args.size()]) {
+                    for (auto it = as[args.size()].rbegin(); it != as[args.size()].rend(); ++it) {
+                        auto a = *it;
                         auto new_args = args;
                         new_args.push_back(a);
                         s.push(new_args);
@@ -117,9 +123,8 @@ void enumerate(const Restriction &restriction, const CalcInformation & calc_info
                 }
             }
         }
-
-
     }
+    return true;
 }
 
 template <class CalcInformation, class Process, class Information>

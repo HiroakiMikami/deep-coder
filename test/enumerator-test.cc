@@ -177,3 +177,20 @@ TEST(EnumerateTest, NoDuplicateProgramTest2) {
     //  c <-ZipWith + b b
     EXPECT_EQ(4, ps.size());
 }
+TEST(EnumerateTest, BreakTest) {
+    Restriction r1 = {
+            2, 2,
+            { Function::ReadList, Function::ReadInt },
+            {}, {}, {}
+    };
+
+    std::vector<Program> ps;
+
+    auto num = 0;
+    enumerate(r1, [](const Program &p, const int &x) { return x; }, [&](const Program &p, const int &x) {
+        num += 1;
+        return false;
+    }, 0);
+
+    EXPECT_EQ(1, num);
+}
