@@ -197,7 +197,6 @@ experimental::optional<Program> sort_and_add(size_t max_length, const Attribute 
 
                         if (expect != actual) {
                             satisfy = false;
-
                         }
                     }
 
