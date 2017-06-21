@@ -53,24 +53,22 @@ Attribute::Attribute(const dsl::Program &program) {
 }
 Attribute::Attribute(const std::vector<double> &attribute_vector) {
     auto total = 0;
-    for (auto i = 0; i < this->function_presence.size(); i++) {
+    for (auto i = 0; i < all_functions.size() - 2; i++) {
         this->function_presence.insert({static_cast<Function>(i), attribute_vector[i]});
     }
-    total += this->function_presence.size() - 2;
+    total += this->function_presence.size();
 
-    for (auto i = 0; i < this->predicate_presence.size(); i++) {
+    for (auto i = 0; i < all_predicate_lambdas.size(); i++) {
         auto x = i + static_cast<size_t>(PredicateLambda::IsPositive);
         this->predicate_presence.insert({static_cast<PredicateLambda>(x), attribute_vector[i + total]});
     }
     total += this->predicate_presence.size();
-
-    for (auto i = 0; i < this->one_argument_lambda_presence.size(); i++) {
+    for (auto i = 0; i < all_one_argument_lambdas.size(); i++) {
         auto x = i + static_cast<size_t>(OneArgumentLambda::Plus1);
         this->one_argument_lambda_presence.insert({static_cast<OneArgumentLambda>(x), attribute_vector[i + total]});
     }
     total += this->one_argument_lambda_presence.size();
-
-    for (auto i = 0; i < this->two_arguments_lambda_presence.size(); i++) {
+    for (auto i = 0; i < all_two_arguments_lambdas.size(); i++) {
         auto x = i + static_cast<size_t>(TwoArgumentsLambda::Plus);
         this->two_arguments_lambda_presence.insert({static_cast<TwoArgumentsLambda>(x), attribute_vector[i + total]});
     }
