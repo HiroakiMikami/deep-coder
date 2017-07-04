@@ -64,32 +64,48 @@ int main(int argc, char **argv) {
     cerr << "Generate dataset\n" << "  Max-Length: " << max_length << "\n  Dataset-Size: " << dataset_size << endl;
     auto dataset = generate_dataset(2, max_length, dataset_size);
 
-    cout << "[\n" << endl;
+    cout << "[\n";
     if (dataset) {
         auto x = dataset.value();
+        long long int cnt = 0;
         for (const auto &p: x.programs) {
-            for (const auto &data: p.second) {
+            cnt += 1;
+            for (auto i = 0; i < p.second.size(); ++i) {
+                const auto &data = p.second.at(i);
                 const auto &program = data.first;
                 const auto &examples = data.second;
                 auto attribute = Attribute(program);
 
                 cerr << "# Program\n" << program << flush;
-                for (const auto &example: examples) {
+                cout << "{\"examples\":[\n";
+                for (auto j = 0; j < examples.size(); ++j) {
+                    const auto &example = examples.at(j);
+
                     cout << "{\"input\":";
                     output_input(example.input);
                     cout << ",\"output\":";
                     output_value(example.output);
-                    cout << ",\"attribute\":";
-                    output_attribute(attribute);
-                    cout << "},\n";
+                    cout << "}";
+                    if (j != examples.size() - 1) {
+                        cout << ",";
+                    }
+                    cout << "\n";
                 }
-                cout << flush;
+                cout << "],\n\"attribute\":";
+                output_attribute(attribute);
+
+                cout << "}";
+                if (cnt != x.programs.size() ||
+                        i != (p.second.size() - 1)) {
+                    cout << ",";
+                }
+                cout << "\n" << flush;
             }
         }
     } else {
         cerr << "Fail to generate dataset" << endl;
     }
-    cout << "]\n" << endl;
+    cout << "]" << endl;
 
     return 0;
 }
