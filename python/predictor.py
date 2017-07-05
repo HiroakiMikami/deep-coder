@@ -7,6 +7,8 @@ import chainer.functions as F
 import chainer.links as L
 from chainer.training import extensions
 import sys
+import json
+import copy
 
 import model as M
 
@@ -23,9 +25,41 @@ serializers.load_npz(sys.argv[1], deepCoder)
 
 predictor = Predictor(deepCoder)
 
+def print_value(value):
+    s = ''
+    if isinstance(value, int):
+        s = "Integer " + str(value)
+    else:
+        s = "List "
+        for x in value:
+            s += str(x) + " "
+    print(s)
+
 if len(sys.argv) == 3:
     # Predict attribute
-    print("bar")
+    f = open(sys.argv[2], 'r')
+    examples_ = json.load(f) # [Example]
+    e = copy.deepcopy(examples_)
+    examples = np.array([M.convert_example(x) for x in examples_])
+    attributes = predictor(np.array([examples]))[0].data
+
+    # Parse Examples
+    for example in e:
+        i = example["input"]
+        o = example["output"]
+
+        for value in i:
+            print_value(value)
+        print("---")
+        print_value(o)
+        print("---")
+
+    print("---")
+    # Output Attributes
+    x = 'Attribute: '
+    for t in attributes:
+        x += str(t) + " "
+    print(x)
 else:
     # Evaluate
     embed = deepCoder.encoder.embed.valueEmbed.integerEmbed
