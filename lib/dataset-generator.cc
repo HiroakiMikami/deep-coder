@@ -4,6 +4,7 @@
 #include "dsl/utils.h"
 #include "dataset-generator.h"
 #include "enumerator.h"
+#include "parameters.h"
 
 using namespace std;
 using namespace dsl;
@@ -154,7 +155,9 @@ experimental::optional<Dataset> generate_dataset(size_t min_length, size_t max_l
 
                             auto examples = examples_.value();
 
-                            dataset.insert(p, examples);
+                            if (examples.size() == EXAMPLE_NUM) {
+                                dataset.insert(p, examples);
+                            }
 
                             cerr << "Generating dataset... " << dataset.size;
                             if (dataset_size != 0) {
