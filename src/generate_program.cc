@@ -2,6 +2,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <iomanip>
 #include "dsl/utils.h"
 #include "find-program.h"
 
@@ -49,6 +50,7 @@ Output read_output() {
 int main(int argc, char **argv) {
     size_t max_length = 4;
     bool is_dfs = false;
+    bool is_none = false;
 
     if (argc >= 2) {
         max_length = atoi(argv[1]);
@@ -56,6 +58,8 @@ int main(int argc, char **argv) {
     if (argc >= 3) {
         if (argv[2] == "dfs") {
             is_dfs = true;
+        } else if (argv[2] == "none") {
+            is_none = true;
         }
     }
 
@@ -83,8 +87,36 @@ int main(int argc, char **argv) {
         attr_.push_back(x);
     }
 
+    if (is_none) {
+        for (auto &a: attr_) {
+            a = 1.0;
+        }
+    } else {
+        for (auto i = 0; i < all_functions.size() - 2; i++) {
+            auto f = all_functions[i];
+            cerr << stringify(f) << "\t";
+        }
+        for (auto x: all_predicate_lambdas) {
+            cerr << stringify(x) << "\t";
+        }
+        for (auto x: all_one_argument_lambdas) {
+            cerr << stringify(x) << "\t";
+        }
+        for (auto x: all_two_arguments_lambdas) {
+            cerr << stringify(x) << "\t";
+        }
+        cerr << endl;
+
+        for (const auto &a: attr_) {
+            cerr << setprecision(3) << a << "\t";
+        }
+        cerr << endl;
+    }
+
     // Find program
     auto p = (is_dfs)
+             ? dfs(max_length, Attribute(attr_), examples)
+             : (is_none)
              ? dfs(max_length, Attribute(attr_), examples)
              : sort_and_add(max_length, Attribute(attr_), examples);
     if (p) {
