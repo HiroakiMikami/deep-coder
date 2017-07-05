@@ -6,16 +6,32 @@ from chainer import Link, Chain, ChainList
 import chainer.functions as F
 import chainer.links as L
 from chainer.training import extensions
+import sys
 
-import model
+import model as M
 
-embed = model.ExampleEmbed(1, 2, 2)
-encoder = model.Encoder(embed, 10)
-decoder = model.Decoder(33)
-model = model.DeepCoder(encoder, decoder)
+class Predictor(Chain):
+    def __init__(self, deepCoder):
+        super(Predictor, self).__init__()
+        with self.init_scope():
+            self.deepCoder = deepCoder
 
-#serializers.load_npz("test.dat", model)
+    def __call__(self, x):
+        return F.sigmoid(self.deepCoder(x))
+deepCoder = M.gen_model()
+serializers.load_npz(sys.argv[1], deepCoder)
 
-x = np.array([[[1, 0, 1, 2], [0, 1, 1, 1]], [[1, 0, 1, 2], [0, 0, 2, 2]], [[1, 0, 1, 2], [0, 0, 2, 2]]], dtype=np.float32)
-print(x.shape)
-#print(model(x))
+predictor = Predictor(deepCoder)
+
+if len(sys.argv) == 3:
+    # Predict attribute
+    print("bar")
+else:
+    # Evaluate
+    embed = deepCoder.encoder.embed.valueEmbed.integerEmbed
+    for l in range(0, M.integer_range + 1):
+        embedInteger = embed(np.array([l], dtype=np.float32)).data[0]
+        s = str(l + M.integer_min)
+        for x in embedInteger:
+            s += " " + str(x)
+        print(s)

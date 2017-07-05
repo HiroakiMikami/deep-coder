@@ -107,7 +107,7 @@ try:
     trainer.extend(extensions.ProgressBar())
 
     trainer.run()
-    # serializers.save_npz(sys.argv[2], deepCoder)
+    serializers.save_npz(sys.argv[2], deepCoder)
 except:
     print(traceback.format_exc())
 
