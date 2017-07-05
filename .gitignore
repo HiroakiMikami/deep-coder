@@ -9,6 +9,7 @@
 !test/dsl
 !src
 !*.py
+!*.sh
 
 ## header files
 !*.h
@@ -19,3 +20,5 @@
 !.gitignore
 !CMakeLists.txt
 !python/
+!scripts/
+
