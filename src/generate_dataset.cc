@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
     }
 
     cerr << "Generate dataset\n" << "  Max-Length: " << max_length << "\n  Dataset-Size: " << dataset_size << endl;
-    auto dataset = generate_dataset(2, max_length, dataset_size);
+    auto dataset = generate_dataset(1, max_length, dataset_size);
 
     cout << "[\n";
     if (dataset) {
