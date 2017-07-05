@@ -38,14 +38,14 @@ f = open(sys.argv[1], 'r')
 x = json.load(f)
 y = M.preprocess_json(x)
 
-l1 = [e for e in range(0, len(y)) if e % 6 != 0]
-l2 = [e for e in range(0, len(y)) if e % 6 == 0]
+l1 = [e for e in range(0, len(y)) if e % 100 != 0]
+l2 = [e for e in range(0, len(y)) if e % 100 == 0]
 
 train = Dataset([y[e] for e in range(0, len(y))])
 test = Dataset([y[e] for e in l2])
 
 try:
-    train_iter = iterators.SerialIterator(train, batch_size=10, shuffle=True)
+    train_iter = iterators.SerialIterator(train, batch_size=50, shuffle=True)
     test_iter = iterators.SerialIterator(test, batch_size=100, repeat=False, shuffle=False)
 
     deepCoder = M.gen_model()
@@ -54,7 +54,7 @@ try:
     optimizer.setup(model)
 
     updater = training.StandardUpdater(train_iter, optimizer)
-    trainer = training.Trainer(updater, (20, 'epoch'), out='result')
+    trainer = training.Trainer(updater, (100, 'epoch'), out='result')
 
     trainer.extend(extensions.Evaluator(test_iter, model))
     trainer.extend(extensions.LogReport())
