@@ -53,6 +53,7 @@ void output_attribute(const Attribute &attr) {
 int main(int argc, char **argv) {
     size_t max_length = 4;
     size_t dataset_size = 0;
+    size_t example_pair_per_program = 1;
 
     if (argc >= 2) {
         max_length = atoi(argv[1]);
@@ -60,9 +61,12 @@ int main(int argc, char **argv) {
     if (argc >= 3) {
         dataset_size = atoi(argv[2]);
     }
+    if (argc >= 4) {
+        example_pair_per_program = atoi(argv[3]);
+    }
 
     cerr << "Generate dataset\n" << "  Max-Length: " << max_length << "\n  Dataset-Size: " << dataset_size << endl;
-    auto dataset = generate_dataset(1, max_length, dataset_size);
+    auto dataset = generate_dataset(1, max_length, dataset_size, example_pair_per_program * EXAMPLE_NUM);
 
     cout << "[\n";
     if (dataset) {
@@ -77,29 +81,34 @@ int main(int argc, char **argv) {
                 auto attribute = Attribute(program);
 
                 cerr << "# Program\n" << program << flush;
-                cout << "{\"examples\":[\n";
-                for (auto j = 0; j < examples.size(); ++j) {
-                    const auto &example = examples.at(j);
+                auto pair_num = examples.size() / EXAMPLE_NUM;
+                for (auto j = 0; j < pair_num; ++j) {
+                    cout << "{\"examples\":[\n";
+                    for (auto k = 0; k < EXAMPLE_NUM; ++k) {
+                        const auto &example = examples.at(j * EXAMPLE_NUM + k);
 
-                    cout << "{\"input\":";
-                    output_input(example.input);
-                    cout << ",\"output\":";
-                    output_value(example.output);
+                        cout << "{\"input\":";
+                        output_input(example.input);
+                        cout << ",\"output\":";
+                        output_value(example.output);
+                        cout << "}";
+                        if (k != EXAMPLE_NUM - 1) {
+                            cout << ",";
+                        }
+                        cout << "\n";
+
+                    }
+                    cout << "],\n\"attribute\":";
+                    output_attribute(attribute);
+
                     cout << "}";
-                    if (j != examples.size() - 1) {
+                    if (cnt != x.programs.size() ||
+                        j != pair_num - 1 ||
+                        i != (p.second.size() - 1)) {
                         cout << ",";
                     }
-                    cout << "\n";
+                    cout << "\n" << flush;
                 }
-                cout << "],\n\"attribute\":";
-                output_attribute(attribute);
-
-                cout << "}";
-                if (cnt != x.programs.size() ||
-                        i != (p.second.size() - 1)) {
-                    cout << ",";
-                }
-                cout << "\n" << flush;
             }
         }
     } else {

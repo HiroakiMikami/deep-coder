@@ -440,7 +440,7 @@ bool is_in_range(const Value &v) {
     }
 }
 
-experimental::optional<vector<Example>> generate_examples(const dsl::Program &p) {
+experimental::optional<vector<Example>> generate_examples(const dsl::Program &p, size_t example_num) {
     auto c_ = analyze(p);
     if (!c_) {
         return {};
@@ -449,9 +449,9 @@ experimental::optional<vector<Example>> generate_examples(const dsl::Program &p)
     auto c = c_.value();
 
     vector<Example> examples;
-    examples.reserve(5);
+    examples.reserve(example_num);
 
-    for (auto i = 0; i < 5 * 100; i++) {
+    for (auto i = 0; i < example_num * 100; i++) {
         // Generate inputs
         Input input;
 
@@ -486,7 +486,7 @@ experimental::optional<vector<Example>> generate_examples(const dsl::Program &p)
 
                 examples.push_back(Example{input, output.value()});
 
-                if (examples.size() >= EXAMPLE_NUM) {
+                if (examples.size() >= example_num) {
                     break;
                 }
             }

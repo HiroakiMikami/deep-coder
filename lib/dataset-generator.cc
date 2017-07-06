@@ -90,7 +90,7 @@ void Dataset::insert(const Program &p, const vector<Example> &examples) {
 
             if (candidate.first.size() > p.size()) {
                 indexes_to_be_deleted.push_back(i);
-                deleted_size += candidate.second.size();
+                deleted_size += candidate.second.size() / EXAMPLE_NUM;
             } else {
                 has_equivalent_program = true;
             }
@@ -99,7 +99,7 @@ void Dataset::insert(const Program &p, const vector<Example> &examples) {
 
     if (!has_equivalent_program) {
         this->programs.find(type)->second.push_back({p, examples});
-        this->size += examples.size();
+        this->size += examples.size() / EXAMPLE_NUM;
     }
 
     for_each(indexes_to_be_deleted.rbegin(), indexes_to_be_deleted.rend(), [&candidates](const auto &i) {
@@ -108,7 +108,8 @@ void Dataset::insert(const Program &p, const vector<Example> &examples) {
     this->size -= deleted_size;
 }
 
-experimental::optional<Dataset> generate_dataset(size_t min_length, size_t max_length, size_t dataset_size) {
+experimental::optional<Dataset> generate_dataset(
+        size_t min_length, size_t max_length, size_t dataset_size, size_t example_per_program) {
     auto functions = all_functions;
     functions.erase(find(functions.begin(), functions.end(), Function::ReadInt));
     functions.erase(find(functions.begin(), functions.end(), Function::ReadList));
@@ -133,12 +134,12 @@ experimental::optional<Dataset> generate_dataset(size_t min_length, size_t max_l
 
     enumerate(
             r_for_read, calc_info,
-            [&r, &calc_info, &dataset, &dataset_size, &min_length, &max_length](const Program &p, const int &i) -> bool {
+            [&r, &calc_info, &dataset, &dataset_size, &min_length, &max_length, &example_per_program](const Program &p, const int &i) -> bool {
                 r.min_length = min_length + p.size();
                 r.max_length = max_length + p.size();
                 enumerate(
                         r, calc_info,
-                        [&dataset, &dataset_size](const Program &p, const int &i) -> bool {
+                        [&dataset, &dataset_size, &example_per_program](const Program &p, const int &i) -> bool {
                             // Check program
                             //// Unused program
                             if (has_unused_variable(p)) {
@@ -146,7 +147,7 @@ experimental::optional<Dataset> generate_dataset(size_t min_length, size_t max_l
                             }
 
                             // Generate example
-                            auto examples_ = generate_examples(p);
+                            auto examples_ = generate_examples(p, example_per_program);
 
                             if (!examples_) {
                                 cerr << "Fail to generate examples" << endl;
@@ -154,10 +155,7 @@ experimental::optional<Dataset> generate_dataset(size_t min_length, size_t max_l
                             }
 
                             auto examples = examples_.value();
-
-                            if (examples.size() == EXAMPLE_NUM) {
-                                dataset.insert(p, examples);
-                            }
+                            dataset.insert(p, examples);
 
                             cerr << "Generating dataset... " << dataset.size;
                             if (dataset_size != 0) {
