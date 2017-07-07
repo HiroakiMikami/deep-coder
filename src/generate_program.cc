@@ -56,9 +56,10 @@ int main(int argc, char **argv) {
         max_length = atoi(argv[1]);
     }
     if (argc >= 3) {
-        if (argv[2] == "dfs") {
+        auto x = string(argv[2]);
+        if (x == "dfs") {
             is_dfs = true;
-        } else if (argv[2] == "none") {
+        } else if (x == "none") {
             is_none = true;
         }
     }

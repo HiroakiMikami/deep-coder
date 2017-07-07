@@ -91,7 +91,7 @@ class DeepCoder(Chain):
         return x2
 
 input_num = 2
-embed_length = 2
+embed_length = 20
 integer_min = -100
 integer_max = 100
 integer_range = integer_max - integer_min + 1 #integerの個数
