@@ -52,4 +52,4 @@ std::experimental::optional<std::vector<int>> generate_list(const ListConstraint
 
 std::experimental::optional<Constraint> analyze(const dsl::Program &p);
 
-std::experimental::optional<std::vector<Example>> generate_examples(const dsl::Program &p);
+std::experimental::optional<std::vector<Example>> generate_examples(const dsl::Program &p, size_t example_num = 5);

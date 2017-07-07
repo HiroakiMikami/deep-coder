@@ -3,6 +3,7 @@
 #include <algorithm>
 #include "example-generator.h"
 #include "dsl/type.h"
+#include "parameters.h"
 
 using namespace std;
 using namespace dsl;
@@ -75,8 +76,8 @@ vector<IntegerConstraint> ListConstraint::all_constraints() const {
 
 experimental::optional<int> generate_integer(const IntegerConstraint& constraint) {
     auto p = constraint.range();
-    auto min = p.first.value_or(-10);
-    auto max = p.second.value_or(10);
+    auto min = p.first.value_or(INPUT_MIN);
+    auto max = p.second.value_or(INPUT_MAX);
 
     // sign
     if (constraint.sign) {
@@ -112,7 +113,7 @@ experimental::optional<int> generate_integer(const IntegerConstraint& constraint
 
 experimental::optional<vector<int>> generate_list(const ListConstraint &constraint) {
     auto min_length = std::max(constraint.min_length.value_or(0), 0);
-    auto max_length = std::max(constraint.max_length.value_or(10), 0);
+    auto max_length = std::max(constraint.max_length.value_or(LIST_LENGTH), 0);
 
     if (max_length < min_length) {
         return {};
@@ -425,7 +426,21 @@ experimental::optional<Constraint> analyze(const Program &p) {
     return c;
 }
 
-experimental::optional<vector<Example>> generate_examples(const dsl::Program &p) {
+bool is_in_range(const Value &v) {
+    if (v.integer()) {
+        auto i = v.integer().value();
+        return i >= INTEGER_MIN && i <= INTEGER_MAX;
+    } else if (v.list()) {
+        auto l = v.list().value();
+        return all_of(l.begin(), l.end(), [](const auto &i) {
+            return i >= INTEGER_MIN && i <= INTEGER_MAX;
+        });
+    } else {
+        return true;
+    }
+}
+
+experimental::optional<vector<Example>> generate_examples(const dsl::Program &p, size_t example_num) {
     auto c_ = analyze(p);
     if (!c_) {
         return {};
@@ -434,9 +449,9 @@ experimental::optional<vector<Example>> generate_examples(const dsl::Program &p)
     auto c = c_.value();
 
     vector<Example> examples;
-    examples.reserve(5);
+    examples.reserve(example_num);
 
-    for (auto i = 0; i < 5 * 100; i++) {
+    for (auto i = 0; i < example_num * 100; i++) {
         // Generate inputs
         Input input;
 
@@ -463,9 +478,15 @@ experimental::optional<vector<Example>> generate_examples(const dsl::Program &p)
         if (c.inputs.size() == input.size()) {
             auto output = eval(p, input);
             if (output && !output.value().is_null()) {
+                auto o = output.value();
+
+                if (!is_in_range(o)) {
+                    continue ;
+                }
+
                 examples.push_back(Example{input, output.value()});
 
-                if (examples.size() >= 5) {
+                if (examples.size() >= example_num) {
                     break;
                 }
             }

@@ -53,6 +53,7 @@ void output_attribute(const Attribute &attr) {
 int main(int argc, char **argv) {
     size_t max_length = 4;
     size_t dataset_size = 0;
+    size_t example_pair_per_program = 1;
 
     if (argc >= 2) {
         max_length = atoi(argv[1]);
@@ -60,36 +61,60 @@ int main(int argc, char **argv) {
     if (argc >= 3) {
         dataset_size = atoi(argv[2]);
     }
+    if (argc >= 4) {
+        example_pair_per_program = atoi(argv[3]);
+    }
 
     cerr << "Generate dataset\n" << "  Max-Length: " << max_length << "\n  Dataset-Size: " << dataset_size << endl;
-    auto dataset = generate_dataset(2, max_length, dataset_size);
+    auto dataset = generate_dataset(1, max_length, dataset_size, example_pair_per_program * EXAMPLE_NUM);
 
-    cout << "[\n" << endl;
+    cout << "[\n";
     if (dataset) {
         auto x = dataset.value();
+        long long int cnt = 0;
         for (const auto &p: x.programs) {
-            for (const auto &data: p.second) {
+            cnt += 1;
+            for (auto i = 0; i < p.second.size(); ++i) {
+                const auto &data = p.second.at(i);
                 const auto &program = data.first;
                 const auto &examples = data.second;
                 auto attribute = Attribute(program);
 
                 cerr << "# Program\n" << program << flush;
-                for (const auto &example: examples) {
-                    cout << "{\"input\":";
-                    output_input(example.input);
-                    cout << ",\"output\":";
-                    output_value(example.output);
-                    cout << ",\"attribute\":";
+                auto pair_num = examples.size() / EXAMPLE_NUM;
+                for (auto j = 0; j < pair_num; ++j) {
+                    cout << "{\"examples\":[\n";
+                    for (auto k = 0; k < EXAMPLE_NUM; ++k) {
+                        const auto &example = examples.at(j * EXAMPLE_NUM + k);
+
+                        cout << "{\"input\":";
+                        output_input(example.input);
+                        cout << ",\"output\":";
+                        output_value(example.output);
+                        cout << "}";
+                        if (k != EXAMPLE_NUM - 1) {
+                            cout << ",";
+                        }
+                        cout << "\n";
+
+                    }
+                    cout << "],\n\"attribute\":";
                     output_attribute(attribute);
-                    cout << "},\n";
+
+                    cout << "}";
+                    if (cnt != x.programs.size() ||
+                        j != pair_num - 1 ||
+                        i != (p.second.size() - 1)) {
+                        cout << ",";
+                    }
+                    cout << "\n" << flush;
                 }
-                cout << flush;
             }
         }
     } else {
         cerr << "Fail to generate dataset" << endl;
     }
-    cout << "]\n" << endl;
+    cout << "]" << endl;
 
     return 0;
 }
