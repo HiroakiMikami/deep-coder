@@ -42,7 +42,6 @@ class ExampleEmbed(Chain):
         (n1, n2, n3) = x.shape
         x1 = x.reshape(n1 * n2, n3)
         x_ = self.valueEmbed(x1)
-
         return x_.reshape([n1, int(x_.size / n1)])
 
 class Encoder(Chain):
