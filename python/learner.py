@@ -18,7 +18,8 @@ class Model(Chain):
             self.deepCoder = deepCoder
     def __call__(self, input_, output):
         actual = self.deepCoder(Variable(input_))
-        loss = F.sigmoid_cross_entropy(actual, Variable(output))
+        expected = Variable(output)
+        loss = F.sigmoid_cross_entropy(actual, expected)
         report({'loss': loss}, self)
         return loss
 
@@ -38,23 +39,25 @@ f = open(sys.argv[1], 'r')
 x = json.load(f)
 y = M.preprocess_json(x)
 
+print(len(y))
+
 l1 = [e for e in range(0, len(y)) if e % 100 != 0]
 l2 = [e for e in range(0, len(y)) if e % 100 == 0]
 
-train = Dataset([y[e] for e in range(0, len(y))])
+train = Dataset([y[e] for e in l1])
 test = Dataset([y[e] for e in l2])
 
 try:
-    train_iter = iterators.SerialIterator(train, batch_size=50, shuffle=True)
+    train_iter = iterators.SerialIterator(train, batch_size=100, shuffle=True)
     test_iter = iterators.SerialIterator(test, batch_size=100, repeat=False, shuffle=False)
 
     deepCoder = M.gen_model()
     model = Model(deepCoder)
-    optimizer = optimizers.SGD()
+    optimizer = optimizers.Adam()
     optimizer.setup(model)
 
     updater = training.StandardUpdater(train_iter, optimizer)
-    trainer = training.Trainer(updater, (100, 'epoch'), out='result')
+    trainer = training.Trainer(updater, (50, 'epoch'), out='result')
 
     trainer.extend(extensions.Evaluator(test_iter, model))
     trainer.extend(extensions.LogReport())
@@ -63,6 +66,7 @@ try:
 
     trainer.run()
     serializers.save_npz(sys.argv[2], deepCoder)
+
 except:
     print(traceback.format_exc())
 
