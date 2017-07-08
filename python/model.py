@@ -90,7 +90,7 @@ class DeepCoder(Chain):
         x2 = self.decoder(x1.reshape(data_num, example_num, vec_length))
         return x2
 
-input_num = 2
+input_num = 3
 embed_length = 20
 integer_min = -100
 integer_max = 100
