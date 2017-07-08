@@ -35,13 +35,12 @@ def print_value(value):
             s += str(x) + " "
     print(s)
 
-if len(sys.argv) == 3:
+if len(sys.argv) >= 3:
     # Predict attribute
     f = open(sys.argv[2], 'r')
     examples_ = json.load(f) # [Example]
     e = copy.deepcopy(examples_)
     examples = np.array([M.convert_example(x) for x in examples_])
-    attributes = predictor(np.array([examples]))[0].data
 
     # Parse Examples
     for example in e:
@@ -56,10 +55,17 @@ if len(sys.argv) == 3:
 
     print("---")
     # Output Attributes
-    x = 'Attribute: '
-    for t in attributes:
-        x += str(t) + " "
-    print(x)
+    if len(sys.argv) >= 4 and sys.argv[3] == "none":
+        x = 'Attribute: '
+        for t in range(0, M.attribute_width):
+            x += "1 "
+        print(x)
+    else:
+        x = 'Attribute: '
+        attributes = predictor(np.array([examples]))[0].data
+        for t in attributes:
+            x += str(t) + " "
+        print(x)
 else:
     # Evaluate
     embed = deepCoder.encoder.embed.valueEmbed.integerEmbed
