@@ -33,12 +33,18 @@ namespace std {
 
 }
 
-struct Dataset {
-    std::unordered_map<ProgramType, std::vector<std::pair<dsl::Program, std::vector<Example>>>> programs;
+struct DatasetForOneInputType {
+    std::vector<std::pair<dsl::Program, std::vector<Example>>> int_output_programs;
+    std::vector<std::pair<dsl::Program, std::vector<Example>>> list_output_programs;
     size_t size;
 
-    Dataset();
+    DatasetForOneInputType();
     void insert(const dsl::Program &p, const std::vector<Example> &examples);
+};
+struct Dataset {
+    std::vector<std::pair<dsl::Program, std::vector<Example>>> programs;
+    size_t size;
+    Dataset();
 };
 
 bool has_unused_variable(const dsl::Program &p);

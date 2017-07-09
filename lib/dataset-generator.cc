@@ -26,42 +26,28 @@ bool has_unused_variable(const dsl::Program &p) {
     return unused_var.size() > 1;
 }
 
-Dataset::Dataset() : size(0) {}
-void Dataset::insert(const Program &p, const vector<Example> &examples) {
-    if (examples.size() < 1) {
+
+DatasetForOneInputType::DatasetForOneInputType() : size(0) {
+    void insert(const dsl::Program &p, const std::vector<Example> &examples);
+};
+void DatasetForOneInputType::insert(const Program &p, const vector<Example> &examples) {
+    if (examples.size() < EXAMPLE_NUM) {
         return ;
     }
 
-    // Check type of program
-    ProgramType type;
+    // Check type of the program output
     auto example = examples[0];
-    type.first.reserve(example.input.size());
-    for (const auto &i: example.input) {
-        if (i.integer()) {
-            type.first.push_back(Type::Integer);
-        } else {
-            type.first.push_back(Type::List);
-        }
-    }
-
-    if (example.output.integer()) {
-        type.second = Type::Integer;
-    } else {
-        type.second = Type::List;
-    }
+    auto &candidates = (example.output.integer())
+                      ? this->int_output_programs
+                      : this->list_output_programs;
 
     // Search equivalent program
-    if (this->programs.find(type) == this->programs.end()) {
-        this->programs.insert({type, {}});
-    }
-
-    auto candidates = this->programs.find(type);
     bool has_equivalent_program = false;
     vector<int> indexes_to_be_deleted;
-    indexes_to_be_deleted.reserve(candidates->second.size());
+    indexes_to_be_deleted.reserve(candidates.size());
     size_t deleted_size = 0;
-    for (auto i = 0; i < candidates->second.size(); i++) {
-        const auto &candidate = candidates->second.at(i);
+    for (auto i = 0; i < candidates.size(); i++) {
+        const auto &candidate = candidates.at(i);
         bool is_equivalent = true;
         for (const auto &example: candidate.second) {
             auto output = eval(p, example.input);
@@ -103,15 +89,18 @@ void Dataset::insert(const Program &p, const vector<Example> &examples) {
     }
 
     if (!has_equivalent_program) {
-        this->programs.find(type)->second.push_back({p, examples});
+        candidates.push_back({p, examples});
         this->size += examples.size() / EXAMPLE_NUM;
     }
 
     for_each(indexes_to_be_deleted.rbegin(), indexes_to_be_deleted.rend(), [&candidates](const auto &i) {
-        candidates->second.erase(candidates->second.begin() + i);
+        candidates.erase(candidates.begin() + i);
     });
     this->size -= deleted_size;
 }
+
+
+Dataset::Dataset() : size(0) {}
 
 experimental::optional<Dataset> generate_dataset(
         size_t min_length, size_t max_length, size_t dataset_size, size_t example_per_program) {
@@ -142,9 +131,10 @@ experimental::optional<Dataset> generate_dataset(
             [&r, &calc_info, &dataset, &dataset_size, &min_length, &max_length, &example_per_program](const Program &p, const int &i) -> bool {
                 r.min_length = min_length + p.size();
                 r.max_length = max_length + p.size();
+                DatasetForOneInputType d;
                 enumerate(
                         r, calc_info,
-                        [&dataset, &dataset_size, &example_per_program](const Program &p, const int &i) -> bool {
+                        [&dataset, &dataset_size, &example_per_program, &d](const Program &p, const int &i) -> bool {
                             // Check program
                             //// Unused program
                             if (has_unused_variable(p)) {
@@ -160,9 +150,9 @@ experimental::optional<Dataset> generate_dataset(
                             }
 
                             auto examples = examples_.value();
-                            dataset.insert(p, examples);
+                            d.insert(p, examples);
 
-                            cerr << "Generating dataset... " << dataset.size;
+                            cerr << "Generating dataset... " << d.size;
                             if (dataset_size != 0) {
                                 cerr << " / " << dataset_size;
                             }
@@ -171,11 +161,20 @@ experimental::optional<Dataset> generate_dataset(
                             if (dataset_size == 0) {
                                 return true;
                             } else {
-                                return dataset.size < dataset_size;
+                                return d.size < dataset_size;
                             }
                         },
                         p, i
                 );
+
+                dataset.programs.reserve(dataset.programs.size() + d.size);
+                for (auto &e: d.int_output_programs) {
+                    dataset.programs.push_back(e);
+                }
+                for (auto &e: d.list_output_programs) {
+                    dataset.programs.push_back(e);
+                }
+                dataset.size += d.size;
 
                 if (dataset_size == 0) {
                     return true;
