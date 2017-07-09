@@ -4,7 +4,6 @@
 #include "dsl/utils.h"
 #include "dataset-generator.h"
 #include "enumerator.h"
-#include "parameters.h"
 
 using namespace std;
 using namespace dsl;
