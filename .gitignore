@@ -24,6 +24,8 @@
 !scripts/
 !model/
 !model/model.dat
+!dataset/
+!dataset/dataset.json
 !examples/
 !examples/reverse.json
 !examples/dot.json
