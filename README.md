@@ -27,7 +27,7 @@ $ cd ../
 1. Use Pre-Trained Model
 ---
 ```bash
-# Search program using a newral network model
+# Search program using a neural network model
 $ ./scripts/gen_program.sh model/model.dat examples/dot.json 2
 head    last    take    drop    access  minimum maximum reverse sort    sum     map     filter  count   zip_with        scanl1  >0      <0      %2 == 0 %2 == 1 +1      -1   *(-1)    *2      *3      *4      /2      /3      /4      **2     +       -       *       MIN     MAX # The probability of each functions
 0.342   0.3     0.00922 0.37    0.492   0.212   0.514   0.192   0.0332  0.109   8.05e-06        0.000323        9.78e-05        0.00831 0.000241        0.00212 0.00347 5.23e-05      2.68e-06        0.00572 0.000305        0.00144 0.00061 0.000862        7.36e-05        0.00197 1.26e-05        0.0703  0.0371  0.84    0.0163  0.145   6.85e-07     6.85e-07 6.85e-07
@@ -58,7 +58,7 @@ The following commands do:
 $ ./build/src/gen_dataset 1 10000 300 > small_dataset.json
 # Learn attributes
 $ python3 ./python/learner.py small_dataset.json model.dat
-# Search program using a newral network model
+# Search program using a neural network model
 $ ./scripts/gen_program.sh model.dat examples/reverse.json 1 2> /dev/null
 ---
 a <- read_list
