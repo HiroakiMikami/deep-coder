@@ -86,10 +86,9 @@ TEST(GenerateDatasetTest, SimpleTest) {
     EXPECT_TRUE(x.value().size >= 10);
 
     for (auto &i: x.value().programs) {
-        for (auto &j: i.second) {
-            for (auto &k: j.second) {
-                cout << j.first << k.input << k.output << endl;
-            }
+        cout << i.first;
+        for (auto &y: i.second) {
+            cout << y.input << y.output << endl;
         }
     }
 }
