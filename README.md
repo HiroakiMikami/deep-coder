@@ -135,6 +135,11 @@ b <- reverse a
 ]
 ```
 
+TODO
+---
+* Over-fitting if program length >= 2
+* Fasten dataset generation
+
 Difference from the original code
 ---
 * The range of embedding of integers
