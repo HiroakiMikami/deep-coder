@@ -67,19 +67,25 @@ void Dataset::insert(const Program &p, const vector<Example> &examples) {
             auto output = eval(p, example.input);
             if (!output) {
                 is_equivalent = false;
+                break;
             } else {
                 if (output.value() != example.output) {
                     is_equivalent = false;
+                    break;
                 }
             }
         }
-        for (const auto &example: examples) {
-            auto output = eval(candidate.first, example.input);
-            if (!output) {
-                is_equivalent = false;
-            } else {
-                if (output.value() != example.output) {
+        if (is_equivalent) {
+            for (const auto &example: examples) {
+                auto output = eval(candidate.first, example.input);
+                if (!output) {
                     is_equivalent = false;
+                    break ;
+                } else {
+                    if (output.value() != example.output) {
+                        is_equivalent = false;
+                        break ;
+                    }
                 }
             }
         }
