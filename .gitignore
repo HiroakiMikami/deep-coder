@@ -22,6 +22,8 @@
 !README.md
 !python/
 !scripts/
+!model/
+!model/model.dat
 !examples/
 !examples/reverse.json
 !examples/dot.json

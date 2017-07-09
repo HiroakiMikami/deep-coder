@@ -29,11 +29,21 @@ $ cd ../
 ```bash
 # Search program using a newral network model
 $ ./scripts/gen_program.sh model/model.dat examples/dot.json 2
- # The probability of each functions
-
- # Program
+head    last    take    drop    access  minimum maximum reverse sort    sum     map     filter  count   zip_with        scanl1  >0      <0      %2 == 0 %2 == 1 +1      -1   *(-1)    *2      *3      *4      /2      /3      /4      **2     +       -       *       MIN     MAX # The probability of each functions
+0.342   0.3     0.00922 0.37    0.492   0.212   0.514   0.192   0.0332  0.109   8.05e-06        0.000323        9.78e-05        0.00831 0.000241        0.00212 0.00347 5.23e-05      2.68e-06        0.00572 0.000305        0.00144 0.00061 0.000862        7.36e-05        0.00197 1.26e-05        0.0703  0.0371  0.84    0.0163  0.145   6.85e-07     6.85e-07 6.85e-07
+--- # Program
+a <- read_list
+b <- read_list
+c <- zip_with * b a
+d <- sum c
+---
 $ ./scripts/gen_program.sh model/model.dat examples/dot.json 2 none # Search program without a neural network model
-# it will take very long time (I don't know how much time it will take).
+---
+a <- read_list
+b <- read_list
+c <- zip_with * b a
+d <- sum c
+---
 ```
 
 2. Simple Experiment
