@@ -74,41 +74,36 @@ int main(int argc, char **argv) {
         long long int cnt = 0;
         for (const auto &p: x.programs) {
             cnt += 1;
-            for (auto i = 0; i < p.second.size(); ++i) {
-                const auto &data = p.second.at(i);
-                const auto &program = data.first;
-                const auto &examples = data.second;
-                auto attribute = Attribute(program);
+            const auto &program = p.first;
+            const auto &examples = p.second;
+            auto attribute = Attribute(program);
+            cerr << "# Program\n" << program << flush;
+            auto pair_num = examples.size() / EXAMPLE_NUM;
+            for (auto j = 0; j < pair_num; ++j) {
+                cout << "{\"examples\":[\n";
+                for (auto k = 0; k < EXAMPLE_NUM; ++k) {
+                    const auto &example = examples.at(j * EXAMPLE_NUM + k);
 
-                cerr << "# Program\n" << program << flush;
-                auto pair_num = examples.size() / EXAMPLE_NUM;
-                for (auto j = 0; j < pair_num; ++j) {
-                    cout << "{\"examples\":[\n";
-                    for (auto k = 0; k < EXAMPLE_NUM; ++k) {
-                        const auto &example = examples.at(j * EXAMPLE_NUM + k);
-
-                        cout << "{\"input\":";
-                        output_input(example.input);
-                        cout << ",\"output\":";
-                        output_value(example.output);
-                        cout << "}";
-                        if (k != EXAMPLE_NUM - 1) {
-                            cout << ",";
-                        }
-                        cout << "\n";
-
-                    }
-                    cout << "],\n\"attribute\":";
-                    output_attribute(attribute);
-
+                    cout << "{\"input\":";
+                    output_input(example.input);
+                    cout << ",\"output\":";
+                    output_value(example.output);
                     cout << "}";
-                    if (cnt != x.programs.size() ||
-                        j != pair_num - 1 ||
-                        i != (p.second.size() - 1)) {
+                    if (k != EXAMPLE_NUM - 1) {
                         cout << ",";
                     }
-                    cout << "\n" << flush;
+                    cout << "\n";
+
                 }
+                cout << "],\n\"attribute\":";
+                output_attribute(attribute);
+
+                cout << "}";
+                if (cnt != x.programs.size() ||
+                    j != pair_num - 1) {
+                    cout << ",";
+                }
+                cout << "\n" << flush;
             }
         }
     } else {
