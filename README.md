@@ -70,12 +70,10 @@ b <- reverse a
 ---
 
 ### a. Dataset generation
-Generate a dataset (N=about 50000):
+Generate a dataset (N=about 200000):
 ```bash
-$ ./build/src/gen_dataset 3 50000 5 > dataset.json
+$ ./build/src/gen_dataset 3 200000 10 2>&1 > dataset.json | grep Progress
 ```
-
-NOTES: *It took over 10 hours on my laptop computer.*
 
 #### Dataset Format
 ```json
