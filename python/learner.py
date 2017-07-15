@@ -70,6 +70,8 @@ try:
     optimizer.setup(model)
     updater = training.StandardUpdater(train_iter, optimizer, device=gpu)
     trainer = training.Trainer(updater, (epoch, 'epoch'), out='result')
+    if os.path.isfile('/opt/ec2-job-scheduler/user/intermidiate'):
+        serializers.load_npz('/opt/ec2-job-scheduler/user/intermidiate', trainer)
 
     trainer.extend(extensions.Evaluator(test_iter, model, device=gpu))
     #trainer.extend(extensions.snapshot())
