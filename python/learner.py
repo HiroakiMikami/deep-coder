@@ -6,6 +6,7 @@ from chainer import Link, Chain, ChainList
 import chainer.functions as F
 import chainer.links as L
 from chainer.training import extensions
+from chainer import cuda
 import json
 import sys
 import traceback
@@ -47,6 +48,10 @@ l2 = [e for e in range(0, len(y)) if e % 100 == 0]
 train = Dataset([y[e] for e in l1])
 test = Dataset([y[e] for e in l2])
 
+gpu = None
+if len(sys.argv) >= 4:
+    gpu = int(sys.argv[3])
+
 try:
     train_iter = iterators.SerialIterator(train, batch_size=100, shuffle=True)
     test_iter = iterators.SerialIterator(test, batch_size=100, repeat=False, shuffle=False)
@@ -54,12 +59,12 @@ try:
     deepCoder = M.gen_model()
     model = Model(deepCoder)
     optimizer = optimizers.Adam()
-    optimizer.setup(model)
 
-    updater = training.StandardUpdater(train_iter, optimizer)
+    optimizer.setup(model)
+    updater = training.StandardUpdater(train_iter, optimizer, device=gpu)
     trainer = training.Trainer(updater, (50, 'epoch'), out='result')
 
-    trainer.extend(extensions.Evaluator(test_iter, model))
+    trainer.extend(extensions.Evaluator(test_iter, model, device=gpu))
     trainer.extend(extensions.LogReport())
     trainer.extend(extensions.PrintReport(['epoch', 'main/loss', 'validation/main/loss']))
     trainer.extend(extensions.ProgressBar())

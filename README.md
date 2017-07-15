@@ -105,8 +105,14 @@ $ ./build/src/gen_dataset 3 200000 10 2>&1 > dataset.json | grep Progress
 ```
 
 ### b. Learn attributes
+Use CPU:
 ```bash
 $ python3 ./python/learner.py dataset.json model.dat
+```
+
+Use GPU (`0` is a device id):
+```bash
+$ python3 ./python/learner.py dataset.json model.dat 0
 ```
 
 ### c. Program search
