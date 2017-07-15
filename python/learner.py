@@ -72,6 +72,8 @@ try:
     trainer = training.Trainer(updater, (epoch, 'epoch'), out='result')
 
     trainer.extend(extensions.Evaluator(test_iter, model, device=gpu))
+    #trainer.extend(extensions.snapshot())
+    trainer.extend(extensions.snapshot(filename='intermidiate'))
     trainer.extend(extensions.LogReport())
     trainer.extend(extensions.PrintReport(['epoch', 'main/loss', 'validation/main/loss']))
     trainer.extend(extensions.ProgressBar())
