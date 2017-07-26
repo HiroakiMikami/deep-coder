@@ -215,16 +215,16 @@ experimental::optional<Program> sort_and_add(size_t max_length, const Attribute 
         }
 
         auto f = (r.functions.size() >= funcs.size())
-                 ? 2
+                 ? 0
                  :attr.function_presence.at(funcs[r.functions.size()]);
         auto p = (r.predicates.size() >= predicates.size())
-                 ? 2
+                 ? 0
                  : attr.predicate_presence.at(predicates[r.predicates.size()]);
         auto o = (r.one_argument_lambda.size() >= one_arg.size())
-                 ? 2
+                 ? 0
                  : attr.one_argument_lambda_presence.at(one_arg[r.one_argument_lambda.size()]);
         auto t = (r.two_arguments_lambda.size() >= two_args.size())
-                 ? 2
+                 ? 0
                  : attr.two_arguments_lambda_presence.at(two_args[r.two_arguments_lambda.size()]);
         if (f >= p && f >= o && f >= t) {
             cout << "function " << " " << stringify(funcs[r.functions.size()]) << endl;
