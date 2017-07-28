@@ -78,7 +78,7 @@ void DatasetForOneInputType::insert(const Program &p, const vector<Example> &exa
         }
 
         if (is_equivalent) {
-            cerr << "Equivalent\n" << p << candidate.first << endl;
+            //cerr << "Equivalent\n" << p << candidate.first << endl;
 
             if (candidate.first.size() > p.size()) {
                 indexes_to_be_deleted.push_back(i);
@@ -152,6 +152,8 @@ experimental::optional<Dataset> generate_dataset(
                                                   r, calc_info,
                                                   [&dataset_size, &example_per_program, &d, &data, &id](const Program &p,
                                                                                                    const int &i) -> bool {
+                                                      std::this_thread::yield();
+
                                                       // Check program
                                                       //// Unused program
                                                       if (has_unused_variable(p)) {
