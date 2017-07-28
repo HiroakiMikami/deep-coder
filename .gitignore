@@ -22,6 +22,7 @@
 !README.md
 !python/
 !scripts/
+!scripts/do_test
 !model/
 !model/model.dat
 !dataset/
