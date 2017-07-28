@@ -5,6 +5,7 @@
 #include "dsl/utils.h"
 #include "dataset-generator.h"
 #include "enumerator.h"
+#include "random-enumerator.h"
 
 using namespace std;
 using namespace dsl;
@@ -226,6 +227,134 @@ experimental::optional<Dataset> generate_dataset(
                 }
                 return ;
             }
+        }
+    });
+
+    // Wait for all futures
+    Dataset dataset;
+    for (auto &d: async_dataset) {
+        auto x = d->dataset.get();
+        dataset.programs.reserve(x.int_output_programs.size() + x.list_output_programs.size() + dataset.programs.size());
+        for (auto &y: x.int_output_programs) {
+            dataset.programs.push_back(y);
+        }
+        for (auto &y: x.list_output_programs) {
+            dataset.programs.push_back(y);
+        }
+        dataset.size += x.size;
+    }
+    is_finished = true;
+    monitor.join();
+
+    return dataset;
+}
+
+
+experimental::optional<Dataset> generate_random_dataset(
+        size_t min_length, size_t max_length, size_t dataset_size, size_t example_per_program) {
+    auto functions = all_functions;
+    functions.erase(find(functions.begin(), functions.end(), Function::ReadInt));
+    functions.erase(find(functions.begin(), functions.end(), Function::ReadList));
+
+    // Enumerate read_{list, int}
+    Restriction r_for_read;
+    r_for_read.min_length = 1;
+    r_for_read.max_length = max_length;
+    r_for_read.functions = { Function::ReadInt, Function::ReadList };
+
+    Restriction r;
+    r.min_length = min_length;
+    r.max_length = max_length;
+    r.functions = functions;
+    r.predicates = all_predicate_lambdas;
+    r.one_argument_lambda = all_one_argument_lambdas;
+    r.two_arguments_lambda = all_two_arguments_lambdas;
+
+    auto calc_info = [](const Program& p, const int &i) { return i; };
+
+    vector<unique_ptr<AsyncDataset>> async_dataset;
+
+    enumerate(
+            r_for_read, calc_info,
+            [&r, &calc_info, &dataset_size, &min_length, &max_length, &example_per_program, &async_dataset](const Program &p, const int &i) -> bool {
+                r.min_length = min_length;
+                r.max_length = max_length;
+                async_dataset.push_back(make_unique<AsyncDataset>());
+                auto &data = *async_dataset.back();
+                auto id = async_dataset.size();
+                auto tenv = generate_type_environment(p).value();
+                data.dataset = std::async(std::launch::async,
+                                          [r, calc_info, dataset_size, example_per_program, tenv, p, i, id, &data]() {
+                                              DatasetForOneInputType d;
+                                              while (true) {
+                                                  std::this_thread::yield();
+                                                  if (data.abort.load()) {
+                                                      break ;
+                                                  }
+                                                  try {
+                                                      auto p2 = generate_random_program(r, p, tenv);
+                                                      if (!p2) {
+                                                          continue;
+                                                      }
+                                                      auto program = p2.value();
+
+                                                      // Check program
+                                                      //// Unused program
+                                                      if (has_unused_variable(program)) {
+                                                          continue;
+                                                      }
+
+                                                      // Generate example
+                                                      auto examples_ = generate_examples(program, example_per_program);
+
+                                                      if (!examples_) {
+                                                          cerr << "Fail to generate examples" << endl;
+                                                          continue;
+                                                      }
+
+                                                      auto examples = examples_.value();
+                                                      d.insert(program, examples);
+
+                                                      data.size.store(d.size);
+                                                  } catch (std::exception e) {
+                                                  }
+                                              }
+                                              return d;
+                                          });
+                return true;
+            },
+            0
+    );
+
+    // Run monitor thread
+    atomic<bool> is_finished;
+    is_finished = false;
+    auto monitor = thread([&async_dataset, &is_finished, &dataset_size]() {
+        size_t size_old = 0;
+        while (true) {
+            this_thread::sleep_for(chrono::seconds(30));
+            if (is_finished) {
+                return ;
+            }
+
+            size_t size = 0;
+            for (auto &d: async_dataset) {
+                size += d->size.load();
+            }
+            cerr << "Progress: " << size;
+            if (dataset_size != 0) {
+                cerr << " / " << dataset_size;
+            }
+
+            cerr << endl;
+            if (size == size_old || (dataset_size != 0 && size >= dataset_size)) {
+                // Finish all enumeration
+                for (auto &d: async_dataset) {
+                    d->abort.store(true);
+                }
+                return ;
+            }
+            size_old = size;
         }
     });
 
