@@ -259,7 +259,7 @@ experimental::optional<Dataset> generate_random_dataset(
     // Enumerate read_{list, int}
     Restriction r_for_read;
     r_for_read.min_length = 1;
-    r_for_read.max_length = max_length;
+    r_for_read.max_length = 3; // TODO
     r_for_read.functions = { Function::ReadInt, Function::ReadList };
 
     Restriction r;
