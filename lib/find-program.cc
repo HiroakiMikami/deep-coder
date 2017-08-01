@@ -197,28 +197,15 @@ experimental::optional<Program> sort_and_add(size_t max_length, const Attribute 
         initial_env.push_back(e);
     }
 
-
-    unordered_set<string> checked;
-    auto to_str = [](const Program &p) {
-        ostringstream oss;
-        oss << p;
-        return oss.str();
-    };
-
     experimental::optional<Program> program_opt = {};
 
-    r.functions.push_back(funcs[0]);
-    cout << "function  " << stringify(funcs[0]) << endl;
+    cout << "function  " << stringify(funcs_queue.front()) << endl;
+    r.functions.push_back(funcs_queue.front());
+    funcs_queue.pop();
     while (true) {
         enumerate(
                 r, mk_calc_info(),
                 [&](const Program &p, const tuple<int, bool, vector<Environment>> &info) {
-                    auto str = to_str(p);
-                    if (checked.find(str) != checked.end()) {
-                        // already checked
-                        return true;
-                    }
-
                     auto index = get<0>(info);
                     auto isValid = get<1>(info);
                     auto env = get<2>(info);
@@ -236,8 +223,6 @@ experimental::optional<Program> sort_and_add(size_t max_length, const Attribute 
                             satisfy = false;
                         }
                     }
-
-                    checked.insert(str);
 
                     if (satisfy) {
                         program_opt = p;
