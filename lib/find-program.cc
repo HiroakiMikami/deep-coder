@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <iostream>
 #include <cmath>
+#include <queue>
 #include <sstream>
 #include "dsl/utils.h"
 #include "find-program.h"
@@ -145,10 +146,19 @@ experimental::optional<Program> sort_and_add(size_t max_length, const Attribute 
         return attr.function_presence.at(f1) > attr.function_presence.at(f2);
     });
 
+    auto funcs_queue = queue<Function>();
+    for (auto f: funcs) {
+        funcs_queue.push(f);
+    }
+
     auto predicates = all_predicate_lambdas;
     sort(predicates.begin(), predicates.end(), [&](auto l1, auto l2) {
         return attr.predicate_presence.at(l1) > attr.predicate_presence.at(l2);
     });
+    auto predicates_queue = queue<PredicateLambda>();
+    for (auto p: predicates) {
+        predicates_queue.push(p);
+    }
     auto one_arg = all_one_argument_lambdas;
     auto two_args = all_two_arguments_lambdas;
     sort(one_arg.begin(), one_arg.end(), [&](auto l1, auto l2) {
@@ -157,6 +167,14 @@ experimental::optional<Program> sort_and_add(size_t max_length, const Attribute 
     sort(two_args.begin(), two_args.end(), [&](auto l1, auto l2) {
         return attr.two_arguments_lambda_presence.at(l1) > attr.two_arguments_lambda_presence.at(l2);
     });
+    auto one_arg_queue = queue<OneArgumentLambda>();
+    for (auto f: one_arg) {
+        one_arg_queue.push(f);
+    }
+    auto two_args_queue = queue<TwoArgumentsLambda>();
+    for (auto f: two_args) {
+        two_args_queue.push(f);
+    }
 
     Restriction r;
     r.min_length = read_input.size() + 1;
@@ -190,8 +208,8 @@ experimental::optional<Program> sort_and_add(size_t max_length, const Attribute 
     experimental::optional<Program> program_opt = {};
 
     r.functions.push_back(funcs[0]);
-    cout << "function " << stringify(funcs[0]) << endl;
-    while (r.functions.size() != funcs.size()) {
+    cout << "function  " << stringify(funcs[0]) << endl;
+    while (true) {
         enumerate(
                 r, mk_calc_info(),
                 [&](const Program &p, const tuple<int, bool, vector<Environment>> &info) {
@@ -233,34 +251,32 @@ experimental::optional<Program> sort_and_add(size_t max_length, const Attribute 
             break;
         }
 
-        auto f = (r.functions.size() >= funcs.size())
-                 ? 0
-                 :attr.function_presence.at(funcs[r.functions.size()]);
-        auto p = (r.predicates.size() >= predicates.size())
-                 ? 0
-                 : attr.predicate_presence.at(predicates[r.predicates.size()]);
-        auto o = (r.one_argument_lambda.size() >= one_arg.size())
-                 ? 0
-                 : attr.one_argument_lambda_presence.at(one_arg[r.one_argument_lambda.size()]);
-        auto t = (r.two_arguments_lambda.size() >= two_args.size())
-                 ? 0
-                 : attr.two_arguments_lambda_presence.at(two_args[r.two_arguments_lambda.size()]);
-        if (f >= p && f >= o && f >= t) {
-            cout << "function " << " " << stringify(funcs[r.functions.size()]) << endl;
-            r.functions.push_back(funcs[r.functions.size()]);
-        } else if (p >= o && p >= t) {
-            cout << "predicate" << " " << stringify(predicates[r.predicates.size()]) << endl;
-            r.predicates.push_back(predicates[r.predicates.size()]);
-        } else if (o >= t) {
-            cout << "one-arg  " << " " << stringify(one_arg[r.one_argument_lambda.size()]) << endl;
-            r.one_argument_lambda.push_back(one_arg[r.one_argument_lambda.size()]);
-        } else {
-            cout << "two-args " << " " << stringify(two_args[r.two_arguments_lambda.size()]) << endl;
-            r.two_arguments_lambda.push_back(two_args[r.two_arguments_lambda.size()]);
+        if (funcs_queue.empty() && predicates_queue.empty() && one_arg_queue.empty() && two_args_queue.empty()) {
+            break;
         }
 
+        auto f = (funcs_queue.empty()) ? 0 : attr.function_presence.at(funcs_queue.front());
+        auto p = (predicates_queue.empty()) ? 0 : attr.predicate_presence.at(predicates_queue.front());
+        auto o = (one_arg_queue.empty()) ? 0 : attr.one_argument_lambda_presence.at(one_arg_queue.front());
+        auto t = (two_args_queue.empty()) ? 0 : attr.two_arguments_lambda_presence.at(two_args_queue.front());
+        if (f >= p && f >= o && f >= t) {
+            cout << "function " << " " << stringify(funcs_queue.front()) << endl;
+            r.functions.push_back(funcs_queue.front());
+            funcs_queue.pop();
+        } else if (p >= o && p >= t) {
+            cout << "predicate" << " " << stringify(predicates_queue.front()) << endl;
+            r.predicates.push_back(predicates_queue.front());
+            predicates_queue.pop();
+        } else if (o >= t) {
+            cout << "one-arg  " << " " << stringify(one_arg_queue.front()) << endl;
+            r.one_argument_lambda.push_back(one_arg_queue.front());
+            one_arg_queue.pop();
+        } else {
+            cout << "two-args " << " " << stringify(two_args_queue.front()) << endl;
+            r.two_arguments_lambda.push_back(two_args_queue.front());
+            two_args_queue.pop();
+        }
     }
-
 
     return program_opt;
 }
