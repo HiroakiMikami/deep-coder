@@ -1,5 +1,8 @@
 #include "dsl/ast.h"
 #include "attribute.h"
+#include "dsl/utils.h"
+#include <iostream>
+using namespace std;
 
 using namespace dsl;
 

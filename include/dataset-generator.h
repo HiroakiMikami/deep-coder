@@ -50,3 +50,4 @@ struct Dataset {
 bool has_unused_variable(const dsl::Program &p);
 
 std::experimental::optional<Dataset> generate_dataset(size_t min_length, size_t max_length, size_t dataset_size, size_t example_per_program = EXAMPLE_NUM);
+std::experimental::optional<Dataset> generate_random_dataset(size_t min_length, size_t max_length, size_t dataset_size, size_t example_per_program = EXAMPLE_NUM);

@@ -124,6 +124,7 @@ int main(int argc, char **argv) {
         cout << p.value() << endl;
         return 0;
     } else {
+        cout << "not found" << endl;
         return 1;
     }
 }

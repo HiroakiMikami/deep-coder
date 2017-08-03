@@ -1,0 +1,42 @@
+#! /bin/sh
+
+model=$1
+example_dir=$2
+output_dir=$3
+timeout_time=$4 #sec
+max_length=$5
+index=$6
+
+exec_test() {
+    (
+        bash -c "/usr/bin/time -f '%U'\
+            timeout ${timeout_time} \
+            $(dirname $0)/gen_program.sh ${model} ${example_dir}/$1-example ${max_length} $2" \
+            2>&1 > /dev/null
+        result=$?
+        if [ $result -eq 124 ]
+        then
+            echo ${timeout_time}
+        elif [ $result -eq 1 ]
+        then
+            echo "not found"
+        elif [ $result -ne 0 ]
+        then
+            echo "error"
+        fi
+    ) | tail -1
+}
+
+
+if [ -e "${example_dir}/${index}-example" ]
+then
+    echo "${index}: Start"
+    time_dfs=$(exec_test $index dfs)
+    echo "${index}: DFS ${time_dfs}"
+    time_sae=$(exec_test $index)
+    echo "${index}: SAE ${time_sae}"
+    time_none=$(exec_test $index none)
+    echo "${index}: None ${time_none}"
+    echo ${index} ${time_none} ${time_sae} ${time_dfs} > ${output_dir}/result-${index}
+    echo "${index}: Finish"
+fi

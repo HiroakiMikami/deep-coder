@@ -91,13 +91,13 @@ class DeepCoder(Chain):
         return x2
 
 input_num = 3
-embed_length = 8 
+embed_length =20 
 integer_min = -100
 integer_max = 100
 integer_range = integer_max - integer_min + 1 #integerの個数
 example_num = 5
 list_length = 10
-hidden_layer_width = 128 
+hidden_layer_width = 256 
 attribute_width = 34
 
 def gen_model():
