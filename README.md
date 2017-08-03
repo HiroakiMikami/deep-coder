@@ -28,9 +28,9 @@ $ cd ../
 ---
 ```bash
 # Search program using a neural network model
-$ ./scripts/gen_program.sh model/model.dat examples/dot.json 2
-head    last    take    drop    access  minimum maximum reverse sort    sum     map     filter  count   zip_with        scanl1  >0      <0      %2 == 0 %2 == 1 +1      -1   *(-1)    *2      *3      *4      /2      /3      /4      **2     +       -       *       MIN     MAX # The probability of each functions
-0.342   0.3     0.00922 0.37    0.492   0.212   0.514   0.192   0.0332  0.109   8.05e-06        0.000323        9.78e-05        0.00831 0.000241        0.00212 0.00347 5.23e-05      2.68e-06        0.00572 0.000305        0.00144 0.00061 0.000862        7.36e-05        0.00197 1.26e-05        0.0703  0.0371  0.84    0.0163  0.145   6.85e-07     6.85e-07 6.85e-07
+$ ./scripts/gen_program.sh model/model.dat examples/dot.json 2 dfs
+head    last    take    drop    access  minimum maximum reverse sort    sum     map     filter  count   zip_with        scanl1  >0     <0       %2 == 0 %2 == 1 +1      -1      *(-1)   *2      *3      *4      /2      /3      /4      **2     +       -       *       MIN    MAX
+0.00273 0.0338  8.35e-05        6.77e-06        0.0145  2.76e-05        0.179   0.0505  0.0692  0.981   2.61e-05        0       0      1.44e-05 0       0       0       4.17e-07        0       0       0       0       2.86e-06        0       0       0       0       0.001570.000216 1       0       0.000307        0       0       0 # The probability of each functions
 --- # Program
 a <- read_list
 b <- read_list
@@ -70,9 +70,9 @@ b <- reverse a
 ---
 
 ### a. Dataset generation
-Generate a dataset (N=about 200000):
+Generate a dataset (N=about 8000000):
 ```bash
-$ ./build/src/gen_dataset 3 200000 10 2>&1 > dataset.json | grep Progress
+$ ./build/src/gen_dataset 4 8000000 400 2>&1 > dataset.json
 ```
 
 #### Dataset Format
@@ -138,11 +138,6 @@ b <- reverse a
     }
 ]
 ```
-
-TODO
----
-* Over-fitting if program length >= 2
-* Fasten dataset generation
 
 Difference from the original code
 ---
