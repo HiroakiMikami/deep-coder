@@ -18,7 +18,7 @@ TEST(GenerateIntegerTest, MinMaxTest) {
 
     c.max = -20;
     auto x = generate_integer(c);
-    EXPECT_FALSE(x);
+    EXPECT_FALSE(static_cast<bool>(x));
 }
 
 TEST(GenerateIntegerTest, SignTest) {
@@ -50,7 +50,7 @@ TEST(GenerateIntegerTest, SignTest) {
     c.min = -100;
     c.max = -1;
     auto x = generate_integer(c);
-    EXPECT_FALSE(x);
+    EXPECT_FALSE(static_cast<bool>(x));
 }
 
 TEST(GenerateIntegerTest, IsEvenTest) {
@@ -82,14 +82,14 @@ TEST(GenerateListTest, MinMaxLengthTest) {
 
     for (auto i = 0; i < 100; i++) {
         auto x = generate_list(c);
-        EXPECT_TRUE(x);
+        EXPECT_TRUE(static_cast<bool>(x));
         EXPECT_TRUE(x.value().size() >= 10);
         EXPECT_TRUE(x.value().size() <= 20);
     }
 
     c.max_length = 5;
     auto x = generate_list(c);
-    EXPECT_FALSE(x);
+    EXPECT_FALSE(static_cast<bool>(x));
 }
 
 TEST(GenerateListTest, IntegerConstraintTest) {
@@ -102,7 +102,7 @@ TEST(GenerateListTest, IntegerConstraintTest) {
 
     for (auto i = 0; i < 100; i++) {
         auto x = generate_list(c);
-        EXPECT_TRUE(x);
+        EXPECT_TRUE(static_cast<bool>(x));
         for (const auto &i: x.value()) {
             EXPECT_TRUE(i >= 5);
             EXPECT_TRUE(i <= 10);
@@ -115,7 +115,7 @@ TEST(GenerateListTest, IntegerConstraintTest) {
     c.sign = {Sign::Positive};
 
     auto x = generate_list(c);
-    EXPECT_FALSE(x);
+    EXPECT_FALSE(static_cast<bool>(x));
 }
 
 TEST(AnalyzeTest, SimpleAnalyzeTest) {
@@ -127,13 +127,13 @@ TEST(AnalyzeTest, SimpleAnalyzeTest) {
     };
 
     auto c = analyze(p);
-    EXPECT_TRUE(c);
+    EXPECT_TRUE(static_cast<bool>(c));
 
     EXPECT_EQ(2, c.value().inputs.size());
     EXPECT_EQ(0, c.value().inputs[0]);
     EXPECT_EQ(1, c.value().inputs[1]);
 
-    EXPECT_TRUE(c.value().integer_variables.find(1)->second.min);
+    EXPECT_TRUE(static_cast<bool>(c.value().integer_variables.find(1)->second.min));
     EXPECT_EQ(0, c.value().integer_variables.find(1)->second.min.value());
 }
 
@@ -149,7 +149,7 @@ TEST(GenerateExamplesTest, SimpleGenerationTest) {
     for (auto i = 0; i < 100; i++) {
         auto examples = generate_examples(p);
 
-        EXPECT_TRUE(examples);
+        EXPECT_TRUE(static_cast<bool>(examples));
         EXPECT_TRUE(examples.value().size() > 0);
         for (auto &example: examples.value()) {
             EXPECT_EQ(eval(p, example.input), example.output);

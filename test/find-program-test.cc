@@ -12,7 +12,7 @@ TEST(DfsTest, FindProgramTest1) {
 
     Attribute attr({Statement(0, Function::ReadList, {}), Statement(1, Function::Minimum, {0})});
     auto p = dfs(2, attr, examples);
-    EXPECT_TRUE(p);
+    EXPECT_TRUE(static_cast<bool>(p));
     EXPECT_EQ(2, p.value().size());
     EXPECT_EQ(1, p.value()[1].variable);
     EXPECT_EQ(Function::Minimum, p.value()[1].function);
@@ -29,7 +29,7 @@ TEST(DfsTest, FindProgramTest2) {
                            Statement(1, Function::Map, {OneArgumentLambda::Pow2, 0})
                    });
     auto p = dfs(2, attr, examples);
-    EXPECT_TRUE(p);
+    EXPECT_TRUE(static_cast<bool>(p));
     EXPECT_EQ(2, p.value().size());
     EXPECT_EQ(1, p.value()[1].variable);
     EXPECT_EQ(Function::Map, p.value()[1].function);
@@ -48,7 +48,7 @@ TEST(DfsTest, FindProgramTest3) {
                            Statement(2, Function::Maximum, {1})
                    });
     auto p = dfs(2, attr, examples);
-    EXPECT_TRUE(p);
+    EXPECT_TRUE(static_cast<bool>(p));
     EXPECT_EQ(3, p.value().size());
     EXPECT_EQ(1, p.value()[1].variable);
     EXPECT_EQ(Function::Map, p.value()[1].function);
@@ -68,7 +68,7 @@ TEST(SortAndAddTest, FindProgramTest1) {
 
     Attribute attr({Statement(0, Function::ReadList, {}), Statement(1, Function::Minimum, {0})});
     auto p = sort_and_add(2, attr, examples);
-    EXPECT_TRUE(p);
+    EXPECT_TRUE(static_cast<bool>(p));
     EXPECT_EQ(2, p.value().size());
     EXPECT_EQ(1, p.value()[1].variable);
     EXPECT_EQ(Function::Minimum, p.value()[1].function);
@@ -85,7 +85,7 @@ TEST(SortAndAddTest, FindProgramTest2) {
                            Statement(1, Function::Map, {OneArgumentLambda::Pow2, 0})
                    });
     auto p = sort_and_add(2, attr, examples);
-    EXPECT_TRUE(p);
+    EXPECT_TRUE(static_cast<bool>(p));
     EXPECT_EQ(2, p.value().size());
     EXPECT_EQ(1, p.value()[1].variable);
     EXPECT_EQ(Function::Map, p.value()[1].function);
@@ -104,7 +104,7 @@ TEST(SortAndAddTest, FindProgramTest3) {
                            Statement(2, Function::Maximum, {1})
                    });
     auto p = sort_and_add(2, attr, examples);
-    EXPECT_TRUE(p);
+    EXPECT_TRUE(static_cast<bool>(p));
     EXPECT_EQ(3, p.value().size());
     EXPECT_EQ(1, p.value()[1].variable);
     EXPECT_EQ(Function::Map, p.value()[1].function);

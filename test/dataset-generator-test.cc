@@ -81,7 +81,7 @@ TEST(DatasetForOneInputTypeTest, InsertTest) {
 
 TEST(GenerateDatasetTest, SimpleTest) {
     auto x = generate_dataset(1, 2, 20);
-    EXPECT_TRUE(x);
+    EXPECT_TRUE(static_cast<bool>(x));
 
     EXPECT_TRUE(x.value().size >= 10);
 
