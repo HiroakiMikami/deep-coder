@@ -87,7 +87,7 @@ Attribute::operator std::vector<double>() const {
     for (const auto &elem: this->function_presence) {
         retval[to_size_t(elem.first)] = elem.second;
     }
-    total += this->function_presence.size() - 2;
+    total += this->function_presence.size();
 
     for (const auto &elem: this->predicate_presence) {
         retval[to_size_t(elem.first) + total] = elem.second;

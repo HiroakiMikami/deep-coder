@@ -58,9 +58,11 @@ TEST(AttributeTest, SerializeTest) {
 
     EXPECT_EQ(1, x[0]);
     EXPECT_EQ(0, x[1]);
-    EXPECT_EQ(1, x[all_functions.size()]);
-}
+    EXPECT_EQ(1, x[all_functions.size() - 2]);
 
-TEST(AttributeTest, DeserializeTest) {
-
+    Attribute a2(x);
+    EXPECT_EQ(a.function_presence, a2.function_presence);
+    EXPECT_EQ(a.one_argument_lambda_presence, a2.one_argument_lambda_presence);
+    EXPECT_EQ(a.two_arguments_lambda_presence, a2.two_arguments_lambda_presence);
+    EXPECT_EQ(a.predicate_presence, a2.predicate_presence);
 }
