@@ -3,3 +3,5 @@
 !/.gitignore
 !/DeepCoder_Utils
 !/requirements.txt
+!/src/*.py
+!/test/*.py
