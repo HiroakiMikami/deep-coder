@@ -2,8 +2,7 @@ import dataclasses
 from enum import Enum
 from typing import List, Tuple, TypeVar
 import copy
-import importlib
-generate_io_samples = importlib.import_module("DeepCoder_Utils.generate_io_samples")
+from .deepcoder_utils import generate_io_samples
 Function = generate_io_samples.Function
 
 class Type(Enum):
