@@ -1,6 +1,7 @@
 import dataclasses
 from enum import Enum
 from typing import List, Tuple, TypeVar
+import copy
 import importlib
 generate_io_samples = importlib.import_module("DeepCoder_Utils.generate_io_samples")
 Function = generate_io_samples.Function
@@ -96,3 +97,32 @@ def to_string(program: Program) -> str:
         code += "{} <- {} {}\n".format(id_to_name(v.id), exp.function.src, " ".join(map(lambda x: id_to_name(x.id), exp.arguments)))
 
     return code
+
+def clone(program: Program) -> Program:
+    """
+    Return the copy of the program
+    The argument and the return value will not share any objects.
+    Thus we can freely modify the return value.
+
+    Parameters
+    ----------
+    program : Program
+        The program to be cloned
+
+    Returns
+    -------
+    cloned_program : Program
+        The program that is same as `program`
+    """
+
+    inputs = []
+    body = []
+    for input in program.inputs:
+        inputs.append(copy.deepcopy(input))
+    for var, exp in program.body:
+        args = []
+        for arg in exp.arguments:
+            args.append(copy.deepcopy(arg))
+        body.append((copy.deepcopy(var), Expression(exp.function, args)))
+
+    return Program(inputs, body)
