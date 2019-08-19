@@ -120,6 +120,7 @@ def generate_dataset(spec: DatasetSpec, destination: BinaryIO, simplify: Union[N
         return True
 
     dataset = {} # Signature -> (string -> IntermidiateEntry)
+    invalid_program = set()
     # Enumerate source code
     for program in source_code(spec.functions, spec.min_program_length, spec.max_program_length):
         program = simplify_and_normalize(program) # Simplify the program
@@ -129,9 +130,12 @@ def generate_dataset(spec: DatasetSpec, destination: BinaryIO, simplify: Union[N
         s = to_string(program)[:-1] # last newline should be removed to compile source code
 
         # Compile the source code
+        if s in invalid_program:
+            continue
         p = generate_io_samples.compile(s, V=spec.value_range, L=spec.max_list_length)
         if p is None:
             # Compilation is failed
+            invalid_program.add(s)
             continue
 
         signature = signature_to_string((tuple(p.ins), p.out))
