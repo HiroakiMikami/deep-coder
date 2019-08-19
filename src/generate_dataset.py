@@ -1,7 +1,8 @@
 import dataclasses
 import copy
 import pickle
-from typing import List, Tuple, Union, Dict, Callable, BinaryIO
+import os
+from typing import List, Tuple, Union, Dict, Callable
 from .deepcoder_utils import generate_io_samples
 from .dsl import Function, Program, to_string, clone
 from .source_code_simplifier import normalize
@@ -37,11 +38,10 @@ class Dataset:
 
     Attributes
     ----------
-    entries : dict from string to list of Entry
+    entries : list of Entry
         The entries of this dataset.
-        The strings of keys represent the type signature of the program.
     """
-    entries: Dict[str, List[Entry]]
+    entries: List[Entry]
 
 @dataclasses.dataclass
 class DatasetSpec:
@@ -67,7 +67,7 @@ class DatasetSpec:
 
 SimplifyFunction = Callable[[Program], Program]
 
-def generate_dataset(spec: DatasetSpec, destination: BinaryIO, simplify: Union[None, SimplifyFunction]=None):
+def generate_dataset(spec: DatasetSpec, destinationDir: str, simplify: Union[None, SimplifyFunction]=None):
     """
     Generate dataset to the file
 
@@ -75,7 +75,7 @@ def generate_dataset(spec: DatasetSpec, destination: BinaryIO, simplify: Union[N
     ----------
     spec : DatasetSpec
         The specification of generated dataset
-    destination : file object
+    destinationDir : str
         The destination of the dataset file
     simplify : function or None
         The function to simplify the source code
@@ -105,7 +105,11 @@ def generate_dataset(spec: DatasetSpec, destination: BinaryIO, simplify: Union[N
         return program
 
     def signature_to_string(signature):
-        return "{}".format(signature)
+        input, output = signature
+        instr = ",".join(map(lambda x: "int" if x == int else "intlist", input))
+        outstr = "int" if output == int else "intlist"
+        retval = "{}-{}".format(instr, outstr)
+        return retval
 
     def is_identical(entry1: Entry, entry2: Entry) -> bool:
         """
@@ -177,17 +181,16 @@ def generate_dataset(spec: DatasetSpec, destination: BinaryIO, simplify: Union[N
             dataset[signature][s] = entry
         for r in removed:
             del dataset[signature][r]
-    
-    # Create dataset instance
-    d = Dataset(dict())
+
     for signature, entries in dataset.items():
-        d.entries[signature] = []
+        # Create dataset instance
+        d = Dataset([])
         for entry in entries.values():
-            d.entries[signature].append(Entry(
+            d.entries.append(Entry(
                 entry.source_code,
                 entry.examples,
                 entry.attributes
             ))
-
-    # Dump the dataset to the file
-    pickle.dump(d, destination)
+        with open(os.path.join(destinationDir, "{}.pickle".format(signature)), "wb") as f:
+            # Dump the dataset to the file
+            pickle.dump(d, f)

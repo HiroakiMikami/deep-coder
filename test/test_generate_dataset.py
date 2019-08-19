@@ -1,6 +1,7 @@
 import unittest
 import tempfile
 import pickle
+import os
 from src.deepcoder_utils import generate_io_samples
 from src.dsl import Function, Type, Variable, Expression, Program, to_string, clone
 from src.generate_dataset import generate_dataset, DatasetSpec
@@ -13,40 +14,41 @@ class Test_generate_dataset(unittest.TestCase):
         TAKE = [f for f in LINQ if f.src == "TAKE"][0]
 
         # Generate the program with the length of 1
-        with tempfile.TemporaryFile() as fp:
-            generate_dataset(DatasetSpec([HEAD, TAKE], 50, 20, 5, 1, 1), fp)
-            fp.seek(0)
-            dataset = pickle.load(fp)
+        with tempfile.TemporaryDirectory() as name:
+            generate_dataset(DatasetSpec([HEAD, TAKE], 50, 20, 5, 1, 1), name)
             # Check the dataset
             srcs = set()
-            for entries in dataset.entries.values():
-                for entry in entries:
-                    srcs.add(entry.source_code)
-                    p = generate_io_samples.compile(entry.source_code, 50, 5)
-                    self.assertNotEqual(None, p)
-                    for example in entry.examples:
-                        output = p.fun(example[0])
-                        self.assertEqual(output, example[1])
+            for p in os.listdir(name):
+                with open(os.path.join(name, p), "rb") as fp:
+                    dataset = pickle.load(fp)
+                    for entry in dataset.entries:
+                        srcs.add(entry.source_code)
+                        p = generate_io_samples.compile(entry.source_code, 50, 5)
+                        self.assertNotEqual(None, p)
+                        for example in entry.examples:
+                            output = p.fun(example[0])
+                            self.assertEqual(output, example[1])
             self.assertEqual(set(["a <- int\nb <- [int]\nc <- TAKE a b", "a <- [int]\nb <- HEAD a"]), srcs)
 
         # Generate the program with the length of 2
-        with tempfile.TemporaryFile() as fp:
+        with tempfile.TemporaryDirectory() as name:
             def simplify(program):
                 program = remove_redundant_variables(program)
                 return program
-            generate_dataset(DatasetSpec([HEAD, TAKE], 50, 20, 5, 2, 2), fp, simplify=simplify)
-            fp.seek(0)
-            dataset = pickle.load(fp)
+            generate_dataset(DatasetSpec([HEAD, TAKE], 50, 20, 5, 2, 2), name, simplify=simplify)
+
             # Check the dataset
             srcs = set()
-            for entries in dataset.entries.values():
-                for entry in entries:
-                    srcs.add(entry.source_code)
-                    p = generate_io_samples.compile(entry.source_code, 50, 5)
-                    self.assertNotEqual(None, p)
-                    for example in entry.examples:
-                        output = p.fun(example[0])
-                        self.assertEqual(output, example[1])
+            for p in os.listdir(name):
+                with open(os.path.join(name, p), "rb") as fp:
+                    dataset = pickle.load(fp)
+                    for entry in dataset.entries:
+                        srcs.add(entry.source_code)
+                        p = generate_io_samples.compile(entry.source_code, 50, 5)
+                        self.assertNotEqual(None, p)
+                        for example in entry.examples:
+                            output = p.fun(example[0])
+                            self.assertEqual(output, example[1])
             self.assertEqual(set([
                 "a <- [int]\nb <- HEAD a\nc <- TAKE b a",
                 "a <- int\nb <- [int]\nc <- TAKE a b\nd <- TAKE a c",
