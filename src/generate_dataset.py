@@ -133,10 +133,10 @@ def worker(functions: List[Function], spec: DatasetSpec, destinationDir: str, si
                 if len(entry.source_code.split("\n")) >= len(entry2.source_code.split("\n")):
                     # This entry should be pruned
                     add_s = False
-                    break
                 else:
                     # entry2 should be removed
                     removed.add(s2)
+                break
         if add_s:
             dataset[code] = entry
         for r in removed:
