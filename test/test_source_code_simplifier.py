@@ -5,7 +5,7 @@ from src.source_code_simplifier import normalize, remove_redundant_variables, re
 
 class Test_source_code_simplifier(unittest.TestCase):
     def test_normalize(self):
-        F = Function("FUNC", [int, [int]], None, None)
+        F = Function("FUNC", ([Type.Int], Type.IntList))
         p = Program([Variable(1, Type.Int), Variable(0, Type.IntList)], [])
         p = normalize(p)
         self.assertEqual(
@@ -21,7 +21,7 @@ class Test_source_code_simplifier(unittest.TestCase):
         )
 
     def test_remove_redundant_variables(self):
-        F = Function("FUNC", [int, [int]], None, None)
+        F = Function("FUNC", ([Type.Int], Type.IntList))
         p = Program([Variable(0, Type.Int), Variable(1, Type.IntList)], [])
         p = remove_redundant_variables(p)
         self.assertEqual(p, Program([], []))
@@ -41,9 +41,9 @@ class Test_source_code_simplifier(unittest.TestCase):
         )
 
     def test_remove_redundant_expressions(self):
-        F = Function("F", [[int], [int]], None, None)
-        SORT = Function("SORT", [[int], [int]], None, None)
-        REVERSE = Function("REVERSE", [[int], [int]], None, None)
+        F = Function("F", ([Type.IntList], Type.IntList))
+        SORT = Function("SORT", ([Type.IntList], Type.IntList))
+        REVERSE = Function("REVERSE", ([Type.IntList], Type.IntList))
 
         p = Program([Variable(0, Type.IntList)], [(Variable(1, Type.Int), Expression(F, [Variable(0, Type.IntList)]))])
         p = remove_redundant_expressions(p)
@@ -83,14 +83,15 @@ class Test_source_code_simplifier(unittest.TestCase):
         ]))
 
     def test_remove_dependency_between_variables(self):
-        F = Function("F", [[int], [int]], None, None)
-        SORT = Function("SORT", [[int], [int]], None, None)
-        REVERSE = Function("REVERSE", [[int], [int]], None, None)
-        MAXIMUM = Function("MAXIMUM", [[int], int], None, None)
-        MINIMUM = Function("MINIMUM", [[int], int], None, None)
-        SUM = Function("SUM", [[int], int], None, None)
-        HEAD = Function("HEAD", [[int], int], None, None)
-        LAST = Function("LAST", [[int], int], None, None)
+        F = Function("F", ([Type.IntList], Type.IntList))
+        SORT = Function("SORT", ([Type.IntList], Type.IntList))
+        REVERSE = Function("REVERSE", ([Type.IntList], Type.IntList))
+        MAXIMUM = Function("MAXIMUM", ([Type.IntList], Type.Int))
+        MINIMUM = Function("MINIMUM", ([Type.IntList], Type.Int))
+        SUM = Function("SUM", ([Type.IntList], Type.Int))
+        HEAD = Function("HEAD", ([Type.IntList], Type.Int))
+        LAST = Function("LAST", ([Type.IntList], Type.Int))
+
 
         p = Program([Variable(0, Type.IntList)], [(Variable(1, Type.Int), Expression(F, [Variable(0, Type.IntList)]))])
         p = remove_dependency_between_variables(p, MINIMUM, MAXIMUM)

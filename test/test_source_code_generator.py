@@ -6,7 +6,7 @@ from src.source_code_generator import arguments, source_code, IdGenerator, Varia
 class Test_arguments(unittest.TestCase):
     def test_arguments(self):
         g = IdGenerator()
-        args = list(arguments(g, set([Variable(g.generate(), Type.Int), Variable(g.generate(), Type.IntList)]), [int, [int]]))
+        args = list(arguments(g, set([Variable(g.generate(), Type.Int), Variable(g.generate(), Type.IntList)]), [Type.Int, Type.IntList]))
         """
         [v(0), v(1)]
         [v(0), v_new]
@@ -18,7 +18,7 @@ class Test_arguments(unittest.TestCase):
 
     def test_arguments_if_arguments_with_same_type(self):
         g = IdGenerator()
-        args = list(arguments(g, set(), [int, int]))
+        args = list(arguments(g, set(), [Type.Int, Type.Int]))
         """
         [v_new, v_new]
         [v_new1, v_new2]
@@ -29,7 +29,7 @@ class Test_arguments(unittest.TestCase):
     def test_arguments_if_no_existing_variables(self):
         # No existing variable
         g = IdGenerator()
-        args = list(arguments(g, set(), [int, [int]]))
+        args = list(arguments(g, set(), [Type.Int, Type.IntList]))
         self.assertEqual(1, len(args))
         self.assertEqual([Variable(0, Type.Int), Variable(1, Type.IntList)], args[0].arguments)
         self.assertEqual(set([Variable(0, Type.Int), Variable(1, Type.IntList)]), args[0].variables)
@@ -39,8 +39,8 @@ class Test_arguments(unittest.TestCase):
 
 class Test_source_code(unittest.TestCase):
     def test_source_code(self):
-        TAKE = Function("TAKE", [int, [int], [int]], None, None)
-        HEAD = Function("HEAD", [[int], int], None, None)
+        TAKE = Function("TAKE", ([Type.Int, Type.IntList], Type.IntList))
+        HEAD = Function("HEAD", ([Type.IntList], Type.Int))
         srcs = set(map(to_string, source_code([TAKE, HEAD], 1, 1)))
         self.assertEqual(
             set(["a <- int\nb <- [int]\nc <- TAKE a b\n", "a <- [int]\nb <- HEAD a\n"]),

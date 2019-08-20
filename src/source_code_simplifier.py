@@ -163,17 +163,17 @@ def remove_redundant_expressions(program: Program) -> Program:
 
     body = []
     for v, exp in program.body:
-        if (exp.function.src, tuple(exp.arguments)) in expression_to_variable:
+        if (exp.function.name, tuple(exp.arguments)) in expression_to_variable:
             # Rule1
-            replacement[v] = expression_to_variable[(exp.function.src, tuple(exp.arguments))]
+            replacement[v] = expression_to_variable[(exp.function.name, tuple(exp.arguments))]
             continue
         if len(exp.arguments) > 0 and exp.arguments[0] in variable_to_expression:
             exp_arg1 = variable_to_expression[exp.arguments[0]]
-            if exp.function.src == "SORT" and (exp_arg1.function.src == "SORT"):
+            if exp.function.name == "SORT" and (exp_arg1.function.name == "SORT"):
                 # Rule2
                 replacement[v] = exp.arguments[0]
                 continue
-            if exp.function.src == "REVERSE" and (exp_arg1.function.src == "REVERSE"):
+            if exp.function.name == "REVERSE" and (exp_arg1.function.name == "REVERSE"):
                 # Rule3
                 replacement[v] = variable_to_expression[exp.arguments[0]].arguments[0]
                 continue
@@ -183,7 +183,7 @@ def remove_redundant_expressions(program: Program) -> Program:
                 exp.arguments[i] = replacement[arg]
         body.append((v, exp))
 
-        expression_to_variable[(exp.function.src, tuple(exp.arguments))] = v
+        expression_to_variable[(exp.function.name, tuple(exp.arguments))] = v
         variable_to_expression[v] = exp
     program.body = body
 
@@ -258,21 +258,21 @@ def remove_dependency_between_variables(program: Program, minimum: Function, max
     for v, exp in program.body:
         if len(exp.arguments) > 0 and exp.arguments[0] in variable_to_expression:
             exp_arg1 = variable_to_expression[exp.arguments[0]]
-            if (exp_arg1.function.src == "SORT" or exp_arg1.function.src == "REVERSE") and (exp.function.src == "SUM" or exp.function.src == "MAXIMUM" or exp.function.src == "MINIMUM"):
+            if (exp_arg1.function.name == "SORT" or exp_arg1.function.name == "REVERSE") and (exp.function.name == "SUM" or exp.function.name == "MAXIMUM" or exp.function.name == "MINIMUM"):
                 # Rule1
                 x = exp_arg1.arguments[0]
                 exp = Expression(exp.function, [x])
                 body.append((v, exp))
                 variable_to_expression[v] = exp
                 continue
-            if exp_arg1.function.src == "SORT" and (exp.function.src == "HEAD"):
+            if exp_arg1.function.name == "SORT" and (exp.function.name == "HEAD"):
                 # Rule2
                 x = exp_arg1.arguments[0]
                 exp = Expression(minimum, [x])
                 body.append((v, exp))
                 variable_to_expression[v] = exp
                 continue
-            if exp_arg1.function.src == "SORT" and (exp.function.src == "LAST"):
+            if exp_arg1.function.name == "SORT" and (exp.function.name == "LAST"):
                 # Rule3
                 x = exp_arg1.arguments[0]
                 exp = Expression(maximum, [x])

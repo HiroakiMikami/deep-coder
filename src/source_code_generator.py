@@ -44,9 +44,8 @@ def arguments(id_generator: IdGenerator, variables: Set[Variable], signature):
         The generator used to create new variables
     variables : set of Variable
         The set of variables that are currently defined
-    signature : list of ([int] or int)
+    signature : list of Type
         The signature of the arguments.
-        `int` represents Type.Int and `[int]` represents Type.IntList.
 
     Yields
     ------
@@ -62,7 +61,7 @@ def arguments(id_generator: IdGenerator, variables: Set[Variable], signature):
         if len(elem.arguments) == len(signature):
             yield elem
         else:
-            t_arg = Type.Int if signature[len(elem.arguments)] == int else Type.IntList # The type of the argument
+            t_arg = signature[len(elem.arguments)] # The type of the argument
             candidates = [v for v in elem.variables if v.t == t_arg] # Existing variables which type is t_arg
             
             for v in candidates:
@@ -95,9 +94,6 @@ def source_code(functions: List[Function], min_length: int, max_length: int):
     """
     assert(min_length <= max_length)
 
-    def type_to_enum(t):
-        return Type.Int if t == int else Type.IntList
-
     # Perform DFS to enumerate source code
     s = [(Program([], []), IdGenerator())] # Start from a program with no expressions
     while len(s) != 0:
@@ -114,10 +110,10 @@ def source_code(functions: List[Function], min_length: int, max_length: int):
         # Enumerate functions
         for func in functions:
             # Enumerate arguments
-            for a in arguments(g, vars, func.sig[:-1]):
+            for a in arguments(g, vars, func.signature[0]):
                 p_new = copy.deepcopy(p)
                 for v in a.new_variables:
                     p_new.inputs.append(v)
                 generator = copy.deepcopy(a.generator)
-                p_new.body.append((Variable(generator.generate(), type_to_enum(func.sig[-1])), Expression(func, a.arguments)))
+                p_new.body.append((Variable(generator.generate(), func.signature[1]), Expression(func, a.arguments)))
                 s.append((p_new, generator))

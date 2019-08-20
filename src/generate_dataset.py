@@ -5,7 +5,7 @@ import os
 import multiprocessing as mp
 from typing import List, Tuple, Union, Dict, Callable
 from .deepcoder_utils import generate_io_samples
-from .dsl import Function, Program, to_string, clone, Type
+from .dsl import Function, Program, to_string, clone, Type, to_function
 from .source_code_simplifier import normalize
 from .source_code_generator import source_code
 
@@ -30,7 +30,7 @@ class Entry:
     """
     source_code: str
     examples: List[Example]
-    attributes: Dict[Function, bool]
+    attributes: Dict[str, bool]
 
 @dataclasses.dataclass
 class Dataset:
@@ -51,8 +51,6 @@ class DatasetSpec:
 
     Attribute
     ---------
-    functions : list of Function
-        The set of functions that can be used in this dataset
     value_range : int
     max_list_length : int
     num_examples : int
@@ -67,13 +65,13 @@ class DatasetSpec:
 
 SimplifyFunction = Callable[[Program], Program]
 
-def worker(functions: List[str], spec: DatasetSpec, destinationDir: str, signature: str, queue: mp.SimpleQueue):
+def worker(functions: List[Function], spec: DatasetSpec, destinationDir: str, signature: str, queue: mp.SimpleQueue):
     @dataclasses.dataclass
     class IntermidiateEntry:
         source_code: str
         program: generate_io_samples.Program
         examples: List[Example]
-        attributes: Dict[Function, bool]
+        attributes: Dict[str, bool]
 
     def is_identical(entry1: IntermidiateEntry, entry2: IntermidiateEntry) -> bool:
         """
@@ -91,12 +89,15 @@ def worker(functions: List[str], spec: DatasetSpec, destinationDir: str, signatu
     invalid_program = set()
     while True:
         # Get a next program
-        elem = queue.get()
+        program = queue.get()
 
-        if elem is None:
+        if program is None:
             # Finish this worker
             break
-        code, functions = elem
+        code = to_string(program)[:-1] # last newline should be removed to compile source code
+        fs = set()
+        for _, exp in program.body:
+            fs.add(exp.function.name)
 
         if code in dataset:
             # the program is already added to the dataset
@@ -118,10 +119,9 @@ def worker(functions: List[str], spec: DatasetSpec, destinationDir: str, signatu
             continue
 
         # Generate binary attributes
-        used_functions = set(functions)
         attributes = dict()
         for f in functions:
-            attributes[f] = f in used_functions
+            attributes[f.name] = f.name in fs
 
         entry = IntermidiateEntry(code, p, examples, attributes)
 
@@ -154,12 +154,14 @@ def worker(functions: List[str], spec: DatasetSpec, destinationDir: str, signatu
         pickle.dump(d, f)
 
 
-def generate_dataset(functions: List[Function], spec: DatasetSpec, destinationDir: str, simplify: Union[None, SimplifyFunction]=None):
+def generate_dataset(functions: List[generate_io_samples.Function], spec: DatasetSpec, destinationDir: str, simplify: Union[None, SimplifyFunction]=None):
     """
     Generate dataset to the file
 
     Parameters
     ----------
+    functions : list of generate_io_samples.Function
+        The set of functions that can be used in the dataset
     spec : DatasetSpec
         The specification of generated dataset
     destinationDir : str
@@ -187,42 +189,35 @@ def generate_dataset(functions: List[Function], spec: DatasetSpec, destinationDi
     def get_signature(program: Program):
         input = []
         for i in program.inputs:
-            input.append(int if i.t == Type.Int else [int])
-        output = program.body[-1][1].function.sig[-1] if len(program.body) > 0 else None
+            input.append(i.t)
+        output = program.body[-1][1].function.signature[-1] if len(program.body) > 0 else None
         return (input, output)
     def signature_to_string(signature):
-        input, output = signature
-        instr = ",".join(map(lambda x: "int" if x == int else "intlist", input))
-        outstr = "int" if output == int else "intlist"
-        retval = "{}-{}".format(instr, outstr)
-        return retval
+        return "{}".format(signature)
 
-    queues = {} # signature(string) -> SimpleQueue[IntermidiateEntry]
+    queues = {} # signature(string) -> SimpleQueue[Program]
     workers = set()
 
-    functions_str = [f.src for f in functions]
+    functions_dsl = [to_function(f) for f in functions]
 
     # Enumerate source code
     cnt = 0
-    for program in source_code(functions, spec.min_program_length, spec.max_program_length):
+    for program in source_code(functions_dsl, spec.min_program_length, spec.max_program_length):
         program = simplify_and_normalize(program) # Simplify the program
         if not (spec.min_program_length <= len(program.body) <= spec.max_program_length):
             # If the length of simplified program is out of range, discard the program
             continue
-        functions = set()
-        for _, exp in program.body:
-            functions.add(exp.function.src)
             
         signature = signature_to_string(get_signature(program))
         if not signature in queues:
             queues[signature] = mp.SimpleQueue()
-            w = mp.Process(target=worker, args=(functions_str, spec, destinationDir, signature, queues[signature]))
+            w = mp.Process(target=worker, args=(functions_dsl, spec, destinationDir, signature, queues[signature]))
             w.start()
             workers.add(w)
             
         # Enqueue the program to the queue
         cnt += 1
-        queues[signature].put((to_string(program)[:-1], functions)) # last newline should be removed to compile source code
+        queues[signature].put(program)
 
     for queue in queues.values():
         queue.put(None) 

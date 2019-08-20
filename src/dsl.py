@@ -2,12 +2,27 @@ import dataclasses
 from enum import Enum
 from typing import List, Tuple, TypeVar
 import copy
-from .deepcoder_utils import generate_io_samples
-Function = generate_io_samples.Function
+from src.deepcoder_utils import generate_io_samples
 
 class Type(Enum):
     Int = 1
     IntList = 2
+
+@dataclasses.dataclass
+class Function:
+    """
+    The function of DSL programs
+
+    Attributes
+    ----------
+    name : str
+        The name of this function
+    signature : tuple of Type list and Type
+        The first element represents the input types and
+        the second element represents the output type.
+    """
+    name: str
+    signature: Tuple[List[Type], Type]
 
 @dataclasses.dataclass
 class Variable:
@@ -93,7 +108,7 @@ def to_string(program: Program) -> str:
     for input in program.inputs:
         code += "{} <- {}\n".format(id_to_name(input.id), "int" if input.t == Type.Int else "[int]")
     for v, exp in program.body:
-        code += "{} <- {} {}\n".format(id_to_name(v.id), exp.function.src, " ".join(map(lambda x: id_to_name(x.id), exp.arguments)))
+        code += "{} <- {} {}\n".format(id_to_name(v.id), exp.function.name, " ".join(map(lambda x: id_to_name(x.id), exp.arguments)))
 
     return code
 
@@ -125,3 +140,24 @@ def clone(program: Program) -> Program:
         body.append((copy.deepcopy(var), Expression(exp.function, args)))
 
     return Program(inputs, body)
+
+
+def to_function(f: generate_io_samples.Function) -> Function:
+    """
+    Convert from generate_io_samples.Function to dsl.Function
+
+    Parameters
+    ----------
+    f : generate_io_samples.Function
+        The function that will be converted
+
+    Returns
+    -------
+    Function
+        The converted Function instance
+    """
+    intype = []
+    for s in f.sig[:-1]:
+        intype.append(Type.Int if s == int else Type.IntList)
+    outtype = Type.Int if f.sig[-1] == int else Type.IntList
+    return Function(f.src, (intype, outtype))
