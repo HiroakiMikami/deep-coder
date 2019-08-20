@@ -15,7 +15,7 @@ class Test_generate_dataset(unittest.TestCase):
 
         # Generate the program with the length of 1
         with tempfile.TemporaryDirectory() as name:
-            generate_dataset(DatasetSpec([HEAD, TAKE], 50, 20, 5, 1, 1), name)
+            generate_dataset([HEAD, TAKE], DatasetSpec(50, 20, 5, 1, 1), name)
             # Check the dataset
             srcs = set()
             for p in os.listdir(name):
@@ -35,7 +35,7 @@ class Test_generate_dataset(unittest.TestCase):
             def simplify(program):
                 program = remove_redundant_variables(program)
                 return program
-            generate_dataset(DatasetSpec([HEAD, TAKE], 50, 20, 5, 2, 2), name, simplify=simplify)
+            generate_dataset([HEAD, TAKE], DatasetSpec(50, 20, 5, 2, 2), name, simplify=simplify)
 
             # Check the dataset
             srcs = set()

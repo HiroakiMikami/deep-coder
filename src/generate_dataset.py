@@ -2,9 +2,10 @@ import dataclasses
 import copy
 import pickle
 import os
+import multiprocessing as mp
 from typing import List, Tuple, Union, Dict, Callable
 from .deepcoder_utils import generate_io_samples
-from .dsl import Function, Program, to_string, clone
+from .dsl import Function, Program, to_string, clone, Type
 from .source_code_simplifier import normalize
 from .source_code_generator import source_code
 
@@ -58,7 +59,6 @@ class DatasetSpec:
     min_program_length : int
     max_program_length : int
     """
-    functions: List[Function]
     value_range: int
     max_list_length: int
     num_examples: int
@@ -67,7 +67,94 @@ class DatasetSpec:
 
 SimplifyFunction = Callable[[Program], Program]
 
-def generate_dataset(spec: DatasetSpec, destinationDir: str, simplify: Union[None, SimplifyFunction]=None):
+def worker(functions: List[str], spec: DatasetSpec, destinationDir: str, signature: str, queue: mp.SimpleQueue):
+    @dataclasses.dataclass
+    class IntermidiateEntry:
+        source_code: str
+        program: generate_io_samples.Program
+        examples: List[Example]
+        attributes: Dict[Function, bool]
+
+    def is_identical(entry1: IntermidiateEntry, entry2: IntermidiateEntry) -> bool:
+        """
+        Check whether the program of entry1 and entry2 are identical or not
+        """
+        for input, output in entry1.examples:
+            if output != entry2.program.fun(input):
+                return False
+        for input, output in entry2.examples:
+            if output != entry1.program.fun(input):
+                return False
+        return True
+
+    dataset = dict()
+    invalid_program = set()
+    while True:
+        # Get a next program
+        elem = queue.get()
+
+        if elem is None:
+            # Finish this worker
+            break
+        code, functions = elem
+
+        if code in dataset:
+            # the program is already added to the dataset
+            continue
+
+        # Compile the source code
+        if code in invalid_program:
+            continue
+        p = generate_io_samples.compile(code, V=spec.value_range, L=spec.max_list_length)
+        if p is None:
+            # Compilation is failed
+            invalid_program.add(code)
+            continue
+
+        try:
+            # Generate IO examples
+            examples = generate_io_samples.generate_IO_examples(p, N=spec.num_examples, L=spec.max_list_length, V=spec.value_range)
+        except ValueError:
+            continue
+
+        # Generate binary attributes
+        used_functions = set(functions)
+        attributes = dict()
+        for f in functions:
+            attributes[f] = f in used_functions
+
+        entry = IntermidiateEntry(code, p, examples, attributes)
+
+        # Prune entries
+        removed = set()
+        add_s = True
+        for s2, entry2 in dataset.items():
+            if is_identical(entry, entry2):
+                if len(entry.source_code.split("\n")) >= len(entry2.source_code.split("\n")):
+                    # This entry should be pruned
+                    add_s = False
+                    break
+                else:
+                    # entry2 should be removed
+                    removed.add(s2)
+        if add_s:
+            dataset[code] = entry
+        for r in removed:
+            del dataset[r]
+
+    # Create dataset instance
+    d = Dataset([])
+    for entry in dataset.values():
+        d.entries.append(Entry(
+            entry.source_code, entry.examples, entry.attributes
+    ))
+
+    # Dump the dataset to the file
+    with open(os.path.join(destinationDir, "{}.pickle".format(signature)), "wb") as f:
+        pickle.dump(d, f)
+
+
+def generate_dataset(functions: List[Function], spec: DatasetSpec, destinationDir: str, simplify: Union[None, SimplifyFunction]=None):
     """
     Generate dataset to the file
 
@@ -86,13 +173,6 @@ def generate_dataset(spec: DatasetSpec, destinationDir: str, simplify: Union[Non
     It might be a problem if the program size is large.
     """
 
-    @dataclasses.dataclass
-    class IntermidiateEntry:
-        source_code: str
-        program: generate_io_samples.Program
-        examples: List[Example]
-        attributes: Dict[Function, bool]
-
     def simplify_and_normalize(program: Program) -> Program:
         while True:
             p_old = to_string(program)
@@ -104,6 +184,12 @@ def generate_dataset(spec: DatasetSpec, destinationDir: str, simplify: Union[Non
         program = normalize(program)
         return program
 
+    def get_signature(program: Program):
+        input = []
+        for i in program.inputs:
+            input.append(int if i.t == Type.Int else [int])
+        output = program.body[-1][1].function.sig[-1] if len(program.body) > 0 else None
+        return (input, output)
     def signature_to_string(signature):
         input, output = signature
         instr = ",".join(map(lambda x: "int" if x == int else "intlist", input))
@@ -111,86 +197,34 @@ def generate_dataset(spec: DatasetSpec, destinationDir: str, simplify: Union[Non
         retval = "{}-{}".format(instr, outstr)
         return retval
 
-    def is_identical(entry1: Entry, entry2: Entry) -> bool:
-        """
-        Check whether the program of entry1 and entry2 are identical or not
-        """
-        for input, output in entry1.examples:
-            if output != entry2.program.fun(input):
-                return False
-        for input, output in entry2.examples:
-            if output != entry1.program.fun(input):
-                return False
-        return True
+    queues = {} # signature(string) -> SimpleQueue[IntermidiateEntry]
+    workers = set()
 
-    dataset = {} # Signature -> (string -> IntermidiateEntry)
-    invalid_program = set()
+    functions_str = [f.src for f in functions]
+
     # Enumerate source code
-    for program in source_code(spec.functions, spec.min_program_length, spec.max_program_length):
+    cnt = 0
+    for program in source_code(functions, spec.min_program_length, spec.max_program_length):
         program = simplify_and_normalize(program) # Simplify the program
         if not (spec.min_program_length <= len(program.body) <= spec.max_program_length):
             # If the length of simplified program is out of range, discard the program
             continue
-        s = to_string(program)[:-1] # last newline should be removed to compile source code
-
-        # Compile the source code
-        if s in invalid_program:
-            continue
-        p = generate_io_samples.compile(s, V=spec.value_range, L=spec.max_list_length)
-        if p is None:
-            # Compilation is failed
-            invalid_program.add(s)
-            continue
-
-        signature = signature_to_string((tuple(p.ins), p.out))
-        if not signature in dataset:
-            dataset[signature] = dict()
-
-        if s in dataset[signature]:
-            # the program is already added to the dataset
-            continue
-        
-        try:
-            # Generate IO examples
-            examples = generate_io_samples.generate_IO_examples(p, N=spec.num_examples, L=spec.max_list_length, V=spec.value_range)
-        except ValueError:
-            continue
-
-        # Generate binary attributes
-        used_functions = set()
+        functions = set()
         for _, exp in program.body:
-            used_functions.add(exp.function.src)
-        attributes = dict()
-        for f in spec.functions:
-            attributes[f.src] = f.src in used_functions
-        entry = IntermidiateEntry(s, p, examples, attributes)
+            functions.add(exp.function.src)
+            
+        signature = signature_to_string(get_signature(program))
+        if not signature in queues:
+            queues[signature] = mp.SimpleQueue()
+            w = mp.Process(target=worker, args=(functions_str, spec, destinationDir, signature, queues[signature]))
+            w.start()
+            workers.add(w)
+            
+        # Enqueue the program to the queue
+        cnt += 1
+        queues[signature].put((to_string(program)[:-1], functions)) # last newline should be removed to compile source code
 
-        # Prune entries
-        removed = set()
-        add_s = True
-        for s2, entry2 in dataset[signature].items():
-            if is_identical(entry, entry2):
-                if len(entry.source_code.split("\n")) >= len(entry2.source_code.split("\n")):
-                    # This entry should be pruned
-                    add_s = False
-                    break
-                else:
-                    # entry2 should be removed
-                    removed.add(s2)
-        if add_s:
-            dataset[signature][s] = entry
-        for r in removed:
-            del dataset[signature][r]
-
-    for signature, entries in dataset.items():
-        # Create dataset instance
-        d = Dataset([])
-        for entry in entries.values():
-            d.entries.append(Entry(
-                entry.source_code,
-                entry.examples,
-                entry.attributes
-            ))
-        with open(os.path.join(destinationDir, "{}.pickle".format(signature)), "wb") as f:
-            # Dump the dataset to the file
-            pickle.dump(d, f)
+    for queue in queues.values():
+        queue.put(None) 
+    for w in workers:
+        w.join()
