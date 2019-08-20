@@ -63,7 +63,7 @@ def arguments(id_generator: IdGenerator, variables: Set[Variable], signature):
         else:
             t_arg = signature[len(elem.arguments)] # The type of the argument
             candidates = [v for v in elem.variables if v.t == t_arg] # Existing variables which type is t_arg
-            
+
             for v in candidates:
                 # Use existing var
                 s.append(ArgumentWithState([*(elem.arguments), v], elem.generator, elem.variables, elem.new_variables))
@@ -106,7 +106,7 @@ def source_code(functions: List[Function], min_length: int, max_length: int):
 
         # Create a set of variables
         vars = set(p.inputs + list(map(lambda x: x[0], p.body)))
-        
+
         # Enumerate functions
         for func in functions:
             # Enumerate arguments

@@ -58,7 +58,7 @@ def remove_redundant_variables(program: Program) -> Program:
     a <- [int]
     d <- REVERSE a
     ```
-    
+
     Parameters
     ----------
     program : Program
@@ -88,7 +88,7 @@ def remove_redundant_variables(program: Program) -> Program:
             for a in exp.arguments:
                 v_used.add(a)
     body.reverse()
-    
+
     for v in program.inputs:
         if v in v_used:
             # v is not a redundant variable
@@ -177,7 +177,7 @@ def remove_redundant_expressions(program: Program) -> Program:
                 # Rule3
                 replacement[v] = variable_to_expression[exp.arguments[0]].arguments[0]
                 continue
-        
+
         for i, arg in enumerate(exp.arguments):
             if arg in replacement:
                 exp.arguments[i] = replacement[arg]
@@ -279,7 +279,7 @@ def remove_dependency_between_variables(program: Program, minimum: Function, max
                 body.append((v, exp))
                 variable_to_expression[v] = exp
                 continue
-        
+
         body.append((v, exp))
         variable_to_expression[v] = exp
 

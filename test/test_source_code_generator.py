@@ -49,7 +49,7 @@ class Test_source_code(unittest.TestCase):
 
         srcs = list(source_code([TAKE], 2, 2))
         l = set(map(lambda x: len(x.body), srcs))
-        
+
         self.assertEqual(set([2]), l)
 
 if __name__ == "__main__":

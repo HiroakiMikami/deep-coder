@@ -207,19 +207,19 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
         if not (spec.min_program_length <= len(program.body) <= spec.max_program_length):
             # If the length of simplified program is out of range, discard the program
             continue
-            
+
         signature = signature_to_string(get_signature(program))
         if not signature in queues:
             queues[signature] = mp.SimpleQueue()
             w = mp.Process(target=worker, args=(functions_dsl, spec, destinationDir, signature, queues[signature]))
             w.start()
             workers.add(w)
-            
+
         # Enqueue the program to the queue
         cnt += 1
         queues[signature].put(program)
 
     for queue in queues.values():
-        queue.put(None) 
+        queue.put(None)
     for w in workers:
         w.join()
