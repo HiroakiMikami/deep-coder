@@ -81,9 +81,25 @@ class EquivalenceCheckingSpec:
 
 SimplifyFunction = Callable[[Program], Program]
 
+@dataclasses.dataclass
+class ProgressCallback:
+    """
+    The callback functions to receive the progress of data generation
+
+    Attribute
+    ---
+    on_generate_program : Callable[[Program], None]
+    on_finish_enumeration : Callabke[[int], None]
+    on_dump_dataset : Callable[[int], None]
+    """
+    on_generate_program: Callable[[Program], None]
+    on_finish_enumeration: Callable[[int], None]
+    on_dump_dataset : Callable[[int], None]
+
 def generate_dataset(functions: List[generate_io_samples.Function], spec: DatasetSpec,
                      equivalence_spec: EquivalenceCheckingSpec,
-                     destinationDir: str, simplify: Union[None, SimplifyFunction]=None):
+                     destinationDir: str, simplify: Union[None, SimplifyFunction]=None,
+                     callback: Union[None, ProgressCallback] = None):
     """
     Generate dataset to the file
 
@@ -138,6 +154,7 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
     entries = dict() # signature -> dict(str -> IntermidiateEntry)
 
     # Enumerate source code
+    n_programs = 0
     for program in source_code(functions_dsl, spec.min_program_length, spec.max_program_length):
         program = simplify_and_normalize(program) # Simplify the program
         if not (spec.min_program_length <= len(program.body) <= spec.max_program_length):
@@ -179,7 +196,13 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
         for f in functions_dsl:
             attributes[f.name] = f.name in fs
 
+        if callback is not None:
+            callback.on_generate_program(program)
+        n_programs += 1
         entries[signature][code] = IntermidiateEntry(code, p, examples, attributes)
+
+    if callback is not None:
+        callback.on_finish_enumeration(n_programs)
 
     # Prune entries
     rng = equivalence_spec.rng if equivalence_spec.rng is not None else np.random
@@ -234,6 +257,8 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
             d.entries.append(Entry(
                 entry.source_code, entry.examples, entry.attributes
         ))
+        if callback is not None:
+            callback.on_dump_dataset(len(ientries))
 
         # Dump the dataset to the file
         with open(os.path.join(destinationDir, "{}.pickle".format(signature)), "wb") as f:
