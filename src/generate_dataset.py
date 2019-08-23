@@ -160,7 +160,7 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
             fs.add(exp.function.name)
         attributes = dict()
         for f in functions_dsl:
-            attributes[f.name] = f.name in fs
+            attributes[f] = f.name in fs
 
         if callback is not None:
             callback.on_generate_program(program)

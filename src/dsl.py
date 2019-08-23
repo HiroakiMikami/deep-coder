@@ -23,6 +23,10 @@ class Function:
     """
     name: str
     signature: Tuple[List[Type], Type]
+    def __eq__(self, rhs):
+        return self.name == rhs.name and self.signature == rhs.signature
+    def __hash__(self):
+        return hash((self.name, (tuple(self.signature[0]), self.signature[1])))
 
 @dataclasses.dataclass
 class Variable:
