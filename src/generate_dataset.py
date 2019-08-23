@@ -204,6 +204,7 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
     if callback is not None:
         callback.on_finish_enumeration(n_programs)
 
+    dataset = Dataset([])
     # Prune entries
     rng = equivalence_spec.rng if equivalence_spec.rng is not None else np.random
     for signature, ientries in entries.items():
@@ -252,14 +253,13 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
                     es[result] = entry
 
         # Create dataset instance
-        d = Dataset([])
         for entry in es.values():
-            d.entries.append(Entry(
+            dataset.entries.append(Entry(
                 entry.source_code, entry.examples, entry.attributes
         ))
         if callback is not None:
             callback.on_dump_dataset(len(ientries))
 
-        # Dump the dataset to the file
-        with open(os.path.join(destinationDir, "{}.pickle".format(signature)), "wb") as f:
-            pickle.dump(d, f)
+    # Dump the dataset to the file
+    with open(os.path.join(destinationDir, "dataset.pickle"), "wb") as f:
+        pickle.dump(dataset, f)
