@@ -36,3 +36,30 @@ class Dataset:
         The entries of this dataset.
     """
     entries: List[Entry]
+
+def prior_distribution(dataset: Dataset) -> Dict[Function, float]:
+    """
+    Return the prior distribution over functions
+
+    Parameters
+    ----------
+    dataset : Dataset
+        The dataset to calculate the prior distribution
+
+    Returns
+    -------
+    prior : Dict[Function, float]
+        The value represents the frequency of the function in the dataset.
+    """
+
+    prior: Dict[Function, float] = dict()
+    for entry in dataset.entries:
+        for function, value in entry.attributes.items():
+            if not function in prior:
+                prior[function] = 0
+            prior[function] += 1 if value else 0
+
+    for function in prior.keys():
+        prior[function] /= len(dataset.entries)
+
+    return prior
