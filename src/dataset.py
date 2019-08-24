@@ -1,4 +1,5 @@
 import dataclasses
+import numpy as np
 from typing import List, Union, Tuple, Dict
 from .dsl import Function
 
@@ -63,3 +64,42 @@ def prior_distribution(dataset: Dataset) -> Dict[Function, float]:
         prior[function] /= len(dataset.entries)
 
     return prior
+
+def divide(dataset: Dataset, separators: Dict[str, int], rng: Union[None, np.random.RandomState] = None) -> Dict[str, Dataset]:
+    """
+    Divide the dataset into some sub-datasets and return the set of sub-datasets
+
+    Attributes
+    ----------
+    dataset : Dataset
+        The dataset to be divided
+    separators : Dict[str, int]
+        The dictionary used to specify how to divide the dataset.
+        The keys represent the name of the sub-datasets, and the values represent
+        the number of entries contained in the sub-datasets.
+    rng : None or np.random.RandomState
+        The generator of random numbers.
+
+    Returns
+    -------
+    sub_datasets: Dict[str, Dataset]
+        The set of sub-datasets.
+    """
+
+    if rng is None:
+        rng = np.random
+
+    total = sum(map(lambda x: x[1], separators.items()))
+    assert(total <= len(dataset.entries))
+
+    random_indexes = np.random.choice(len(dataset.entries), len(dataset.entries), replace=False)
+    offset = 0
+    retval = dict()
+    for name, num in separators.items():
+        d = Dataset([])
+        for index in range(offset, offset + num):
+            d.entries.append(dataset.entries[random_indexes[index]])
+        retval[name] = d
+        offset += num
+
+    return retval
