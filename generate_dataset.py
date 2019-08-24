@@ -11,7 +11,7 @@ from src.source_code_simplifier import remove_redundant_variables, remove_redund
 SEED_MAX = 2**32 - 1
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--value-range", help="The maximum absolute value used in the dataset", type=int, default=256)
+parser.add_argument("--value-range", help="The largest absolute value used in the dataset", type=int, default=256)
 parser.add_argument("--max-list-length", help="The maximum length of the list used in the dataset", type=int, default=20)
 parser.add_argument("--num-examples", help="The number of I/O examples per program", type=int, default=5)
 parser.add_argument("--min-length", help="The minimum length of the program body", type=int, default=1)
