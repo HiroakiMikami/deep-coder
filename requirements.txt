@@ -3,3 +3,4 @@ docopt==0.6.2
 tqdm==4.34.0
 matplotlib==3.1.1
 pandas==0.25.1
+chainer==6.3.0
