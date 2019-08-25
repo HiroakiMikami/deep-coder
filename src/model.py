@@ -202,3 +202,23 @@ def TrainingClassifier(embed: ExampleEmbed, encoder: Encoder, decoder: Decoder):
         lossfun=F.sigmoid_cross_entropy,
         accfun=F.binary_accuracy
     )
+
+def InferenceModel(embed: ExampleEmbed, encoder: Encoder, decoder: Decoder):
+    """
+    Return the model for inference
+
+    Parameters
+    ----------
+    embed : ExampleEmbed
+    encoder : Encoder
+        The encoder of DeepCoder
+    decoder : Decoder
+        The decoder of DeepCoder
+
+    Returns
+    -------
+    chainer.Link
+        The predcictor used for inference
+    """
+
+    return ch.Sequential(embed, encoder, decoder, F.sigmoid)

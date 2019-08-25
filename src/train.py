@@ -1,5 +1,5 @@
 import dataclasses
-from typing import List, Union, Tuple, Dict
+from typing import List, Union, Tuple, Dict, Set
 import chainer as ch
 from chainer import training
 from .dataset import Dataset
@@ -8,7 +8,7 @@ from .model import ExampleEmbed, Encoder, Decoder, TrainingClassifier
 @dataclasses.dataclass
 class DatasetStats:
     max_num_inputs: int
-    num_functions: int
+    names: Set[str]
 
 @dataclasses.dataclass
 class ModelShapeParameters:
@@ -33,12 +33,13 @@ def dataset_stats(dataset: Dataset) -> DatasetStats:
         in the dataset.
     """
     num_inputs = 0
-    num_functions = 0
+    names = set([])
     for entry in dataset.entries:
         num_inputs = max(num_inputs, len(entry.examples[0][0]))
-        if num_functions == 0:
-            num_functions = len(entry.attributes)
-    return DatasetStats(num_inputs, num_functions)
+        if len(names) == 0:
+            for name in entry.attributes.keys():
+                names.add(name)
+    return DatasetStats(num_inputs, names)
 
 def model(params: ModelShapeParameters) -> ch.Link:
     """
@@ -55,7 +56,7 @@ def model(params: ModelShapeParameters) -> ch.Link:
     """
     embed = ExampleEmbed(params.dataset_stats.max_num_inputs, params.value_range, params.n_embed)
     encoder = Encoder(params.n_units)
-    decoder = Decoder(params.dataset_stats.num_functions)
+    decoder = Decoder(len(params.dataset_stats.names))
     return TrainingClassifier(embed, encoder, decoder)
 
 def trainer(train_iter, out: str,
