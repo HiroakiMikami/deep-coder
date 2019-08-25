@@ -85,7 +85,7 @@ def encode_attribute(attribute: Dict[Function, bool]) -> np.array:
         The encoding of the entry
     """
     func_names = list(attribute.keys())
-    func_names = sorted(func_names, key=lambda x: x.name)
+    func_names = sorted(func_names)
     arr = []
     for func in func_names:
         arr.append(1 if attribute[func] else 0)

@@ -1,7 +1,6 @@
 import unittest
 import numpy as np
 
-from src.dsl import Function, Type
 from src.dataset import Dataset, Entry
 from src.chainer_dataset import encode_primitive, encode_attribute, PrimitiveEncoding, ChainerDataset
 
@@ -18,25 +17,22 @@ class Test_encode_primitive(unittest.TestCase):
 class Test_encode_attribute(unittest.TestCase):
     def test_encode_attribute(self):
         encoding = encode_attribute(dict([
-            [Function("A", ([Type.Int], Type.Int)), True],
-            [Function("B", ([Type.Int], Type.Int)), False]]))
+            ["A", True],
+            ["B", False]]))
         self.assertTrue(np.all(np.array([1, 0]) == encoding))
 
 class Test_ChainerDataset(unittest.TestCase):
     def test_constructor(self):
-        HEAD = Function("HEAD", ([Type.IntList], Type.Int))
-        SORT = Function("SORT", ([Type.IntList], Type.IntList))
-
         dataset = Dataset([])
         dataset.entries.append(Entry(
             "entry1",
             [(([10, 20, 30],), 10)],
-            dict([[HEAD, True], [SORT, False]])
+            dict([["HEAD", True], ["SORT", False]])
         ))
         dataset.entries.append(Entry(
             "entry2",
             [(([30, 20, 10],), [10, 20, 30])],
-            dict([[HEAD, False], [SORT, True]])
+            dict([["HEAD", False], ["SORT", True]])
         ))
 
         cdataset = ChainerDataset(dataset, 256, 5)

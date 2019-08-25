@@ -19,12 +19,13 @@ class Entry:
         The input/output examples for the source code
     attributes : dict from str to bool
         The binary attributes of the source code.
+        The key represents the name of functions or lambdas.
         The value represents whether the program contains
         the function or not.
     """
     source_code: str
     examples: List[Example]
-    attributes: Dict[Function, bool]
+    attributes: Dict[str, bool]
 
 @dataclasses.dataclass
 class Dataset:
@@ -38,7 +39,7 @@ class Dataset:
     """
     entries: List[Entry]
 
-def prior_distribution(dataset: Dataset) -> Dict[Function, float]:
+def prior_distribution(dataset: Dataset) -> Dict[str, float]:
     """
     Return the prior distribution over functions
 
@@ -49,8 +50,8 @@ def prior_distribution(dataset: Dataset) -> Dict[Function, float]:
 
     Returns
     -------
-    prior : Dict[Function, float]
-        The value represents the frequency of the function in the dataset.
+    prior : Dict[str, float]
+        The value represents the frequency of the function or lambda in the dataset.
     """
 
     prior: Dict[Function, float] = dict()

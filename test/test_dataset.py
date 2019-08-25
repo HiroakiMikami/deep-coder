@@ -1,28 +1,24 @@
 import unittest
 
-from src.dsl import Function, Type
 from src.dataset import Entry, Dataset, prior_distribution, divide
 
 class Test_prior_distribution(unittest.TestCase):
     def test_prior_distribution(self):
-        F1 = Function("F1", ([Type.IntList], Type.Int))
-        F2 = Function("F2", ([Type.IntList], Type.Int))
         dataset = Dataset([
-            Entry("", [], dict([[F1, True], [F2, False]])),
-            Entry("", [], dict([[F1, True], [F2, True]]))
+            Entry("", [], dict([["F1", True], ["F2", False]])),
+            Entry("", [], dict([["F1", True], ["F2", True]]))
         ])
         prior = prior_distribution(dataset)
-        self.assertAlmostEqual(1.0, prior[F1])
-        self.assertAlmostEqual(0.5, prior[F2])
+        self.assertAlmostEqual(1.0, prior["F1"])
+        self.assertAlmostEqual(0.5, prior["F2"])
 
 class Test_divide(unittest.TestCase):
     def test_divide(self):
-        F1 = Function("F1", ([Type.IntList], Type.Int))
         dataset = Dataset([
-            Entry("e1", [], dict([[F1, True]])),
-            Entry("e2", [], dict([[F1, True]])),
-            Entry("e3", [], dict([[F1, True]])),
-            Entry("e4", [], dict([[F1, True]])),
+            Entry("e1", [], dict([["F1", True]])),
+            Entry("e2", [], dict([["F1", True]])),
+            Entry("e3", [], dict([["F1", True]])),
+            Entry("e4", [], dict([["F1", True]])),
         ])
         d = divide(dataset, dict([["train", 2], ["dev", 1], ["valid", 1]]))
         self.assertEqual(2, len(d["train"].entries))

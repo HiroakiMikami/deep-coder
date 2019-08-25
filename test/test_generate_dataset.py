@@ -107,5 +107,24 @@ class Test_generate_dataset(unittest.TestCase):
             self.assertEqual(2, c.n_programs)
             self.assertEqual([2], c.num_entries)
 
+    def test_generate_dataset_separate_higher_order_function_and_lambda(self):
+        LINQ, _ = generate_io_samples.get_language(50)
+        HEAD = [f for f in LINQ if f.src == "HEAD"][0]
+        MAP_INC = [f for f in LINQ if f.src == "MAP INC"][0]
+
+        # Generate the program with the length of 1
+        with tempfile.TemporaryDirectory() as name:
+            np.random.seed(0)
+            generate_dataset([HEAD, MAP_INC], DatasetSpec(50, 20, 5, 1, 1), EquivalenceCheckingSpec(1, 1, None), name)
+            # Check the dataset
+            attribute_keys = set()
+            for p in os.listdir(name):
+                with open(os.path.join(name, p), "rb") as fp:
+                    dataset = pickle.load(fp)
+                    for entry in dataset.entries:
+                        for name in entry.attributes.keys():
+                            attribute_keys.add(name)
+            self.assertEqual(set(["HEAD", "MAP", "INC"]), attribute_keys)
+
 if __name__ == "__main__":
     unittest.main()

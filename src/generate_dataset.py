@@ -157,10 +157,14 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
         # Generate binary attributes
         fs = set()
         for _, exp in program.body:
-            fs.add(exp.function.name)
+            for name in exp.function.name.split(" "):
+                fs.add(name)
         attributes = dict()
         for f in functions_dsl:
-            attributes[f] = f.name in fs
+            for name in f.name.split(" "):
+                if not name in attributes:
+                    attributes[name] = False
+                attributes[name] |= name in fs
 
         if callback is not None:
             callback.on_generate_program(program)

@@ -29,8 +29,8 @@ plt.ion()
 prior = prior_distribution(dataset)
 columns = []
 data = []
-for function, prob in prior.items():
-    columns.append(function.name)
+for name, prob in prior.items():
+    columns.append(name)
     data.append(prob)
 data = np.array([data])
 data = pd.DataFrame(data, columns=columns)
@@ -81,9 +81,9 @@ for index in indexes:
     ax_attributes.set_title("Attributes")
     labels = []
     text = [[]]
-    for f, v in entry.attributes.items():
+    for name, v in entry.attributes.items():
         if v:
-            labels.append(f.name)
+            labels.append(name)
             text[0].append(v)
     labels.append("Others")
     text[0].append(False)
