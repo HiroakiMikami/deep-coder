@@ -70,11 +70,14 @@ if test_iter is not None:
 trainer.extend(extensions.LogReport())
 if test_iter is not None:
     trainer.extend(extensions.PrintReport(
-                ['epoch', 'main/loss', 'validation/main/loss',
-                 'main/accuracy', 'validation/main/accuracy', 'elapsed_time']))
+                ['epoch',
+                 'main/loss', 'validation/main/loss',
+                 'main/accuracy', 'main/accuracy_false', 'main/accuracy_true',
+                 'validation/main/accuracy', 'validation/main/accuracy_false', 'validation/main/accuracy_true',
+                 'elapsed_time']))
 else:
     trainer.extend(extensions.PrintReport(
-                ['epoch', 'main/loss', 'main/accuracy', 'elapsed_time']))
+                ['epoch', 'main/loss', 'main/accuracy', 'main/accuracy_false', 'main/accuracy_true', 'elapsed_time']))
 trainer.extend(extensions.snapshot(filename="snapshot_{.updater.epoch}"), trigger=(10, 'epoch'))
 trainer.extend(extensions.snapshot_object(model.predictor, "model_{.updater.epoch}"), trigger=(10, 'epoch'))
 trainer.run()

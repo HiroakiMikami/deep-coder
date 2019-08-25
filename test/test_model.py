@@ -2,7 +2,7 @@ import numpy as np
 import unittest
 import chainer.functions as F
 
-from src.model import ExampleEmbed, Encoder, Decoder, TrainingClassifier
+from src.model import ExampleEmbed, Encoder, Decoder, TrainingClassifier, tupled_binary_accuracy
 from src.chainer_dataset import ExampleEncoding, encode_example
 
 class TestExampleEmbed(unittest.TestCase):
@@ -145,6 +145,12 @@ class TestTrainingClassifier(unittest.TestCase):
 
         # backward does not throw an error
         loss.backward()
+
+class Test_tupled_binary_accuracy(unittest.TestCase):
+    def test_tupled_binary_accuracy(self):
+        acc = tupled_binary_accuracy(np.array([-1.0, -1.0, -1.0, 1.0]), np.array([0, 0, 1, 1]))
+        self.assertAlmostEqual(1.0, acc[0].array)
+        self.assertAlmostEqual(0.5, acc[1].array)
 
 if __name__ == "__main__":
     unittest.main()

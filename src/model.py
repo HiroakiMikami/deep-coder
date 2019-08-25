@@ -3,9 +3,32 @@ import chainer as ch
 from chainer import link
 import chainer.links as L
 import chainer.functions as F
+from chainer import backend
+from chainer import reporter
 from typing import List, Union, Tuple, Dict
 
 from .chainer_dataset import PrimitiveEncoding
+
+def tupled_binary_accuracy(y, t):
+    """
+    Compte binary classification accuracy
+
+    Attributes
+    ----------
+    y
+        The output predictions
+    t
+        The ground truth label
+    """
+
+    t_0 = t.copy()
+    t_1 = t.copy()
+    t_0[t_0 == 1] = -1
+    t_1[t_0 == 0] = -1
+    acc_0 = F.binary_accuracy(y, t_0)
+    acc_1 = F.binary_accuracy(y, t_1)
+
+    return acc_0, acc_1
 
 class ExampleEmbed(link.Chain):
     """
@@ -197,11 +220,17 @@ def TrainingClassifier(embed: ExampleEmbed, encoder: Encoder, decoder: Decoder):
     """
 
     predictor = ch.Sequential(embed, encoder, decoder)
-    return L.Classifier(
+    classifier = L.Classifier(
         predictor,
         lossfun=F.sigmoid_cross_entropy,
         accfun=F.binary_accuracy
     )
+    def accuracy(y, t):
+        acc_0, acc_1 = tupled_binary_accuracy(y, t)
+        reporter.report({ "accuracy_false": acc_0, "accuracy_true": acc_1 }, classifier)
+        return F.binary_accuracy(y, t)
+    classifier.accfun = accuracy
+    return classifier
 
 def InferenceModel(embed: ExampleEmbed, encoder: Encoder, decoder: Decoder):
     """
