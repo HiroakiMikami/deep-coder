@@ -27,6 +27,7 @@ random.seed(root_rng.randint(SEED_MAX))
 np.random.seed(root_rng.randint(SEED_MAX))
 
 LINQ, _ = generate_io_samples.get_language(args.value_range)
+LINQ = [f for f in LINQ if not "IDT" in f.src]
 
 MINIMUM = to_function([f for f in LINQ if f.src == "MINIMUM"][0])
 MAXIMUM = to_function([f for f in LINQ if f.src == "MAXIMUM"][0])
