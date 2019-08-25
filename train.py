@@ -76,5 +76,5 @@ else:
     trainer.extend(extensions.PrintReport(
                 ['epoch', 'main/loss', 'main/accuracy', 'elapsed_time']))
 trainer.extend(extensions.snapshot(filename="snapshot_{.updater.epoch}"), trigger=(10, 'epoch'))
-trainer.extend(extensions.snapshot_object(model, "model_{.updater.epoch}"), trigger=(10, 'epoch'))
+trainer.extend(extensions.snapshot_object(model.predictor, "model_{.updater.epoch}"), trigger=(10, 'epoch'))
 trainer.run()

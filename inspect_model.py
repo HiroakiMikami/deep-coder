@@ -27,7 +27,7 @@ np.random.seed(root_rng.randint(SEED_MAX))
 with open(args.modelshape, "rb") as f:
    model_shape: T.ModelShapeParameters = pickle.load(f)
 model = T.model(model_shape)
-ch.serializers.load_npz(args.model, model)
+ch.serializers.load_npz(args.model, model.predictor)
 
 plt.ion()
 
