@@ -77,6 +77,14 @@ class TestExampleEmbed(unittest.TestCase):
         self.assertTrue(np.allclose([0, 1, 3, 4], state_embeddings.array[1, 1, 1])) # Input of e11
         self.assertTrue(np.allclose([0, 1, 5, 5], state_embeddings.array[1, 1, 2])) # Output of e11
 
+    def test_throw_error_if_num_inputs_is_too_large(self):
+        embed = ExampleEmbed(1, 2, 1, (np.arange(5) + 1).reshape((5, 1)))
+        e0 = encode_example(([1, [0, 1]], [0]), 2, 2)
+        e1 = encode_example(([0, [0, 1]], []), 2, 2)
+        minibatch = np.array([[e0, e1]])
+
+        self.assertRaises(RuntimeError, lambda: embed(minibatch))
+
 class TestEncoder(unittest.TestCase):
     def test_encoder(self):
         embed = ExampleEmbed(1, 2, 1, (np.arange(5) + 1).reshape((5, 1)))

@@ -62,6 +62,8 @@ class ExampleEmbed(link.Chain):
         types = np.zeros((N, e, num_inputs + 1, 2), dtype=np.float32)
         for i, example_encodings in enumerate(examples):
             for j, example in enumerate(example_encodings):
+                if len(example.inputs) > num_inputs:
+                    raise RuntimeError("The number of inputs ({}) exceeds the limits ({})".format(len(example.inputs), num_inputs))
                 types[i, j, :len(example.inputs), :] = np.array(list(map(lambda x: np.identity(2)[x.t], example.inputs)))
                 types[i, j, num_inputs, :] = np.identity(2)[example.output.t]
 
