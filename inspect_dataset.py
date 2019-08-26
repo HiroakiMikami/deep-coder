@@ -11,7 +11,7 @@ from src.dataset import Dataset, prior_distribution
 SEED_MAX = 2**32 - 1
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--num-entries", help="The number of entries to dump", type=int, default=5)
+parser.add_argument("--entries", nargs="+", help="The indexed of entries to dump", default=[])
 parser.add_argument("--seed", help="The random seed", type=int, default=22956)
 parser.add_argument("--width", help="The width of plots", type=int, default=16)
 parser.add_argument("--height", help="The height of plots", type=int, default=6)
@@ -44,9 +44,9 @@ ax.bar(xs, data.iloc[0], width=0.4, bottom=np.zeros(1), tick_label=list(map(lamb
 ax.set_ylabel("Probability")
 ax.set_title("Prior Distribution")
 
-## Show randomly chosen entries
+## Show chosen entries
 m = cm.ScalarMappable(norm=colors.Normalize(vmin=0, vmax=1), cmap=cm.Greens)
-indexes = np.random.choice(list(range(len(dataset.entries))), args.num_entries)
+indexes = map(int, args.entries)
 for index in indexes:
     entry = dataset.entries[index]
 
