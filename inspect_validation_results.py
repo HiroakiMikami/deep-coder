@@ -2,6 +2,8 @@ import numpy as np
 import random
 import pickle
 import matplotlib.pyplot as plt
+from matplotlib import colors
+import matplotlib.cm as cm
 import pandas as pd
 import argparse
 from typing import List, Tuple, Union, Dict, Callable, Set
@@ -78,13 +80,14 @@ ax_time.set_ylabel("Time [Second]")
 ax_time.set_title("The Search Time")
 
 ## Show randomly chosen entries
+m = cm.ScalarMappable(norm=colors.Normalize(vmin=0, vmax=1), cmap=cm.Greens)
 indexes = np.random.choice(list(range(len(dataset.entries))), args.num_entries)
 for index in indexes:
     entry = dataset.entries[index]
     baseline_result = baseline[index]
     dnn_result = result[index]
 
-    fig, [ax_stats, ax_examples, ax_code] = plt.subplots(3, 1, figsize=(args.width, args.height))
+    fig, [ax_stats, ax_examples, ax_code, ax_attributes] = plt.subplots(4, 1, figsize=(args.width, args.height))
     fig.suptitle("Entry {}".format(index))
 
     ax_stats.axis("tight")
@@ -125,6 +128,29 @@ for index in indexes:
     colLabels = ["Ground Truth", "Baseline", "DNN"]
     text = [[entry.source_code, baseline_result.solution, dnn_result.solution]]
     ax_code.table(cellText=text, colLabels=colLabels, loc="center")
+
+    ax_attributes.set_title("Attributes")
+    #ax_attributes.get_yaxis().set_visible(False)
+    data = np.ones(len(entry.attributes))
+    gt = []
+    bs = []
+    dnn = []
+    for name in entry.attributes.keys():
+        gt.append(m.to_rgba(1 if entry.attributes[name] else 0))
+        bs.append(m.to_rgba(baseline_result.probabilities[name]))
+        dnn.append(m.to_rgba(dnn_result.probabilities[name]))
+    xs = np.arange(len(entry.attributes)) + 10
+    ax_attributes.bar(xs, data, width=0.9, bottom=np.zeros(1),
+            color=gt,
+            tick_label=list(entry.attributes.keys()))
+    ax_attributes.bar(xs, data, width=0.9, bottom=np.ones(1),
+            color=bs,
+            tick_label=list(entry.attributes.keys()))
+    ax_attributes.bar(xs, data, width=0.9, bottom=np.ones(1) * 2,
+            color=dnn,
+            tick_label=list(entry.attributes.keys()))
+    plt.sca(ax_attributes)
+    plt.yticks(ticks=[0.5, 1.5, 2.5], labels=["Ground Truth", "Baseline", "DNN"])
 
 plt.show()
 input("Press Enter to continue")

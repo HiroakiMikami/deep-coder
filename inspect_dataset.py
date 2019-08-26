@@ -1,6 +1,8 @@
 import numpy as np
 import random
 import pickle
+from matplotlib import colors
+import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import pandas as pd
 import argparse
@@ -43,6 +45,7 @@ ax.set_ylabel("Probability")
 ax.set_title("Prior Distribution")
 
 ## Show randomly chosen entries
+m = cm.ScalarMappable(norm=colors.Normalize(vmin=0, vmax=1), cmap=cm.Greens)
 indexes = np.random.choice(list(range(len(dataset.entries))), args.num_entries)
 for index in indexes:
     entry = dataset.entries[index]
@@ -76,19 +79,16 @@ for index in indexes:
         text.append(row)
     ax_examples.table(cellText=text, colLabels=colLabels, rowLabels=rowLabels, loc="center")
 
-    ax_attributes.axis("tight")
-    ax_attributes.axis("off")
     ax_attributes.set_title("Attributes")
-    labels = []
-    text = [[]]
+    ax_attributes.get_yaxis().set_visible(False)
+    data = np.ones(len(entry.attributes))
+    colors = []
     for name, v in entry.attributes.items():
-        if v:
-            labels.append(name)
-            text[0].append(v)
-    labels.append("Others")
-    text[0].append(False)
-    ax_attributes.table(cellText=text, colLabels=labels, loc="center")
-    ax_attributes.autoscale(True)
+        colors.append(m.to_rgba(1 if v else 0))
+    xs = np.arange(len(entry.attributes)) + 10
+    ax_attributes.bar(xs, data, width=0.9, bottom=np.zeros(1),
+            color=colors,
+            tick_label=list(entry.attributes.keys()))
 
 plt.show()
 input("Press Enter to continue")
