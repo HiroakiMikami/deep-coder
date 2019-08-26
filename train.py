@@ -15,7 +15,7 @@ import src.train as T
 SEED_MAX = 2**32 - 1
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--single-batch", help="Use one entry to debug the neural network model", action="store_true")
+parser.add_argument("--num-train", help="The number of entries used for training", type=int, default=None)
 parser.add_argument("--value-range", help="The largest absolute value used in the dataset", type=int, default=256)
 parser.add_argument("--max-list-length", help="The maximum length of the list used in the dataset", type=int, default=20)
 parser.add_argument("--num-epochs", help="The number of epoch", type=int, default=50)
@@ -36,8 +36,10 @@ np.random.seed(root_rng.randint(SEED_MAX))
 with open(args.dataset, "rb") as f:
     dataset: Dataset = pickle.load(f)
 
-if args.single_batch:
-    dataset = Dataset([dataset.entries[root_rng.randint(len(dataset.entries))]])
+if args.num_train:
+    num_test = int(args.num_train * (args.ratio_test if args.ratio_test is not None else 0.0))
+    random_indexes = root_rng.choice(len(dataset.entries), args.num_train + num_test, replace=False)
+    dataset = Dataset([dataset.entries[index] for index in random_indexes])
 
 dataset_stats = T.dataset_stats(dataset)
 model_shape = T.ModelShapeParameters(dataset_stats, args.value_range, args.max_list_length, args.n_embed, args.n_units)
