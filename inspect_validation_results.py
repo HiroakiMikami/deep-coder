@@ -84,8 +84,19 @@ for index in indexes:
     baseline_result = baseline[index]
     dnn_result = result[index]
 
-    fig, [ax_examples, ax_code] = plt.subplots(2, 1, figsize=(args.width, args.height))
+    fig, [ax_stats, ax_examples, ax_code] = plt.subplots(3, 1, figsize=(args.width, args.height))
     fig.suptitle("Entry {}".format(index))
+
+    ax_stats.axis("tight")
+    ax_stats.axis("off")
+    ax_stats.set_title("Stats")
+
+    colLabels = ["Baseline", "DNN"]
+    rowLabels = ["time [second]", "# explored nodes"]
+    text = [
+        [baseline_result.time_seconds, dnn_result.time_seconds],
+        [baseline_result.explored_nodes, dnn_result.explored_nodes]]
+    ax_stats.table(cellText=text, colLabels=colLabels, rowLabels=rowLabels, loc="center")
 
     ax_examples.axis("tight")
     ax_examples.axis("off")
