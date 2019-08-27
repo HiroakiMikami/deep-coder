@@ -3,6 +3,7 @@ import random
 import pickle
 import os
 import argparse
+from tqdm import tqdm
 import chainer as ch
 from src.dataset import Dataset
 import src.inference as I
@@ -47,7 +48,7 @@ else:
 
 results = dict([])
 num_succ = 0
-for i, entry in enumerate(dataset.entries):
+for i, entry in enumerate(tqdm(dataset.entries)):
     result = I.search(
         os.path.join(os.getcwd(), "DeepCoder_Utils", "enumerative-search", "search"),
         args.timeout_second,
