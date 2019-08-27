@@ -14,7 +14,7 @@ class Test_dataset_stats(unittest.TestCase):
         dataset = ch.datasets.TupleDataset([e0, e1])
         stats = dataset_stats(dataset)
         self.assertEqual(2, stats.max_num_inputs)
-        self.assertEqual(set(["HEAD", "TAKE"]), stats.names)
+        self.assertEqual(set(["HEAD", "TAKE"]), stats.symbols)
 
 
 class Test_prior_distribution(unittest.TestCase):

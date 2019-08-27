@@ -85,9 +85,9 @@ def arguments(id_generator: IdGenerator, variables: Set[Variable], signature):
                                        vars_new, [*(elem.new_variables), v_new]))
 
 
-def source_code(functions: List[Function], min_length: int, max_length: int):
+def programs(functions: List[Function], min_length: int, max_length: int):
     """
-    Enumerate all source code which length is in [min_length:max_length]
+    Enumerate all programs which length is in [min_length:max_length]
 
     Parameters
     ----------
@@ -132,9 +132,9 @@ def source_code(functions: List[Function], min_length: int, max_length: int):
                 s.append((p_new, generator))
 
 
-def random_source_code(functions: List[Function], min_length: int, max_length: int, rng: Union[None, np.random.RandomState] = None):
+def random_programs(functions: List[Function], min_length: int, max_length: int, rng: Union[None, np.random.RandomState] = None):
     """
-    Enumerate all source code which length is in [min_length:max_length]
+    Generate random programs which length is in [min_length:max_length]
 
     Parameters
     ----------

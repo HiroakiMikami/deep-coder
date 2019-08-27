@@ -271,7 +271,7 @@ def Predictor(params: ModelShapeParameters) -> ch.Link:
                          params.value_range, params.n_embed)
     encoder = Encoder(
         params.n_units, num_hidden_layers=params.num_hidden_layers)
-    decoder = Decoder(len(params.dataset_stats.names))
+    decoder = Decoder(len(params.dataset_stats.symbols))
 
     return ch.Sequential(embed, encoder, decoder)
 

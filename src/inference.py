@@ -192,13 +192,12 @@ def predict_with_neural_network(model_shape: ModelShapeParameters, model: Infere
         The predict function
     """
     def pred(examples: List[Example]):
-        ns = sorted(list(model_shape.dataset_stats.names))
         example_encodings = [encode_example(
             example, model_shape.value_range, model_shape.max_list_length) for example in examples]
         example_encodings = np.array([example_encodings])
         pred = model.model(example_encodings).array[0]
         retval = dict()
-        for name, p in zip(ns, pred):
+        for name, p in zip(sorted(list(model_shape.dataset_stats.symbols)), pred):
             retval[name] = p
         return retval
     return pred

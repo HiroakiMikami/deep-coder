@@ -6,7 +6,7 @@ import argparse
 from src.dsl import to_function, Program
 from src.deepcoder_utils import generate_io_samples
 from src.generate_dataset import generate_dataset, DatasetSpec, EquivalenceCheckingSpec, ProgressCallback
-from src.source_code_simplifier import remove_redundant_variables, remove_redundant_expressions, remove_dependency_between_variables
+from src.program_simplifier import remove_redundant_variables, remove_redundant_expressions, remove_dependency_between_variables
 
 SEED_MAX = 2**32 - 1
 

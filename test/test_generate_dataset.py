@@ -6,7 +6,7 @@ import numpy as np
 from src.deepcoder_utils import generate_io_samples
 from src.dsl import Function, Type, Variable, Expression, Program
 from src.generate_dataset import generate_dataset, DatasetSpec, EquivalenceCheckingSpec, ProgressCallback
-from src.source_code_simplifier import remove_redundant_variables
+from src.program_simplifier import remove_redundant_variables
 
 
 class Test_generate_dataset(unittest.TestCase):
@@ -137,8 +137,8 @@ class Test_generate_dataset(unittest.TestCase):
                 with open(os.path.join(name, p), "rb") as fp:
                     dataset = pickle.load(fp)
                     for entry, in dataset:
-                        for name in entry.attributes.keys():
-                            attribute_keys.add(name)
+                        for symbol in entry.attribute.keys():
+                            attribute_keys.add(symbol)
             self.assertEqual(set(["HEAD", "MAP", "INC"]), attribute_keys)
 
 

@@ -33,21 +33,21 @@ class Entry:
         The source code of the program
     examples : list of Example
         The input/output examples for the source code
-    attributes : dict from str to bool
-        The binary attributes of the source code.
-        The key represents the name of functions or lambdas.
+    attribute : dict from str to bool
+        The binary attribute of the source code.
+        The key represents the name of functions or lambdas (symbols).
         The value represents whether the program contains
         the function or not.
     """
     source_code: str
     examples: List[Example]
-    attributes: Dict[str, bool]
+    attribute: Dict[str, bool]
 
 
 @dataclasses.dataclass
 class DatasetStats:
     max_num_inputs: int
-    names: Set[str]
+    symbols: Set[str]
 
 
 def dataset_stats(dataset) -> DatasetStats:
@@ -65,14 +65,14 @@ def dataset_stats(dataset) -> DatasetStats:
         in the dataset.
     """
     num_inputs = 0
-    names = set([])
+    symbols = set([])
     for entry in dataset:
         entry = entry[0]
         num_inputs = max(num_inputs, len(entry.examples[0].inputs))
-        if len(names) == 0:
-            for name in entry.attributes.keys():
-                names.add(name)
-    return DatasetStats(num_inputs, names)
+        if len(symbols) == 0:
+            for symbol in entry.attribute.keys():
+                symbols.add(symbol)
+    return DatasetStats(num_inputs, symbols)
 
 
 def prior_distribution(dataset) -> Dict[str, float]:
@@ -94,13 +94,13 @@ def prior_distribution(dataset) -> Dict[str, float]:
     prior: Dict[Function, float] = dict()
     for entry in dataset:
         entry = entry[0]
-        for function, value in entry.attributes.items():
-            if not function in prior:
-                prior[function] = 0
-            prior[function] += 1 if value else 0
+        for symbol, value in entry.attribute.items():
+            if not symbol in prior:
+                prior[symbol] = 0
+            prior[symbol] += 1 if value else 0
 
-    for function in prior.keys():
-        prior[function] /= len(dataset)
+    for symbol in prior.keys():
+        prior[symbol] /= len(dataset)
 
     return prior
 
@@ -201,11 +201,11 @@ def encode_attribute(attribute: Dict[Function, bool]) -> np.array:
     PrimitiveEntry
         The encoding of the entry
     """
-    func_names = list(attribute.keys())
-    func_names = sorted(func_names)
+    symbols = list(attribute.keys())
+    symbols = sorted(symbols)
     arr = []
-    for func in func_names:
-        arr.append(1 if attribute[func] else 0)
+    for symbol in symbols:
+        arr.append(1 if attribute[symbol] else 0)
 
     return np.array(arr)
 
@@ -213,7 +213,7 @@ def encode_attribute(attribute: Dict[Function, bool]) -> np.array:
 def encode_entry(entry: Entry, value_range: int, max_list_length: int) -> EntryEncoding:
     example_encoding = [encode_example(example, value_range, max_list_length)
                         for example in entry.examples]
-    example_attribute = encode_attribute(entry.attributes)
+    example_attribute = encode_attribute(entry.attribute)
     return EntryEncoding(example_encoding, example_attribute)
 
 
@@ -231,7 +231,7 @@ class EncodedDataset(datasets.TransformDataset):
         Parameters
         ----------
         dataset : chainer.dataset
-            The instance contains the entries of the program, examples, and attributes
+            The instance contains the entries of the program, examples, and attribute
         value_range : int
             The largest absolute value used in the dataset
         max_list_length : int

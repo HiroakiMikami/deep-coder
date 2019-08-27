@@ -1,10 +1,10 @@
 import unittest
 
 from src.dsl import Function, Type, Variable, Expression, Program, Signature, Statement
-from src.source_code_simplifier import normalize, remove_redundant_variables, remove_redundant_expressions, remove_dependency_between_variables
+from src.program_simplifier import normalize, remove_redundant_variables, remove_redundant_expressions, remove_dependency_between_variables
 
 
-class Test_source_code_simplifier(unittest.TestCase):
+class Test_program_simplifier(unittest.TestCase):
     def test_normalize(self):
         F = Function("FUNC", Signature([Type.Int], Type.IntList))
         p = Program([Variable(1, Type.Int), Variable(0, Type.IntList)], [])

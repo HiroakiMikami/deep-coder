@@ -35,8 +35,8 @@ plt.ion()
 prior = prior_distribution(dataset)
 columns = []
 data = []
-for name, prob in prior.items():
-    columns.append(name)
+for symbol, prob in prior.items():
+    columns.append(symbol)
     data.append(prob)
 data = np.array([data])
 data = pd.DataFrame(data, columns=columns)
@@ -55,7 +55,7 @@ indexes = map(int, args.entries)
 for index in indexes:
     entry = dataset[index][0]
 
-    fig, [ax_code, ax_examples, ax_attributes] = plt.subplots(
+    fig, [ax_code, ax_examples, ax_attribute] = plt.subplots(
         3, 1, figsize=(args.width, args.height))
     fig.suptitle("Entry {}".format(index))
 
@@ -86,16 +86,16 @@ for index in indexes:
     ax_examples.table(cellText=text, colLabels=colLabels,
                       rowLabels=rowLabels, loc="center")
 
-    ax_attributes.set_title("Attributes")
-    ax_attributes.get_yaxis().set_visible(False)
-    data = np.ones(len(entry.attributes))
+    ax_attribute.set_title("Attributes")
+    ax_attribute.get_yaxis().set_visible(False)
+    data = np.ones(len(entry.attribute))
     colors = []
-    for name, v in entry.attributes.items():
+    for _, v in entry.attribute.items():
         colors.append(m.to_rgba(1 if v else 0))
-    xs = np.arange(len(entry.attributes)) + 10
-    ax_attributes.bar(xs, data, width=0.9, bottom=np.zeros(1),
-                      color=colors,
-                      tick_label=list(entry.attributes.keys()))
+    xs = np.arange(len(entry.attribute)) + 10
+    ax_attribute.bar(xs, data, width=0.9, bottom=np.zeros(1),
+                     color=colors,
+                     tick_label=list(entry.attribute.keys()))
 
 plt.show()
 input("Press Enter to continue")

@@ -9,8 +9,8 @@ from typing import List, Tuple, Union, Dict, Callable
 from .dataset import Primitive, Example, Entry
 from .deepcoder_utils import generate_io_samples
 from .dsl import Function, Program, Type, to_function, Signature
-from .source_code_simplifier import normalize
-from .source_code_generator import source_code
+from .program_simplifier import normalize
+from .program_generator import programs
 
 
 @dataclasses.dataclass
@@ -99,7 +99,7 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
         source_code: str
         program: generate_io_samples.Program
         examples: List[Example]
-        attributes: Dict[str, bool]
+        attribute: Dict[str, bool]
 
     def simplify_and_normalize(program: Program) -> Program:
         while True:
@@ -126,7 +126,7 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
 
     # Enumerate source code
     n_programs = 0
-    for program in source_code(functions_dsl, spec.min_program_length, spec.max_program_length):
+    for program in programs(functions_dsl, spec.min_program_length, spec.max_program_length):
         program = simplify_and_normalize(program)  # Simplify the program
         if not (spec.min_program_length <= len(program.body) <= spec.max_program_length):
             # If the length of simplified program is out of range, discard the program
@@ -162,23 +162,23 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
         except ValueError:
             continue
 
-        # Generate binary attributes
-        fs = set()
+        # Generate binary attribute
+        ss = set()
         for statement in program.body:
-            for name in statement.expression.function.name.split(" "):
-                fs.add(name)
-        attributes = dict()
+            for symbol in statement.expression.function.name.split(" "):
+                ss.add(symbol)
+        attribute = dict()
         for f in functions_dsl:
-            for name in f.name.split(" "):
-                if not name in attributes:
-                    attributes[name] = False
-                attributes[name] |= name in fs
+            for symbol in f.name.split(" "):
+                if not symbol in attribute:
+                    attribute[symbol] = False
+                attribute[symbol] |= symbol in ss
 
         if callback is not None:
             callback.on_generate_program(program)
         n_programs += 1
         entries[signature][code] = IntermidiateEntry(
-            code, p, list(map(lambda x: Example(x[0], x[1]), examples)), attributes)
+            code, p, list(map(lambda x: Example(x[0], x[1]), examples)), attribute)
 
     if callback is not None:
         callback.on_finish_enumeration(n_programs)
@@ -236,7 +236,7 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
         # Create dataset instance
         for entry in es.values():
             dataset.append(Entry(
-                entry.source_code, entry.examples, entry.attributes
+                entry.source_code, entry.examples, entry.attribute
             ))
         if callback is not None:
             callback.on_dump_dataset(len(ientries))

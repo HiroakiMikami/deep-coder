@@ -5,8 +5,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import chainer as ch
 import argparse
-import src.train as T
-from src.model import ModelShapeParameters
+from src.model import ModelShapeParameters, Predictor
 
 SEED_MAX = 2**32 - 1
 
@@ -27,14 +26,14 @@ np.random.seed(root_rng.randint(SEED_MAX))
 # Load model
 with open(args.modelshape, "rb") as f:
     model_shape: ModelShapeParameters = pickle.load(f)
-model = T.model(model_shape)
-ch.serializers.load_npz(args.model, model.predictor)
+predictor = Predictor(model_shape)
+ch.serializers.load_npz(args.model, predictor)
 
 plt.ion()
 
 # integer embeddings
 fig, ax = plt.subplots(figsize=(args.width, args.height))
-embed = list(model.predictor.children())[0]._embed_integer
+embed = list(predictor.children())[0]._embed_integer
 
 axis_0, axis_1 = np.random.choice(model_shape.n_embed, 2, replace=False)
 for i in range(-model_shape.value_range, model_shape.value_range):

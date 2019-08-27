@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 
 from src.dsl import Function, Type, Variable, Expression, Program, Signature
-from src.source_code_generator import arguments, source_code, random_source_code, IdGenerator, Variable, Type
+from src.program_generator import arguments, programs, random_programs, IdGenerator, Variable, Type
 
 
 class Test_arguments(unittest.TestCase):
@@ -44,32 +44,32 @@ class Test_arguments(unittest.TestCase):
         self.assertEqual(0, g.generate())
 
 
-class Test_source_code(unittest.TestCase):
-    def test_source_code(self):
+class Test_programs(unittest.TestCase):
+    def test_programs(self):
         TAKE = Function("TAKE", Signature(
             [Type.Int, Type.IntList], Type.IntList))
         HEAD = Function("HEAD", Signature([Type.IntList], Type.Int))
         srcs = set(map(lambda x: x.to_string(),
-                       source_code([TAKE, HEAD], 1, 1)))
+                       programs([TAKE, HEAD], 1, 1)))
         self.assertEqual(
             set(["a <- int\nb <- [int]\nc <- TAKE a b\n",
                  "a <- [int]\nb <- HEAD a\n"]),
             srcs
         )
 
-        srcs = list(source_code([TAKE], 2, 2))
+        srcs = list(programs([TAKE], 2, 2))
         l = set(map(lambda x: len(x.body), srcs))
 
         self.assertEqual(set([2]), l)
 
 
-class Test_random_source_code(unittest.TestCase):
-    def test_random_source_code(self):
+class Test_random_programs(unittest.TestCase):
+    def test_random_programs(self):
         TAKE = Function("TAKE", Signature(
             [Type.Int, Type.IntList], Type.IntList))
         HEAD = Function("HEAD", Signature([Type.IntList], Type.Int))
         l = []
-        for _, program in zip(range(100), random_source_code([TAKE, HEAD], 1, 2, rng=np.random.RandomState(100))):
+        for _, program in zip(range(100), random_programs([TAKE, HEAD], 1, 2, rng=np.random.RandomState(100))):
             l.append(len(program.body))
         self.assertTrue(min(l) >= 1)
         self.assertTrue(max(l) >= 2)
