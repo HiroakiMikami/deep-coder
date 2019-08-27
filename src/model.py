@@ -34,7 +34,8 @@ class ExampleEmbed(link.Chain):
     """
     The embeded link of DeepCoder
     """
-    def __init__(self, num_inputs: int, value_range: int, n_embed: int, initialW: Union[None, np.array]=None):
+    def __init__(self, num_inputs: int, value_range: int, n_embed: int,
+                 initialW: Union[None, np.array, ch.Initializer]=None):
         """
         Constructor
 
@@ -46,7 +47,7 @@ class ExampleEmbed(link.Chain):
             The largest absolute value used in the dataset.
         n_embed : int
             The dimension of integer embedding. 20 was used in the paper.
-        initialW : np.array or None
+        initialW : ch.Initializer or np.array or None
             The initial value of the weights
         """
         super(ExampleEmbed, self).__init__()
@@ -114,8 +115,8 @@ class Encoder(link.Chain):
     The encoder neural network of DeepCoder
     """
     def __init__(self, n_units: int,
-                 initialWs: Union[None, List[np.array]] = None,
-                 initial_biases: Union[None, List[np.array]] = None):
+                 initialW: Union[None, ch.Initializer] = None,
+                 initial_bias: Union[None, ch.Initializer] = None):
         """
         Constructor
 
@@ -123,27 +124,20 @@ class Encoder(link.Chain):
         ----------
         n_units : int
             The number of units in the hidden layers. 256 was used in the paper.
-        initialWs : List[np.array] or None
+        initialW : ch.Initializer or None
             The initial value of the weights
-        initial_biases : List[np.array] or None
+        initial_bias : ch.Initializer or None
             The initial value of the biases
         """
         super(Encoder, self).__init__()
 
         linears = []
-        if initialWs is None:
-            initialWs = [None, None, None]
-        if initial_biases is None:
-            initial_biases = [None, None, None]
         with self.init_scope():
-            for i in range(3):
-                linears.append(
-                    L.Linear(n_units, initialW=initialWs[i], initial_bias=initial_biases[i])
-                )
-            self._hidden = ch.Sequential(
-                linears[0], F.sigmoid,
-                linears[1], F.sigmoid,
-                linears[2], F.sigmoid)
+            layer = ch.Sequential(
+                L.Linear(n_units, initialW=initialW, initial_bias=initial_bias),
+                F.sigmoid
+            )
+            self._hidden = layer.repeat(3)
 
     def forward(self, state_embeddings: np.array):
         """
@@ -174,7 +168,8 @@ class Encoder(link.Chain):
         output = F.reshape(output, (N, e, -1))
         return output
 
-def Decoder(n_functions: int, initialW: Union[None, np.array] = None, initial_bias: Union[None, np.array] = None):
+def Decoder(n_functions: int, initialW: Union[None, ch.Initializer, np.array] = None,
+            initial_bias: Union[None, ch.Initializer, np.array] = None):
     """
     Returns the decoder of DeepCoder
 
