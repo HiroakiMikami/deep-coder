@@ -7,8 +7,8 @@ from src.model import ExampleEmbed, Encoder, Decoder, TrainingClassifier, tupled
 from src.dataset import Example, encode_example
 
 
-class TestExampleEmbed(unittest.TestCase):
-    def test_embed_one_sample(self):
+class Test_model(unittest.TestCase):
+    def test_example_embed_embed_one_sample(self):
         embed = ExampleEmbed(1, 2, 1, (np.arange(5) + 1).reshape((5, 1)))
         self.assertEqual(1, len(list(embed.params())))
         """
@@ -47,7 +47,7 @@ class TestExampleEmbed(unittest.TestCase):
         state_embeddings.backward()
 
     # minibatch with mask
-    def test_embed_minibatch_with_different_number_of_inputs(self):
+    def test_example_embed_embed_minibatch_with_different_number_of_inputs(self):
         embed = ExampleEmbed(2, 2, 1, (np.arange(5) + 1).reshape((5, 1)))
         """
         EmbedId
@@ -101,7 +101,7 @@ class TestExampleEmbed(unittest.TestCase):
         self.assertTrue(np.allclose(
             [0, 1, 5, 5], state_embeddings.array[1, 1, 2]))
 
-    def test_throw_error_if_num_inputs_is_too_large(self):
+    def test_example_embed_if_num_inputs_is_too_large(self):
         embed = ExampleEmbed(1, 2, 1, (np.arange(5) + 1).reshape((5, 1)))
         e0 = encode_example(Example([1, [0, 1]], [0]), 2, 2)
         e1 = encode_example(Example([0, [0, 1]], []), 2, 2)
@@ -109,9 +109,7 @@ class TestExampleEmbed(unittest.TestCase):
 
         self.assertRaises(RuntimeError, lambda: embed(minibatch))
 
-
-class TestEncoder(unittest.TestCase):
-    def test_encoder(self):
+    def test_Encoder(self):
         embed = ExampleEmbed(1, 2, 1, (np.arange(5) + 1).reshape((5, 1)))
 
         encoder = Encoder(1, initialW=ch.initializers.One(),
@@ -135,9 +133,7 @@ class TestEncoder(unittest.TestCase):
                 h = F.sigmoid(F.sigmoid(F.sigmoid(h)))
                 self.assertEqual(h.array, layer_encodings.array[i, j])
 
-
-class TestDecoder(unittest.TestCase):
-    def test_decoder(self):
+    def test_Decoder(self):
         initialW = np.ones((1, 2))
         initial_bias = np.zeros((1,))
 
@@ -154,9 +150,7 @@ class TestDecoder(unittest.TestCase):
         self.assertEqual((1, 1), output.shape)
         self.assertTrue(np.allclose(np.array([1.0]), output.array))
 
-
-class TestTrainingClassifier(unittest.TestCase):
-    def test_training_classifier(self):
+    def test_TrainingClassifier(self):
         embed = ExampleEmbed(1, 2, 2)
         encoder = Encoder(10)
         decoder = Decoder(2)
@@ -172,8 +166,6 @@ class TestTrainingClassifier(unittest.TestCase):
         # backward does not throw an error
         loss.backward()
 
-
-class Test_tupled_binary_accuracy(unittest.TestCase):
     def test_tupled_binary_accuracy(self):
         acc = tupled_binary_accuracy(
             np.array([-1.0, -1.0, -1.0, 1.0]), np.array([0, 0, 1, 1]))

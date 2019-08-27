@@ -5,7 +5,7 @@ import numpy as np
 from src.dataset import Example, Entry, prior_distribution, encode_primitive, encode_attribute, EncodedDataset, dataset_stats
 
 
-class Test_dataset_stats(unittest.TestCase):
+class Test_dataset(unittest.TestCase):
     def test_dataset_stats(self):
         e0 = Entry("HEAD", [Example([[10, 20]], 10)], dict(
             [["HEAD", True], ["TAKE", False]]))
@@ -16,8 +16,6 @@ class Test_dataset_stats(unittest.TestCase):
         self.assertEqual(2, stats.max_num_inputs)
         self.assertEqual(set(["HEAD", "TAKE"]), stats.symbols)
 
-
-class Test_prior_distribution(unittest.TestCase):
     def test_prior_distribution(self):
         dataset = ch.datasets.TupleDataset([
             Entry("", [], dict([["F1", True], ["F2", False]])),
@@ -27,8 +25,6 @@ class Test_prior_distribution(unittest.TestCase):
         self.assertAlmostEqual(1.0, prior["F1"])
         self.assertAlmostEqual(0.5, prior["F2"])
 
-
-class Test_encode_primitive(unittest.TestCase):
     def test_encode_primitive(self):
         encoding = encode_primitive(-10, 256, 2)
         self.assertEqual(0, encoding.t)
@@ -40,17 +36,13 @@ class Test_encode_primitive(unittest.TestCase):
         self.assertTrue(
             np.all(np.array([257, 258, 512] == encoding.value_arr)))
 
-
-class Test_encode_attribute(unittest.TestCase):
     def test_encode_attribute(self):
         encoding = encode_attribute(dict([
             ["A", True],
             ["B", False]]))
         self.assertTrue(np.all(np.array([1, 0]) == encoding))
 
-
-class Test_EncodedDataset(unittest.TestCase):
-    def test_constructor(self):
+    def test_EncodedDataset_constructor(self):
         dataset = ch.datasets.TupleDataset([
             Entry("entry1", [Example(([10, 20, 30],), 10)],
                   dict([["HEAD", True], ["SORT", False]])),

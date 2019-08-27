@@ -5,7 +5,7 @@ from src.dsl import Function, Type, Variable, Expression, Program, Signature
 from src.program_generator import arguments, programs, random_programs, IdGenerator, Variable, Type
 
 
-class Test_arguments(unittest.TestCase):
+class Test_program_generator(unittest.TestCase):
     def test_arguments(self):
         g = IdGenerator()
         args = list(arguments(g, set([Variable(g.generate(), Type.Int), Variable(
@@ -43,8 +43,6 @@ class Test_arguments(unittest.TestCase):
         self.assertEqual(2, args[0].generator.generate())
         self.assertEqual(0, g.generate())
 
-
-class Test_programs(unittest.TestCase):
     def test_programs(self):
         TAKE = Function("TAKE", Signature(
             [Type.Int, Type.IntList], Type.IntList))
