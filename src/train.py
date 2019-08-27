@@ -15,6 +15,7 @@ class ModelShapeParameters:
     dataset_stats: DatasetStats
     value_range: int
     max_list_length: int
+    num_hidden_layers: int
     n_embed: int
     n_units: int
 
@@ -55,7 +56,7 @@ def model(params: ModelShapeParameters) -> ch.Link:
         The model of DeepCoder
     """
     embed = ExampleEmbed(params.dataset_stats.max_num_inputs, params.value_range, params.n_embed)
-    encoder = Encoder(params.n_units)
+    encoder = Encoder(params.n_units, num_hidden_layers=params.num_hidden_layers)
     decoder = Decoder(len(params.dataset_stats.names))
     return TrainingClassifier(embed, encoder, decoder)
 

@@ -20,6 +20,7 @@ parser.add_argument("--value-range", help="The largest absolute value used in th
 parser.add_argument("--max-list-length", help="The maximum length of the list used in the dataset", type=int, default=20)
 parser.add_argument("--num-epochs", help="The number of epoch", type=int, default=50)
 parser.add_argument("--seed", help="The random seed", type=int, default=24649)
+parser.add_argument("--num-hidden-layers", help="The number of the hidden layers", type=int, default=3)
 parser.add_argument("--n-embed", help="The dimension of integer embeddings", type=int, default=20)
 parser.add_argument("--n-units", help="The number of units in the hidden layers", type=int, default=256)
 parser.add_argument("--batch-size", help="The minibatch-size", type=int, default=32)
@@ -42,7 +43,8 @@ if args.num_train:
     dataset = Dataset([dataset.entries[index] for index in random_indexes])
 
 dataset_stats = T.dataset_stats(dataset)
-model_shape = T.ModelShapeParameters(dataset_stats, args.value_range, args.max_list_length, args.n_embed, args.n_units)
+model_shape = T.ModelShapeParameters(dataset_stats, args.value_range, args.max_list_length,
+                                     args.num_hidden_layers, args.n_embed, args.n_units)
 model = T.model(model_shape)
 
 # Save model shape
