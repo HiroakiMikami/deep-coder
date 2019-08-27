@@ -25,16 +25,15 @@ parser.add_argument("model", help="The path of the model file", type=str)
 parser.add_argument(
     "dataset", help="The path of the dataset pickle file", type=str)
 parser.add_argument(
-    "output", help="The path of the directory to store the result", type=str)
+    "output", help="The path to store the result", type=str)
 args = parser.parse_args()
 
 root_rng = np.random.RandomState(args.seed)
 random.seed(root_rng.randint(SEED_MAX))
 np.random.seed(root_rng.randint(SEED_MAX))
 
-if not os.path.exists(args.output):
-    os.makedirs(args.output)
-assert(os.path.isdir(args.output))
+if not os.path.exists(os.path.dirname(args.output)):
+    os.makedirs(os.path.dirname(args.output))
 
 with open(args.dataset, "rb") as f:
     dataset: ch.datasets.TupleDataset = pickle.load(f)
@@ -43,7 +42,7 @@ with open(args.dataset, "rb") as f:
 with open(args.modelshape, "rb") as f:
     model_shape: ModelShapeParameters = pickle.load(f)
 model = I.InferenceModel(model_shape)
-ch.serializers.load_npz(args.model, model.predictor)  # TODO
+ch.serializers.load_npz(args.model, model.predictor)
 
 if args.use_prior:
     with open(args.use_prior, "rb") as f:
@@ -70,5 +69,5 @@ for i, (entry,) in enumerate(tqdm(dataset)):
 
 print("Solved: {} of {} examples".format(num_succ, len(dataset)))
 
-with open(os.path.join(args.output, "validation_results.pickle"), "wb") as f:
+with open(args.output, "wb") as f:
     pickle.dump(results, f)

@@ -70,7 +70,7 @@ class ProgressCallback:
 
 def generate_dataset(functions: List[generate_io_samples.Function], spec: DatasetSpec,
                      equivalence_spec: EquivalenceCheckingSpec,
-                     destinationDir: str, simplify: Union[None, SimplifyFunction] = None,
+                     destination: str, simplify: Union[None, SimplifyFunction] = None,
                      callback: Union[None, ProgressCallback] = None):
     """
     Generate dataset to the file
@@ -83,7 +83,7 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
         The specification of generated dataset
     equivalence_spec: EquivalenceCheckingSpec
         The specification used to check equivalence of programs
-    destinationDir : str
+    destination : str
         The destination of the dataset file
     simplify : function or None
         The function to simplify the source code
@@ -242,5 +242,5 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
             callback.on_dump_dataset(len(ientries))
 
     # Dump the dataset to the file
-    with open(os.path.join(destinationDir, "dataset.pickle"), "wb") as f:
+    with open(destination, "wb") as f:
         pickle.dump(ch.datasets.TupleDataset(dataset), f)

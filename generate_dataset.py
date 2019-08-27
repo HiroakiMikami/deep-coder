@@ -25,7 +25,7 @@ parser.add_argument("--seed", help="The random seed", type=int, default=6217)
 parser.add_argument("--num-examples-for-pruning",
                     help="The number of examples used to prune the identical programs", type=int, default=100)
 parser.add_argument(
-    "destination", help="The directory that will contain the dataset", type=str)
+    "destination", help="The path that will contain the dataset", type=str)
 args = parser.parse_args()
 
 root_rng = np.random.RandomState(args.seed)
@@ -70,9 +70,8 @@ tqdm_for_generation = Tqdm()
 callback = ProgressCallback(lambda p: tqdm_for_generation.on_generate_program(
     p), lambda x: tqdm_for_generation.on_finish_enumeration(x), lambda x: tqdm_for_generation.on_dump_dataset(x))
 
-if not os.path.exists(args.destination):
-    os.makedirs(args.destination)
-assert(os.path.isdir(args.destination))
+if not os.path.exists(os.path.dirname(args.destination)):
+    os.makedirs(os.path.dirname(args.destination))
 
 generate_dataset(LINQ,
                  DatasetSpec(args.value_range, args.max_list_length,

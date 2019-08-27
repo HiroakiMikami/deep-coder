@@ -16,27 +16,29 @@ class Test_generate_dataset(unittest.TestCase):
         TAKE = [f for f in LINQ if f.src == "TAKE"][0]
 
         # Generate the program with the length of 1
-        with tempfile.TemporaryDirectory() as name:
+        with tempfile.NamedTemporaryFile() as f:
+            name = f.name
             generate_dataset([HEAD, TAKE], DatasetSpec(
                 50, 20, 5, 1, 1), EquivalenceCheckingSpec(1.0, 1, None), name)
             # Check the dataset
             srcs = set()
-            for p in os.listdir(name):
-                with open(os.path.join(name, p), "rb") as fp:
-                    dataset = pickle.load(fp)
-                    for entry, in dataset:
-                        srcs.add(entry.source_code)
-                        p = generate_io_samples.compile(
-                            entry.source_code, 50, 5)
-                        self.assertNotEqual(None, p)
-                        for example in entry.examples:
-                            output = p.fun(example.inputs)
-                            self.assertEqual(output, example.output)
+            with open(name, "rb") as fp:
+                dataset = pickle.load(fp)
+                for entry, in dataset:
+                    srcs.add(entry.source_code)
+                    p = generate_io_samples.compile(
+                        entry.source_code, 50, 5)
+                    self.assertNotEqual(None, p)
+                    for example in entry.examples:
+                        output = p.fun(example.inputs)
+                        self.assertEqual(output, example.output)
             self.assertEqual(
                 set(["a <- int\nb <- [int]\nc <- TAKE a b", "a <- [int]\nb <- HEAD a"]), srcs)
 
         # Generate the program with the length of 2
-        with tempfile.TemporaryDirectory() as name:
+        with tempfile.NamedTemporaryFile() as f:
+            name = f.name
+
             def simplify(program):
                 program = remove_redundant_variables(program)
                 return program
@@ -45,17 +47,16 @@ class Test_generate_dataset(unittest.TestCase):
 
             # Check the dataset
             srcs = set()
-            for p in os.listdir(name):
-                with open(os.path.join(name, p), "rb") as fp:
-                    dataset = pickle.load(fp)
-                    for entry, in dataset:
-                        srcs.add(entry.source_code)
-                        p = generate_io_samples.compile(
-                            entry.source_code, 50, 5)
-                        self.assertNotEqual(None, p)
-                        for example in entry.examples:
-                            output = p.fun(example.inputs)
-                            self.assertEqual(output, example.output)
+            with open(name, "rb") as fp:
+                dataset = pickle.load(fp)
+                for entry, in dataset:
+                    srcs.add(entry.source_code)
+                    p = generate_io_samples.compile(
+                        entry.source_code, 50, 5)
+                    self.assertNotEqual(None, p)
+                    for example in entry.examples:
+                        output = p.fun(example.inputs)
+                        self.assertEqual(output, example.output)
             self.assertEqual(set([
                 "a <- [int]\nb <- HEAD a\nc <- TAKE b a",
                 "a <- int\nb <- [int]\nc <- TAKE a b\nd <- TAKE a c",
@@ -70,23 +71,23 @@ class Test_generate_dataset(unittest.TestCase):
         LAST = [f for f in LINQ if f.src == "LAST"][0]
 
         # Generate the program with the length of 1
-        with tempfile.TemporaryDirectory() as name:
+        with tempfile.NamedTemporaryFile() as f:
+            name = f.name
             np.random.seed(0)
             generate_dataset([HEAD, LAST], DatasetSpec(
                 50, 20, 5, 1, 1), EquivalenceCheckingSpec(0, 1, None), name)
             # Check the dataset
             srcs = set()
-            for p in os.listdir(name):
-                with open(os.path.join(name, p), "rb") as fp:
-                    dataset = pickle.load(fp)
-                    for entry, in dataset:
-                        srcs.add(entry.source_code)
-                        p = generate_io_samples.compile(
-                            entry.source_code, 50, 5)
-                        self.assertNotEqual(None, p)
-                        for example in entry.examples:
-                            output = p.fun(example.inputs)
-                            self.assertEqual(output, example.output)
+            with open(name, "rb") as fp:
+                dataset = pickle.load(fp)
+                for entry, in dataset:
+                    srcs.add(entry.source_code)
+                    p = generate_io_samples.compile(
+                        entry.source_code, 50, 5)
+                    self.assertNotEqual(None, p)
+                    for example in entry.examples:
+                        output = p.fun(example.inputs)
+                        self.assertEqual(output, example.output)
             self.assertEqual(
                 set(["a <- [int]\nb <- HEAD a", "a <- [int]\nb <- LAST a"]), srcs)
 
@@ -113,7 +114,8 @@ class Test_generate_dataset(unittest.TestCase):
             p), lambda x: c.on_finish_enumeration(x), lambda x: c.on_dump_dataset(x))
 
         # Generate the program with the length of 1
-        with tempfile.TemporaryDirectory() as name:
+        with tempfile.NamedTemporaryFile() as f:
+            name = f.name
             np.random.seed(0)
             generate_dataset([HEAD, LAST], DatasetSpec(
                 50, 20, 5, 1, 1), EquivalenceCheckingSpec(1, 1, None), name, callback=callback)
@@ -127,18 +129,18 @@ class Test_generate_dataset(unittest.TestCase):
         MAP_INC = [f for f in LINQ if f.src == "MAP INC"][0]
 
         # Generate the program with the length of 1
-        with tempfile.TemporaryDirectory() as name:
+        with tempfile.NamedTemporaryFile() as f:
+            name = f.name
             np.random.seed(0)
             generate_dataset([HEAD, MAP_INC], DatasetSpec(
                 50, 20, 5, 1, 1), EquivalenceCheckingSpec(1, 1, None), name)
             # Check the dataset
             attribute_keys = set()
-            for p in os.listdir(name):
-                with open(os.path.join(name, p), "rb") as fp:
-                    dataset = pickle.load(fp)
-                    for entry, in dataset:
-                        for symbol in entry.attribute.keys():
-                            attribute_keys.add(symbol)
+            with open(name, "rb") as fp:
+                dataset = pickle.load(fp)
+                for entry, in dataset:
+                    for symbol in entry.attribute.keys():
+                        attribute_keys.add(symbol)
             self.assertEqual(set(["HEAD", "MAP", "INC"]), attribute_keys)
 
 
