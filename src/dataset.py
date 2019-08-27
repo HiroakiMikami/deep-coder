@@ -6,6 +6,7 @@ from .dsl import Function
 Primitive = Union[int, List[int]]
 Example = Tuple[List[Primitive], Primitive]
 
+
 @dataclasses.dataclass
 class Entry:
     """
@@ -27,6 +28,7 @@ class Entry:
     examples: List[Example]
     attributes: Dict[str, bool]
 
+
 @dataclasses.dataclass
 class Dataset:
     """
@@ -38,6 +40,7 @@ class Dataset:
         The entries of this dataset.
     """
     entries: List[Entry]
+
 
 def prior_distribution(dataset: Dataset) -> Dict[str, float]:
     """
@@ -66,6 +69,7 @@ def prior_distribution(dataset: Dataset) -> Dict[str, float]:
 
     return prior
 
+
 def divide(dataset: Dataset, separators: Dict[str, int], rng: Union[None, np.random.RandomState] = None) -> Dict[str, Dataset]:
     """
     Divide the dataset into some sub-datasets and return the set of sub-datasets
@@ -93,7 +97,8 @@ def divide(dataset: Dataset, separators: Dict[str, int], rng: Union[None, np.ran
     total = sum(map(lambda x: x[1], separators.items()))
     assert(total <= len(dataset.entries))
 
-    random_indexes = np.random.choice(len(dataset.entries), len(dataset.entries), replace=False)
+    random_indexes = np.random.choice(
+        len(dataset.entries), len(dataset.entries), replace=False)
     offset = 0
     retval = dict()
     for name, num in separators.items():

@@ -4,9 +4,11 @@ from typing import List, Tuple, TypeVar
 import copy
 from src.deepcoder_utils import generate_io_samples
 
+
 class Type(Enum):
     Int = 1
     IntList = 2
+
 
 @dataclasses.dataclass
 class Function:
@@ -23,10 +25,13 @@ class Function:
     """
     name: str
     signature: Tuple[List[Type], Type]
+
     def __eq__(self, rhs):
         return self.name == rhs.name and self.signature == rhs.signature
+
     def __hash__(self):
         return hash((self.name, (tuple(self.signature[0]), self.signature[1])))
+
 
 @dataclasses.dataclass
 class Variable:
@@ -43,10 +48,13 @@ class Variable:
 
     id: int
     t: Type
+
     def __eq__(self, rhs):
         return self.id == rhs.id and self.t == rhs.t
+
     def __hash__(self):
         return hash((self.id, self.t))
+
 
 @dataclasses.dataclass
 class Expression:
@@ -63,6 +71,7 @@ class Expression:
 
     function: Function
     arguments: List[Variable]
+
 
 @dataclasses.dataclass
 class Program:
@@ -83,6 +92,7 @@ class Program:
     inputs: List[Variable]
     body: List[Tuple[Variable, Expression]]
 
+
 def to_string(program: Program) -> str:
     """
     Return the source code of the program
@@ -99,6 +109,7 @@ def to_string(program: Program) -> str:
     """
 
     code = ""
+
     def id_to_name(id: int) -> str:
         name = ""
         while True:
@@ -110,11 +121,14 @@ def to_string(program: Program) -> str:
         return name
 
     for input in program.inputs:
-        code += "{} <- {}\n".format(id_to_name(input.id), "int" if input.t == Type.Int else "[int]")
+        code += "{} <- {}\n".format(id_to_name(input.id),
+                                    "int" if input.t == Type.Int else "[int]")
     for v, exp in program.body:
-        code += "{} <- {} {}\n".format(id_to_name(v.id), exp.function.name, " ".join(map(lambda x: id_to_name(x.id), exp.arguments)))
+        code += "{} <- {} {}\n".format(id_to_name(v.id), exp.function.name, " ".join(
+            map(lambda x: id_to_name(x.id), exp.arguments)))
 
     return code
+
 
 def clone(program: Program) -> Program:
     """

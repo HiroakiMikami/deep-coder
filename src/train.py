@@ -5,10 +5,12 @@ from chainer import training
 from .dataset import Dataset
 from .model import ExampleEmbed, Encoder, Decoder, TrainingClassifier
 
+
 @dataclasses.dataclass
 class DatasetStats:
     max_num_inputs: int
     names: Set[str]
+
 
 @dataclasses.dataclass
 class ModelShapeParameters:
@@ -18,6 +20,7 @@ class ModelShapeParameters:
     num_hidden_layers: int
     n_embed: int
     n_units: int
+
 
 def dataset_stats(dataset: Dataset) -> DatasetStats:
     """
@@ -42,6 +45,7 @@ def dataset_stats(dataset: Dataset) -> DatasetStats:
                 names.add(name)
     return DatasetStats(num_inputs, names)
 
+
 def model(params: ModelShapeParameters, w_0: float = -1) -> ch.Link:
     """
     Return the model of DeepCoder
@@ -57,13 +61,16 @@ def model(params: ModelShapeParameters, w_0: float = -1) -> ch.Link:
     ch.Link
         The model of DeepCoder
     """
-    embed = ExampleEmbed(params.dataset_stats.max_num_inputs, params.value_range, params.n_embed)
-    encoder = Encoder(params.n_units, num_hidden_layers=params.num_hidden_layers)
+    embed = ExampleEmbed(params.dataset_stats.max_num_inputs,
+                         params.value_range, params.n_embed)
+    encoder = Encoder(
+        params.n_units, num_hidden_layers=params.num_hidden_layers)
     decoder = Decoder(len(params.dataset_stats.names))
     return TrainingClassifier(embed, encoder, decoder, w_0)
 
+
 def trainer(train_iter, out: str,
-            model: ch.Link, num_epochs: int, optimizer = ch.optimizers.Adam(), device=-1):
+            model: ch.Link, num_epochs: int, optimizer=ch.optimizers.Adam(), device=-1):
     """
     Return the trainer
 

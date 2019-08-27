@@ -12,14 +12,20 @@ import src.train as T
 SEED_MAX = 2**32 - 1
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--use-prior", help="Use prior distribution in prediction", type=str, default=None)
-parser.add_argument("--max-program-length", help="The maximum length of the program", type=int, default=5)
-parser.add_argument("--timeout-second", help="The timeout", type=int, default=10)
+parser.add_argument(
+    "--use-prior", help="Use prior distribution in prediction", type=str, default=None)
+parser.add_argument("--max-program-length",
+                    help="The maximum length of the program", type=int, default=5)
+parser.add_argument("--timeout-second", help="The timeout",
+                    type=int, default=10)
 parser.add_argument("--seed", help="The random seed", type=int, default=24649)
-parser.add_argument("modelshape", help="The path of the model shape parameter file", type=str)
+parser.add_argument(
+    "modelshape", help="The path of the model shape parameter file", type=str)
 parser.add_argument("model", help="The path of the model file", type=str)
-parser.add_argument("dataset", help="The path of the dataset pickle file", type=str)
-parser.add_argument("output", help="The path of the directory to store the result", type=str)
+parser.add_argument(
+    "dataset", help="The path of the dataset pickle file", type=str)
+parser.add_argument(
+    "output", help="The path of the directory to store the result", type=str)
 args = parser.parse_args()
 
 root_rng = np.random.RandomState(args.seed)
@@ -35,7 +41,7 @@ with open(args.dataset, "rb") as f:
 
 # Load model
 with open(args.modelshape, "rb") as f:
-   model_shape: T.ModelShapeParameters = pickle.load(f)
+    model_shape: T.ModelShapeParameters = pickle.load(f)
 model = I.model(model_shape)
 ch.serializers.load_npz(args.model, model)
 
@@ -50,7 +56,8 @@ results = dict([])
 num_succ = 0
 for i, entry in enumerate(tqdm(dataset.entries)):
     result = I.search(
-        os.path.join(os.getcwd(), "DeepCoder_Utils", "enumerative-search", "search"),
+        os.path.join(os.getcwd(), "DeepCoder_Utils",
+                     "enumerative-search", "search"),
         args.timeout_second,
         model_shape.value_range,
         entry.examples,

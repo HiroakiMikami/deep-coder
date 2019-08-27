@@ -4,10 +4,12 @@ import numpy as np
 from src.dsl import Function, Type, Variable, Expression, Program, to_string
 from src.source_code_generator import arguments, source_code, random_source_code, IdGenerator, Variable, Type
 
+
 class Test_arguments(unittest.TestCase):
     def test_arguments(self):
         g = IdGenerator()
-        args = list(arguments(g, set([Variable(g.generate(), Type.Int), Variable(g.generate(), Type.IntList)]), [Type.Int, Type.IntList]))
+        args = list(arguments(g, set([Variable(g.generate(), Type.Int), Variable(
+            g.generate(), Type.IntList)]), [Type.Int, Type.IntList]))
         """
         [v(0), v(1)]
         [v(0), v_new]
@@ -32,11 +34,15 @@ class Test_arguments(unittest.TestCase):
         g = IdGenerator()
         args = list(arguments(g, set(), [Type.Int, Type.IntList]))
         self.assertEqual(1, len(args))
-        self.assertEqual([Variable(0, Type.Int), Variable(1, Type.IntList)], args[0].arguments)
-        self.assertEqual(set([Variable(0, Type.Int), Variable(1, Type.IntList)]), args[0].variables)
-        self.assertEqual([Variable(0, Type.Int), Variable(1, Type.IntList)], args[0].new_variables)
+        self.assertEqual([Variable(0, Type.Int), Variable(
+            1, Type.IntList)], args[0].arguments)
+        self.assertEqual(
+            set([Variable(0, Type.Int), Variable(1, Type.IntList)]), args[0].variables)
+        self.assertEqual([Variable(0, Type.Int), Variable(
+            1, Type.IntList)], args[0].new_variables)
         self.assertEqual(2, args[0].generator.generate())
         self.assertEqual(0, g.generate())
+
 
 class Test_source_code(unittest.TestCase):
     def test_source_code(self):
@@ -44,7 +50,8 @@ class Test_source_code(unittest.TestCase):
         HEAD = Function("HEAD", ([Type.IntList], Type.Int))
         srcs = set(map(to_string, source_code([TAKE, HEAD], 1, 1)))
         self.assertEqual(
-            set(["a <- int\nb <- [int]\nc <- TAKE a b\n", "a <- [int]\nb <- HEAD a\n"]),
+            set(["a <- int\nb <- [int]\nc <- TAKE a b\n",
+                 "a <- [int]\nb <- HEAD a\n"]),
             srcs
         )
 
@@ -52,6 +59,7 @@ class Test_source_code(unittest.TestCase):
         l = set(map(lambda x: len(x.body), srcs))
 
         self.assertEqual(set([2]), l)
+
 
 class Test_random_source_code(unittest.TestCase):
     def test_random_source_code(self):
@@ -62,6 +70,7 @@ class Test_random_source_code(unittest.TestCase):
             l.append(len(program.body))
         self.assertTrue(min(l) >= 1)
         self.assertTrue(max(l) >= 2)
+
 
 if __name__ == "__main__":
     unittest.main()

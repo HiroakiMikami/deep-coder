@@ -11,6 +11,7 @@ from .dsl import Function, Program, to_string, clone, Type, to_function
 from .source_code_simplifier import normalize
 from .source_code_generator import source_code
 
+
 @dataclasses.dataclass
 class DatasetSpec:
     """
@@ -30,6 +31,7 @@ class DatasetSpec:
     min_program_length: int
     max_program_length: int
 
+
 @dataclasses.dataclass
 class EquivalenceCheckingSpec:
     """
@@ -45,7 +47,9 @@ class EquivalenceCheckingSpec:
     num_of_examples: int
     rng: Union[np.random.RandomState, None]
 
+
 SimplifyFunction = Callable[[Program], Program]
+
 
 @dataclasses.dataclass
 class ProgressCallback:
@@ -60,11 +64,12 @@ class ProgressCallback:
     """
     on_generate_program: Callable[[Program], None]
     on_finish_enumeration: Callable[[int], None]
-    on_dump_dataset : Callable[[int], None]
+    on_dump_dataset: Callable[[int], None]
+
 
 def generate_dataset(functions: List[generate_io_samples.Function], spec: DatasetSpec,
                      equivalence_spec: EquivalenceCheckingSpec,
-                     destinationDir: str, simplify: Union[None, SimplifyFunction]=None,
+                     destinationDir: str, simplify: Union[None, SimplifyFunction] = None,
                      callback: Union[None, ProgressCallback] = None):
     """
     Generate dataset to the file
@@ -110,19 +115,21 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
         input = []
         for i in program.inputs:
             input.append(i.t)
-        output = program.body[-1][1].function.signature[-1] if len(program.body) > 0 else None
+        output = program.body[-1][1].function.signature[-1] if len(
+            program.body) > 0 else None
         return (input, output)
+
     def signature_to_string(signature):
         return "{}".format(signature)
 
     functions_dsl = [to_function(f) for f in functions]
     invalid_program = set()
-    entries = dict() # signature -> dict(str -> IntermidiateEntry)
+    entries = dict()  # signature -> dict(str -> IntermidiateEntry)
 
     # Enumerate source code
     n_programs = 0
     for program in source_code(functions_dsl, spec.min_program_length, spec.max_program_length):
-        program = simplify_and_normalize(program) # Simplify the program
+        program = simplify_and_normalize(program)  # Simplify the program
         if not (spec.min_program_length <= len(program.body) <= spec.max_program_length):
             # If the length of simplified program is out of range, discard the program
             continue
@@ -131,7 +138,8 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
         if not signature in entries:
             entries[signature] = dict()
 
-        code = to_string(program)[:-1] # last newline should be removed to compile source code
+        # last newline should be removed to compile source code
+        code = to_string(program)[:-1]
 
         if code in entries[signature]:
             # the program is already added to the dataset
@@ -140,8 +148,9 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
         # Compile the source code
         if code in invalid_program:
             continue
-        with contextlib.redirect_stdout(None): # ignore stdout
-            p = generate_io_samples.compile(code, V=spec.value_range, L=spec.max_list_length)
+        with contextlib.redirect_stdout(None):  # ignore stdout
+            p = generate_io_samples.compile(
+                code, V=spec.value_range, L=spec.max_list_length)
         if p is None:
             # Compilation is failed
             invalid_program.add(code)
@@ -149,8 +158,9 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
 
         try:
             # Generate IO examples
-            with contextlib.redirect_stdout(None): # ignore stdout
-                examples = generate_io_samples.generate_IO_examples(p, N=spec.num_examples, L=spec.max_list_length, V=spec.value_range)
+            with contextlib.redirect_stdout(None):  # ignore stdout
+                examples = generate_io_samples.generate_IO_examples(
+                    p, N=spec.num_examples, L=spec.max_list_length, V=spec.value_range)
         except ValueError:
             continue
 
@@ -169,7 +179,8 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
         if callback is not None:
             callback.on_generate_program(program)
         n_programs += 1
-        entries[signature][code] = IntermidiateEntry(code, p, examples, attributes)
+        entries[signature][code] = IntermidiateEntry(
+            code, p, examples, attributes)
 
     if callback is not None:
         callback.on_finish_enumeration(n_programs)
@@ -190,20 +201,22 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
         from_partial_entries = num % len(ientries)
 
         # Extract examples from all entries
-        not_used = dict() # str -> [int]
+        not_used = dict()  # str -> [int]
         for entry in ientries.values():
-            indexes = set(rng.choice(list(range(spec.num_examples)), from_all_entries, replace=False))
+            indexes = set(rng.choice(list(range(spec.num_examples)),
+                                     from_all_entries, replace=False))
             for index in indexes:
                 examples.append(entry.examples[index][0])
-            not_used[entry.source_code] = [i for i in range(spec.num_examples) if not (i in indexes) ]
+            not_used[entry.source_code] = [i for i in range(
+                spec.num_examples) if not (i in indexes)]
         # Extract examples from partial entries
         if from_partial_entries != 0:
             for entry in rng.choice(list(ientries.values()), from_partial_entries, replace=False):
                 index = rng.choice(not_used[entry.source_code])
                 examples.append(entry.examples[index][0])
-        
+
         # Execute programs
-        es = dict() # Tuple[Primitive] -> IntermidiateEntry
+        es = dict()  # Tuple[Primitive] -> IntermidiateEntry
         for entry in ientries.values():
             result = []
             for example in examples:
@@ -226,7 +239,7 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
         for entry in es.values():
             dataset.entries.append(Entry(
                 entry.source_code, entry.examples, entry.attributes
-        ))
+            ))
         if callback is not None:
             callback.on_dump_dataset(len(ientries))
 

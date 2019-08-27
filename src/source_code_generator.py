@@ -4,6 +4,7 @@ from typing import List, Set, Union
 import copy
 from .dsl import Function, Type, Variable, Expression, Program, clone
 
+
 class IdGenerator:
     """
     The class to generate a unique id
@@ -13,8 +14,10 @@ class IdGenerator:
     _n : int
         The next id
     """
+
     def __init__(self):
         self._n = 0
+
     def generate(self):
         """
         Return a unique id
@@ -28,12 +31,14 @@ class IdGenerator:
         self._n += 1
         return id
 
+
 @dataclasses.dataclass
 class ArgumentWithState:
     arguments: List[Variable]
     generator: IdGenerator
     variables: Set[Variable]
     new_variables: List[Variable]
+
 
 def arguments(id_generator: IdGenerator, variables: Set[Variable], signature):
     """
@@ -55,25 +60,30 @@ def arguments(id_generator: IdGenerator, variables: Set[Variable], signature):
     """
 
     # Perform DFS to enumerate arguments
-    s = list([ArgumentWithState([], id_generator, variables, set())]) # Start from an empty list
+    # Start from an empty list
+    s = list([ArgumentWithState([], id_generator, variables, set())])
     while len(s) != 0:
         elem = s.pop()
 
         if len(elem.arguments) == len(signature):
             yield elem
         else:
-            t_arg = signature[len(elem.arguments)] # The type of the argument
-            candidates = [v for v in elem.variables if v.t == t_arg] # Existing variables which type is t_arg
+            t_arg = signature[len(elem.arguments)]  # The type of the argument
+            # Existing variables which type is t_arg
+            candidates = [v for v in elem.variables if v.t == t_arg]
 
             for v in candidates:
                 # Use existing var
-                s.append(ArgumentWithState([*(elem.arguments), v], elem.generator, elem.variables, elem.new_variables))
+                s.append(ArgumentWithState(
+                    [*(elem.arguments), v], elem.generator, elem.variables, elem.new_variables))
             # Create new var
             generator_new = copy.deepcopy(elem.generator)
             v_new = Variable(generator_new.generate(), t_arg)
             arg_new = [*(elem.arguments), v_new]
             vars_new = set([*(elem.variables), v_new])
-            s.append(ArgumentWithState(arg_new, generator_new, vars_new, [*(elem.new_variables), v_new]))
+            s.append(ArgumentWithState(arg_new, generator_new,
+                                       vars_new, [*(elem.new_variables), v_new]))
+
 
 def source_code(functions: List[Function], min_length: int, max_length: int):
     """
@@ -96,7 +106,8 @@ def source_code(functions: List[Function], min_length: int, max_length: int):
     assert(min_length <= max_length)
 
     # Perform DFS to enumerate source code
-    s = [(Program([], []), IdGenerator())] # Start from a program with no expressions
+    # Start from a program with no expressions
+    s = [(Program([], []), IdGenerator())]
     while len(s) != 0:
         p, g = s.pop()
 
@@ -116,10 +127,12 @@ def source_code(functions: List[Function], min_length: int, max_length: int):
                 for v in a.new_variables:
                     p_new.inputs.append(v)
                 generator = copy.deepcopy(a.generator)
-                p_new.body.append((Variable(generator.generate(), func.signature[1]), Expression(func, a.arguments)))
+                p_new.body.append(
+                    (Variable(generator.generate(), func.signature[1]), Expression(func, a.arguments)))
                 s.append((p_new, generator))
 
-def random_source_code(functions: List[Function], min_length: int, max_length: int, rng: Union[None, np.random.RandomState]=None):
+
+def random_source_code(functions: List[Function], min_length: int, max_length: int, rng: Union[None, np.random.RandomState] = None):
     """
     Enumerate all source code which length is in [min_length:max_length]
 
@@ -152,18 +165,21 @@ def random_source_code(functions: List[Function], min_length: int, max_length: i
         generator = IdGenerator()
         for i in range(length):
             # Create a set of variables
-            vars = set(program.inputs + list(map(lambda x: x[0], program.body)))
+            vars = set(program.inputs +
+                       list(map(lambda x: x[0], program.body)))
 
             # Decide the functions
             func = rng.choice(functions)
 
             # Decide the arguments
-            arg = rng.choice(list(arguments(generator, vars, func.signature[0])))
+            arg = rng.choice(
+                list(arguments(generator, vars, func.signature[0])))
 
             # Add the function call
             for v in arg.new_variables:
                 program.inputs.append(v)
             generator = arg.generator
-            program.body.append((Variable(generator.generate(), func.signature[1]), Expression(func, arg.arguments)))
+            program.body.append((Variable(generator.generate(
+            ), func.signature[1]), Expression(func, arg.arguments)))
 
         yield program

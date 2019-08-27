@@ -10,6 +10,7 @@ from .chainer_dataset import encode_example
 from .model import ExampleEmbed, Encoder, Decoder, InferenceModel
 from .train import ModelShapeParameters
 
+
 @dataclasses.dataclass
 class SearchResult:
     is_solved: bool
@@ -17,6 +18,7 @@ class SearchResult:
     solution: str
     explored_nodes: int
     time_seconds: float
+
 
 def search(search: str, timeout_second: int, value_range: int,
            examples: List[Example], max_program_length: int, pred: Callable[[List[Example]], Dict[str, float]]) -> SearchResult:
@@ -111,22 +113,25 @@ def search(search: str, timeout_second: int, value_range: int,
         # Execute search command
         try:
             res = subprocess.run(
-                [search, "search", str(len(examples)), str(max_program_length), "0", "0", "-1", str(value_range)],
+                [search, "search", str(len(examples)), str(
+                    max_program_length), "0", "0", "-1", str(value_range)],
                 stdout=subprocess.PIPE,
                 timeout=timeout_second, cwd=tmpdir)
             lines = res.stdout.decode().split("\n")
         except subprocess.TimeoutExpired:
             return SearchResult(False, prob, "", -1, timeout_second)
-        
+
         for i, line in enumerate(lines):
             if line == "Solved!":
                 solution = "\n".join(lines[i + 4:])
-                explored_nodes = int(lines[i + 1].replace("Nodes explored: ", ""))
+                explored_nodes = int(
+                    lines[i + 1].replace("Nodes explored: ", ""))
                 time = float(lines[i + 2])
                 return SearchResult(
                     True, prob, solution, explored_nodes, time)
 
         return SearchResult(False, prob, "", -1, -1)
+
 
 def predict_with_prior_distribution(dataset: Dataset):
     """
@@ -145,6 +150,7 @@ def predict_with_prior_distribution(dataset: Dataset):
     prior = prior_distribution(dataset)
     return lambda x: prior
 
+
 def model(params: ModelShapeParameters) -> ch.Link:
     """
     Return the model of DeepCoder
@@ -158,10 +164,12 @@ def model(params: ModelShapeParameters) -> ch.Link:
     ch.Link
         The model of DeepCoder
     """
-    embed = ExampleEmbed(params.dataset_stats.max_num_inputs, params.value_range, params.n_embed)
+    embed = ExampleEmbed(params.dataset_stats.max_num_inputs,
+                         params.value_range, params.n_embed)
     encoder = Encoder(params.n_units)
     decoder = Decoder(len(params.dataset_stats.names))
     return InferenceModel(embed, encoder, decoder)
+
 
 def predict_with_neural_network(model_shape: ModelShapeParameters, model: InferenceModel):
     """
@@ -182,7 +190,8 @@ def predict_with_neural_network(model_shape: ModelShapeParameters, model: Infere
     """
     def pred(examples: List[Example]):
         ns = sorted(list(model_shape.dataset_stats.names))
-        example_encodings = [encode_example(example, model_shape.value_range, model_shape.max_list_length) for example in examples]
+        example_encodings = [encode_example(
+            example, model_shape.value_range, model_shape.max_list_length) for example in examples]
         example_encodings = np.array([example_encodings])
         pred = model(example_encodings).array[0]
         retval = dict()

@@ -6,6 +6,7 @@ from typing import List, Union, Tuple, Dict
 from .dataset import Dataset, Primitive, Example
 from .dsl import Function
 
+
 @dataclasses.dataclass
 class PrimitiveEncoding:
     """
@@ -23,6 +24,7 @@ class PrimitiveEncoding:
     t: int
     value_arr: np.array
 
+
 @dataclasses.dataclass
 class ExampleEncoding:
     """
@@ -35,6 +37,7 @@ class ExampleEncoding:
     """
     inputs: List[PrimitiveEncoding]
     output: PrimitiveEncoding
+
 
 def encode_primitive(p: Primitive, value_range: int, max_list_length: int) -> PrimitiveEncoding:
     """
@@ -62,11 +65,14 @@ def encode_primitive(p: Primitive, value_range: int, max_list_length: int) -> Pr
     # Add offset of value_range because the range of integers is [-value_range:value_range-1]
     return PrimitiveEncoding(t, value_arr + value_range)
 
+
 def encode_example(example: Example, value_range: int, max_list_length: int) -> ExampleEncoding:
     inputs, output = example
-    enc_inputs = [encode_primitive(ins, value_range, max_list_length) for ins in inputs]
+    enc_inputs = [encode_primitive(
+        ins, value_range, max_list_length) for ins in inputs]
     enc_output = encode_primitive(output, value_range, max_list_length)
     return ExampleEncoding(enc_inputs, enc_output)
+
 
 def encode_attribute(attribute: Dict[Function, bool]) -> np.array:
     """
@@ -92,12 +98,14 @@ def encode_attribute(attribute: Dict[Function, bool]) -> np.array:
 
     return np.array(arr)
 
+
 class ChainerDataset(datasets.TupleDataset):
     """
     The dataset of chainer for DeepCoder
     This instance stores each entry as the tuple of
     (the encoding of examples, the encoding of attribute).
     """
+
     def __init__(self, dataset: Dataset, value_range: int, max_list_length: int):
         """
         Constructor
@@ -115,7 +123,8 @@ class ChainerDataset(datasets.TupleDataset):
         examples = []
         attributes = []
         for entry in dataset.entries:
-            E = [encode_example(example, value_range, max_list_length) for example in entry.examples]
+            E = [encode_example(example, value_range, max_list_length)
+                 for example in entry.examples]
             A = encode_attribute(entry.attributes)
             examples.append(E)
             attributes.append(A)

@@ -1,6 +1,7 @@
 import copy
 from .dsl import Function, Type, Variable, Expression, Program, to_string, clone
 
+
 def normalize(program: Program):
     """
     Return the normalized program
@@ -23,7 +24,8 @@ def normalize(program: Program):
     This function modify the program object of the argument
     to reduce runtime overhead.
     """
-    program = clone(program) # Clone program to isolate the argument from modifications
+    program = clone(
+        program)  # Clone program to isolate the argument from modifications
 
     # inputs should be sorted by id
     program.inputs.sort(key=lambda i: i.id)
@@ -42,6 +44,7 @@ def normalize(program: Program):
             arg.id = old_id_to_new_id[arg.id]
 
     return program
+
 
 def remove_redundant_variables(program: Program) -> Program:
     """
@@ -70,7 +73,8 @@ def remove_redundant_variables(program: Program) -> Program:
         The simplified program
     """
 
-    program = clone(program) # Clone program to isolate the argument from modifications
+    # Clone program to isolate the argument from modifications
+    program = clone(program)
 
     inputs = []
     body = []
@@ -97,6 +101,7 @@ def remove_redundant_variables(program: Program) -> Program:
     program.inputs = inputs
     program.body = body
     return program
+
 
 def remove_redundant_expressions(program: Program) -> Program:
     """
@@ -155,17 +160,19 @@ def remove_redundant_expressions(program: Program) -> Program:
     Program
         The simplified program
     """
-    program = clone(program) # Clone program to isolate the argument from modifications
+    program = clone(
+        program)  # Clone program to isolate the argument from modifications
 
-    replacement = dict() # Variable -> Variable
-    expression_to_variable = dict() # (str, [Variable]) -> Variable
-    variable_to_expression = dict() # Variable -> Expression
+    replacement = dict()  # Variable -> Variable
+    expression_to_variable = dict()  # (str, [Variable]) -> Variable
+    variable_to_expression = dict()  # Variable -> Expression
 
     body = []
     for v, exp in program.body:
         if (exp.function.name, tuple(exp.arguments)) in expression_to_variable:
             # Rule1
-            replacement[v] = expression_to_variable[(exp.function.name, tuple(exp.arguments))]
+            replacement[v] = expression_to_variable[(
+                exp.function.name, tuple(exp.arguments))]
             continue
         if len(exp.arguments) > 0 and exp.arguments[0] in variable_to_expression:
             exp_arg1 = variable_to_expression[exp.arguments[0]]
@@ -188,6 +195,7 @@ def remove_redundant_expressions(program: Program) -> Program:
     program.body = body
 
     return program
+
 
 def remove_dependency_between_variables(program: Program, minimum: Function, maximum: Function) -> Program:
     """
@@ -250,9 +258,10 @@ def remove_dependency_between_variables(program: Program, minimum: Function, max
     Program
         The simplified program
     """
-    program = clone(program) # Clone program to isolate the argument from modifications
+    program = clone(
+        program)  # Clone program to isolate the argument from modifications
 
-    variable_to_expression = dict() # Variable -> Expression
+    variable_to_expression = dict()  # Variable -> Expression
 
     body = []
     for v, exp in program.body:

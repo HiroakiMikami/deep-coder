@@ -6,6 +6,7 @@ import chainer.functions as F
 from src.model import ExampleEmbed, Encoder, Decoder, TrainingClassifier, tupled_binary_accuracy
 from src.chainer_dataset import ExampleEncoding, encode_example
 
+
 class TestExampleEmbed(unittest.TestCase):
     def test_embed_one_sample(self):
         embed = ExampleEmbed(1, 2, 1, (np.arange(5) + 1).reshape((5, 1)))
@@ -22,7 +23,7 @@ class TestExampleEmbed(unittest.TestCase):
         e1 = encode_example(([[0, 1]], 0), 2, 2)
         e2 = encode_example(([[1]], 1), 2, 2)
         minibatch = np.array([[e1, e2]])
-        
+
         N = 1
         e = 2
         I = 1
@@ -31,15 +32,20 @@ class TestExampleEmbed(unittest.TestCase):
 
         state_embeddings = embed.forward(minibatch)
         self.assertEqual((1, 2, 2, 2 + 2 * 1), state_embeddings.shape)
-        self.assertTrue(np.allclose([0, 1, 3, 4], state_embeddings.array[0, 0, 0])) # Input of e1
-        self.assertTrue(np.allclose([1, 0, 3, 5], state_embeddings.array[0, 0, 1])) # Output of e1
-        self.assertTrue(np.allclose([0, 1, 4, 5], state_embeddings.array[0, 1, 0])) # Input of e2
-        self.assertTrue(np.allclose([1, 0, 4, 5], state_embeddings.array[0, 1, 1])) # Output of e2
+        self.assertTrue(np.allclose(
+            [0, 1, 3, 4], state_embeddings.array[0, 0, 0]))  # Input of e1
+        self.assertTrue(np.allclose(
+            [1, 0, 3, 5], state_embeddings.array[0, 0, 1]))  # Output of e1
+        self.assertTrue(np.allclose(
+            [0, 1, 4, 5], state_embeddings.array[0, 1, 0]))  # Input of e2
+        self.assertTrue(np.allclose(
+            [1, 0, 4, 5], state_embeddings.array[0, 1, 1]))  # Output of e2
 
         # backward does not throw an error
-        state_embeddings.grad = np.ones(state_embeddings.shape, dtype=np.float32)
+        state_embeddings.grad = np.ones(
+            state_embeddings.shape, dtype=np.float32)
         state_embeddings.backward()
-        
+
     # minibatch with mask
     def test_embed_minibatch_with_different_number_of_inputs(self):
         embed = ExampleEmbed(2, 2, 1, (np.arange(5) + 1).reshape((5, 1)))
@@ -57,7 +63,7 @@ class TestExampleEmbed(unittest.TestCase):
         e10 = encode_example(([1, [0, 1]], [0]), 2, 2)
         e11 = encode_example(([0, [0, 1]], []), 2, 2)
         minibatch = np.array([[e00, e01], [e10, e11]])
-        
+
         N = 1
         e = 2
         I = 2
@@ -66,18 +72,34 @@ class TestExampleEmbed(unittest.TestCase):
 
         state_embeddings = embed.forward(minibatch)
         self.assertEqual((2, 2, 3, 2 + 2 * 1), state_embeddings.shape)
-        self.assertTrue(np.allclose([0, 1, 3, 4], state_embeddings.array[0, 0, 0])) # Input of e00
-        self.assertTrue(np.allclose([0, 0, 5, 5], state_embeddings.array[0, 0, 1])) # Input of e00
-        self.assertTrue(np.allclose([1, 0, 3, 5], state_embeddings.array[0, 0, 2])) # Output of e00
-        self.assertTrue(np.allclose([0, 1, 4, 5], state_embeddings.array[0, 1, 0])) # Input of e01
-        self.assertTrue(np.allclose([0, 0, 5, 5], state_embeddings.array[0, 1, 1])) # Input of e01
-        self.assertTrue(np.allclose([1, 0, 4, 5], state_embeddings.array[0, 1, 2])) # Output of e01
-        self.assertTrue(np.allclose([1, 0, 4, 5], state_embeddings.array[1, 0, 0])) # Input of e10
-        self.assertTrue(np.allclose([0, 1, 3, 4], state_embeddings.array[1, 0, 1])) # Input of e10
-        self.assertTrue(np.allclose([0, 1, 3, 5], state_embeddings.array[1, 0, 2])) # Output of e10
-        self.assertTrue(np.allclose([1, 0, 3, 5], state_embeddings.array[1, 1, 0])) # Input of e11
-        self.assertTrue(np.allclose([0, 1, 3, 4], state_embeddings.array[1, 1, 1])) # Input of e11
-        self.assertTrue(np.allclose([0, 1, 5, 5], state_embeddings.array[1, 1, 2])) # Output of e11
+        self.assertTrue(np.allclose(
+            [0, 1, 3, 4], state_embeddings.array[0, 0, 0]))  # Input of e00
+        self.assertTrue(np.allclose(
+            [0, 0, 5, 5], state_embeddings.array[0, 0, 1]))  # Input of e00
+        # Output of e00
+        self.assertTrue(np.allclose(
+            [1, 0, 3, 5], state_embeddings.array[0, 0, 2]))
+        self.assertTrue(np.allclose(
+            [0, 1, 4, 5], state_embeddings.array[0, 1, 0]))  # Input of e01
+        self.assertTrue(np.allclose(
+            [0, 0, 5, 5], state_embeddings.array[0, 1, 1]))  # Input of e01
+        # Output of e01
+        self.assertTrue(np.allclose(
+            [1, 0, 4, 5], state_embeddings.array[0, 1, 2]))
+        self.assertTrue(np.allclose(
+            [1, 0, 4, 5], state_embeddings.array[1, 0, 0]))  # Input of e10
+        self.assertTrue(np.allclose(
+            [0, 1, 3, 4], state_embeddings.array[1, 0, 1]))  # Input of e10
+        # Output of e10
+        self.assertTrue(np.allclose(
+            [0, 1, 3, 5], state_embeddings.array[1, 0, 2]))
+        self.assertTrue(np.allclose(
+            [1, 0, 3, 5], state_embeddings.array[1, 1, 0]))  # Input of e11
+        self.assertTrue(np.allclose(
+            [0, 1, 3, 4], state_embeddings.array[1, 1, 1]))  # Input of e11
+        # Output of e11
+        self.assertTrue(np.allclose(
+            [0, 1, 5, 5], state_embeddings.array[1, 1, 2]))
 
     def test_throw_error_if_num_inputs_is_too_large(self):
         embed = ExampleEmbed(1, 2, 1, (np.arange(5) + 1).reshape((5, 1)))
@@ -87,11 +109,13 @@ class TestExampleEmbed(unittest.TestCase):
 
         self.assertRaises(RuntimeError, lambda: embed(minibatch))
 
+
 class TestEncoder(unittest.TestCase):
     def test_encoder(self):
         embed = ExampleEmbed(1, 2, 1, (np.arange(5) + 1).reshape((5, 1)))
 
-        encoder = Encoder(1, initialW=ch.initializers.One(), initial_bias=ch.initializers.Zero())
+        encoder = Encoder(1, initialW=ch.initializers.One(),
+                          initial_bias=ch.initializers.Zero())
         self.assertEqual(6, len(list(encoder.params())))
         """
         state_embeddings: (N, e, 2, 4) -> h1: (N, e, 1) -> h2: (N, e, 2) -> output: (N, e, 2)
@@ -110,6 +134,7 @@ class TestEncoder(unittest.TestCase):
                 h = np.array(state_embeddings[i, j, :, :].array.sum())
                 h = F.sigmoid(F.sigmoid(F.sigmoid(h)))
                 self.assertEqual(h.array, layer_encodings.array[i, j])
+
 
 class TestDecoder(unittest.TestCase):
     def test_decoder(self):
@@ -147,11 +172,14 @@ class TestTrainingClassifier(unittest.TestCase):
         # backward does not throw an error
         loss.backward()
 
+
 class Test_tupled_binary_accuracy(unittest.TestCase):
     def test_tupled_binary_accuracy(self):
-        acc = tupled_binary_accuracy(np.array([-1.0, -1.0, -1.0, 1.0]), np.array([0, 0, 1, 1]))
+        acc = tupled_binary_accuracy(
+            np.array([-1.0, -1.0, -1.0, 1.0]), np.array([0, 0, 1, 1]))
         self.assertAlmostEqual(1.0, acc[0].array)
         self.assertAlmostEqual(0.5, acc[1].array)
+
 
 if __name__ == "__main__":
     unittest.main()

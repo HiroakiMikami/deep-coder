@@ -11,11 +11,14 @@ from src.dataset import Dataset, prior_distribution
 SEED_MAX = 2**32 - 1
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--entries", nargs="+", help="The indexed of entries to dump", default=[])
+parser.add_argument("--entries", nargs="+",
+                    help="The indexed of entries to dump", default=[])
 parser.add_argument("--seed", help="The random seed", type=int, default=22956)
 parser.add_argument("--width", help="The width of plots", type=int, default=16)
-parser.add_argument("--height", help="The height of plots", type=int, default=6)
-parser.add_argument("dataset", help="The path of the dataset pickle file", type=str)
+parser.add_argument("--height", help="The height of plots",
+                    type=int, default=6)
+parser.add_argument(
+    "dataset", help="The path of the dataset pickle file", type=str)
 args = parser.parse_args()
 
 root_rng = np.random.RandomState(args.seed)
@@ -37,20 +40,22 @@ for name, prob in prior.items():
 data = np.array([data])
 data = pd.DataFrame(data, columns=columns)
 
-## Show plot
+# Show plot
 fig, ax = plt.subplots(figsize=(args.width, args.height))
 xs = np.arange(len(columns)) + 10
-ax.bar(xs, data.iloc[0], width=0.4, bottom=np.zeros(1), tick_label=list(map(lambda x: x.replace(" ", "\n"), columns)))
+ax.bar(xs, data.iloc[0], width=0.4, bottom=np.zeros(
+    1), tick_label=list(map(lambda x: x.replace(" ", "\n"), columns)))
 ax.set_ylabel("Probability")
 ax.set_title("Prior Distribution")
 
-## Show chosen entries
+# Show chosen entries
 m = cm.ScalarMappable(norm=colors.Normalize(vmin=0, vmax=1), cmap=cm.Greens)
 indexes = map(int, args.entries)
 for index in indexes:
     entry = dataset.entries[index]
 
-    fig, [ax_code, ax_examples, ax_attributes] = plt.subplots(3, 1, figsize=(args.width, args.height))
+    fig, [ax_code, ax_examples, ax_attributes] = plt.subplots(
+        3, 1, figsize=(args.width, args.height))
     fig.suptitle("Entry {}".format(index))
 
     ax_code.axis("tight")
@@ -77,7 +82,8 @@ for index in indexes:
             row.append("")
         row.append(out)
         text.append(row)
-    ax_examples.table(cellText=text, colLabels=colLabels, rowLabels=rowLabels, loc="center")
+    ax_examples.table(cellText=text, colLabels=colLabels,
+                      rowLabels=rowLabels, loc="center")
 
     ax_attributes.set_title("Attributes")
     ax_attributes.get_yaxis().set_visible(False)
@@ -87,8 +93,8 @@ for index in indexes:
         colors.append(m.to_rgba(1 if v else 0))
     xs = np.arange(len(entry.attributes)) + 10
     ax_attributes.bar(xs, data, width=0.9, bottom=np.zeros(1),
-            color=colors,
-            tick_label=list(entry.attributes.keys()))
+                      color=colors,
+                      tick_label=list(entry.attributes.keys()))
 
 plt.show()
 input("Press Enter to continue")

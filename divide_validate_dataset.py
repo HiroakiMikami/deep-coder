@@ -11,10 +11,13 @@ import src.train as T
 SEED_MAX = 2**32 - 1
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--num-valid", help="The number of entries for validation.", type=int, default=None)
+parser.add_argument(
+    "--num-valid", help="The number of entries for validation.", type=int, default=None)
 parser.add_argument("--seed", help="The random seed", type=int, default=13782)
-parser.add_argument("dataset", help="The path of the dataset pickle file", type=str)
-parser.add_argument("output", help="The path of the directory to store the divided dataset", type=str)
+parser.add_argument(
+    "dataset", help="The path of the dataset pickle file", type=str)
+parser.add_argument(
+    "output", help="The path of the directory to store the divided dataset", type=str)
 args = parser.parse_args()
 
 root_rng = np.random.RandomState(args.seed)
@@ -31,7 +34,8 @@ with open(args.dataset, "rb") as f:
 num_valid = args.num_valid
 num_train = len(dataset.entries) - num_valid
 
-subdatasets = divide(dataset, dict([["train", num_train], ["valid", num_valid]]), rng = np.random.RandomState(root_rng.randint(SEED_MAX)))
+subdatasets = divide(dataset, dict([["train", num_train], [
+                     "valid", num_valid]]), rng=np.random.RandomState(root_rng.randint(SEED_MAX)))
 
 with open(os.path.join(args.output, "train.pickle"), "wb") as f:
     pickle.dump(subdatasets["train"], f)

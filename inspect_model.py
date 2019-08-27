@@ -14,8 +14,10 @@ SEED_MAX = 2**32 - 1
 parser = argparse.ArgumentParser()
 parser.add_argument("--seed", help="The random seed", type=int, default=22956)
 parser.add_argument("--width", help="The width of plots", type=int, default=16)
-parser.add_argument("--height", help="The height of plots", type=int, default=6)
-parser.add_argument("modelshape", help="The path of the model shape parameter file", type=str)
+parser.add_argument("--height", help="The height of plots",
+                    type=int, default=6)
+parser.add_argument(
+    "modelshape", help="The path of the model shape parameter file", type=str)
 parser.add_argument("model", help="The path of the model file", type=str)
 args = parser.parse_args()
 
@@ -25,7 +27,7 @@ np.random.seed(root_rng.randint(SEED_MAX))
 
 # Load model
 with open(args.modelshape, "rb") as f:
-   model_shape: T.ModelShapeParameters = pickle.load(f)
+    model_shape: T.ModelShapeParameters = pickle.load(f)
 model = T.model(model_shape)
 ch.serializers.load_npz(args.model, model.predictor)
 
@@ -42,16 +44,16 @@ for i in range(-model_shape.value_range, model_shape.value_range):
     y = e.array[0, axis_1]
 
     if i == 0:
-        color="b"
+        color = "b"
     elif i > 0:
-        color="g"
+        color = "g"
     else:
-        color="r"
+        color = "r"
 
     if i % 2 == 0:
-        shape="s"
+        shape = "s"
     else:
-        shape="^"
+        shape = "^"
 
     ax.plot(x, y, "{}{}".format(color, shape))
     if abs(i) < 10 or abs(i) > 253:
