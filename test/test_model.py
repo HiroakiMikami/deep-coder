@@ -8,6 +8,7 @@ from src.chainer_dataset import ExampleEncoding, encode_example
 class TestExampleEmbed(unittest.TestCase):
     def test_embed_one_sample(self):
         embed = ExampleEmbed(1, 2, 1, (np.arange(5) + 1).reshape((5, 1)))
+        self.assertEqual(1, len(list(embed.params())))
         """
         EmbedId
           0 (-2)   -> 1 
@@ -92,6 +93,7 @@ class TestEncoder(unittest.TestCase):
         initialWs = [np.ones((1, 8)), np.ones((1, 1)), np.ones((1, 1))]
         initial_biases = [np.zeros((1,)), np.zeros((1,)), np.zeros((1,))]
         encoder = Encoder(1, initialWs=initialWs, initial_biases=initial_biases)
+        self.assertEqual(6, len(list(encoder.params())))
         """
         state_embeddings: (N, e, 2, 4) -> h1: (N, e, 1) -> h2: (N, e, 2) -> output: (N, e, 2)
         """
@@ -112,11 +114,11 @@ class TestEncoder(unittest.TestCase):
 
 class TestDecoder(unittest.TestCase):
     def test_decoder(self):
-
         initialW = np.ones((1, 2))
         initial_bias = np.zeros((1,))
 
         decoder = Decoder(1, initialW, initial_bias)
+        self.assertEqual(2, len(list(decoder.params())))
 
         input = np.zeros((1, 2, 2), dtype=np.float32)
         input[0, 1, :] = 1.0

@@ -51,7 +51,8 @@ class ExampleEmbed(link.Chain):
         """
         super(ExampleEmbed, self).__init__()
 
-        self._embed_integer = L.EmbedID(2 * value_range + 1, n_embed, initialW=initialW)
+        with self.init_scope():
+            self._embed_integer = L.EmbedID(2 * value_range + 1, n_embed, initialW=initialW)
         self._num_inputs = num_inputs
 
     def forward(self, examples: np.array):
@@ -141,14 +142,15 @@ class Encoder(link.Chain):
             initialWs = [None, None, None]
         if initial_biases is None:
             initial_biases = [None, None, None]
-        for i in range(3):
-            linears.append(
-                L.Linear(n_units, initialW=initialWs[i], initial_bias=initial_biases[i])
-            )
-        self._hidden = ch.Sequential(
-            linears[0], F.sigmoid,
-            linears[1], F.sigmoid,
-            linears[2], F.sigmoid)
+        with self.init_scope():
+            for i in range(3):
+                linears.append(
+                    L.Linear(n_units, initialW=initialWs[i], initial_bias=initial_biases[i])
+                )
+            self._hidden = ch.Sequential(
+                linears[0], F.sigmoid,
+                linears[1], F.sigmoid,
+                linears[2], F.sigmoid)
 
     def forward(self, state_embeddings: np.array):
         """
