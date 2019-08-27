@@ -1,7 +1,8 @@
 import unittest
+import numpy as np
 
 from src.dsl import Function, Type, Variable, Expression, Program, to_string
-from src.source_code_generator import arguments, source_code, IdGenerator, Variable, Type
+from src.source_code_generator import arguments, source_code, random_source_code, IdGenerator, Variable, Type
 
 class Test_arguments(unittest.TestCase):
     def test_arguments(self):
@@ -51,6 +52,16 @@ class Test_source_code(unittest.TestCase):
         l = set(map(lambda x: len(x.body), srcs))
 
         self.assertEqual(set([2]), l)
+
+class Test_random_source_code(unittest.TestCase):
+    def test_random_source_code(self):
+        TAKE = Function("TAKE", ([Type.Int, Type.IntList], Type.IntList))
+        HEAD = Function("HEAD", ([Type.IntList], Type.Int))
+        l = []
+        for _, program in zip(range(100), random_source_code([TAKE, HEAD], 1, 2, rng=np.random.RandomState(100))):
+            l.append(len(program.body))
+        self.assertTrue(min(l) >= 1)
+        self.assertTrue(max(l) >= 2)
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,4 +1,5 @@
 import dataclasses
+import numpy as np
 from typing import List, Set, Union
 import copy
 from .dsl import Function, Type, Variable, Expression, Program, clone
@@ -117,3 +118,52 @@ def source_code(functions: List[Function], min_length: int, max_length: int):
                 generator = copy.deepcopy(a.generator)
                 p_new.body.append((Variable(generator.generate(), func.signature[1]), Expression(func, a.arguments)))
                 s.append((p_new, generator))
+
+def random_source_code(functions: List[Function], min_length: int, max_length: int, rng: Union[None, np.random.RandomState]=None):
+    """
+    Enumerate all source code which length is in [min_length:max_length]
+
+    Parameters
+    ----------
+    functions : list of Function
+        All functions that can be used in source code
+    min_length : int
+        The minimum length of programs
+    max_length : int
+        The maximum length of programs
+    rng : None or np.random.RandomState
+        The random number generator
+
+    Yields
+    ------
+    Program
+        The program which length is in [min_length:max_length]
+    """
+    if rng is None:
+        rng = np.random
+
+    while True:
+        assert(min_length <= max_length)
+
+        # Decide the length of the program
+        length = rng.randint(min_length, max_length + 1)
+
+        program = Program([], [])
+        generator = IdGenerator()
+        for i in range(length):
+            # Create a set of variables
+            vars = set(program.inputs + list(map(lambda x: x[0], program.body)))
+
+            # Decide the functions
+            func = rng.choice(functions)
+
+            # Decide the arguments
+            arg = rng.choice(list(arguments(generator, vars, func.signature[0])))
+
+            # Add the function call
+            for v in arg.new_variables:
+                program.inputs.append(v)
+            generator = arg.generator
+            program.body.append((Variable(generator.generate(), func.signature[1]), Expression(func, arg.arguments)))
+
+        yield program
