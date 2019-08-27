@@ -23,6 +23,9 @@ parser.add_argument("--seed", help="The random seed", type=int, default=24649)
 parser.add_argument("--num-hidden-layers", help="The number of the hidden layers", type=int, default=3)
 parser.add_argument("--n-embed", help="The dimension of integer embeddings", type=int, default=20)
 parser.add_argument("--n-units", help="The number of units in the hidden layers", type=int, default=256)
+parser.add_argument("--weight-label-false",
+                    help="The weight for the loss value in the case of attribute=False. -1 means that using the original loss function",
+                    type=float, default=-1)
 parser.add_argument("--batch-size", help="The minibatch-size", type=int, default=32)
 parser.add_argument("--ratio-test", help="The ratio of entries for evaluation.", type=float, default=None)
 parser.add_argument("--device", help="The device used for training.", type=int, default=-1)
@@ -45,7 +48,7 @@ if args.num_train:
 dataset_stats = T.dataset_stats(dataset)
 model_shape = T.ModelShapeParameters(dataset_stats, args.value_range, args.max_list_length,
                                      args.num_hidden_layers, args.n_embed, args.n_units)
-model = T.model(model_shape)
+model = T.model(model_shape, args.weight_label_false)
 
 # Save model shape
 if not os.path.exists(args.output):

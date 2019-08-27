@@ -9,6 +9,36 @@ from typing import List, Union, Tuple, Dict
 
 from .chainer_dataset import PrimitiveEncoding
 
+def weighted_sigmoid_cross_entropy(y, t, w_0 : float = 0.5):
+    """
+    Compute weighted sigmoid cross entropy
+
+    Parameters
+    ----------
+    y
+        The prediction vector
+    t
+        The ground truth label
+    w_0 : float
+        The weight for label=0.
+        If this value is negative, this function computes the original sigmoid cross entropy
+
+    Returns
+    -------
+    ch.Variable
+        computed cross entropy
+    """
+    if w_0 < 0:
+        return F.sigmoid_cross_entropy(y, t)
+
+    t_0 = t.copy()
+    t_1 = t.copy()
+    t_0[t_0 == 1] = -1
+    t_1[t_0 == 0] = -1
+    l0 = F.sigmoid_cross_entropy(y, t_0)
+    l1 = F.sigmoid_cross_entropy(y, t_1)
+    return w_0 * l0 + (1.0 - w_0) * l1
+
 def tupled_binary_accuracy(y, t):
     """
     Compte binary classification accuracy
@@ -194,7 +224,7 @@ def Decoder(n_functions: int, initialW: Union[None, ch.Initializer, np.array] = 
         # (N, n_functions)
     )
 
-def TrainingClassifier(embed: ExampleEmbed, encoder: Encoder, decoder: Decoder):
+def TrainingClassifier(embed: ExampleEmbed, encoder: Encoder, decoder: Decoder, w_0: float = -1):
     """
     Return the classifier for training DeepCoder
 
@@ -205,6 +235,8 @@ def TrainingClassifier(embed: ExampleEmbed, encoder: Encoder, decoder: Decoder):
         The encoder of DeepCoder
     decoder : Decoder
         The decoder of DeepCoder
+    w_0 : float
+        The weight for label=False
 
     Returns
     -------
@@ -215,7 +247,7 @@ def TrainingClassifier(embed: ExampleEmbed, encoder: Encoder, decoder: Decoder):
     predictor = ch.Sequential(embed, encoder, decoder)
     classifier = L.Classifier(
         predictor,
-        lossfun=F.sigmoid_cross_entropy,
+        lossfun=lambda y, t: weighted_sigmoid_cross_entropy(y, t, w_0),
         accfun=F.binary_accuracy
     )
     def accuracy(y, t):

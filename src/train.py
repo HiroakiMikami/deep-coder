@@ -42,13 +42,15 @@ def dataset_stats(dataset: Dataset) -> DatasetStats:
                 names.add(name)
     return DatasetStats(num_inputs, names)
 
-def model(params: ModelShapeParameters) -> ch.Link:
+def model(params: ModelShapeParameters, w_0: float = -1) -> ch.Link:
     """
     Return the model of DeepCoder
 
     Parameters
     ----------
     params : ModelShapeParameters
+    w_0 : float
+        The weight for label=False
 
     Returns
     -------
@@ -58,7 +60,7 @@ def model(params: ModelShapeParameters) -> ch.Link:
     embed = ExampleEmbed(params.dataset_stats.max_num_inputs, params.value_range, params.n_embed)
     encoder = Encoder(params.n_units, num_hidden_layers=params.num_hidden_layers)
     decoder = Decoder(len(params.dataset_stats.names))
-    return TrainingClassifier(embed, encoder, decoder)
+    return TrainingClassifier(embed, encoder, decoder, w_0)
 
 def trainer(train_iter, out: str,
             model: ch.Link, num_epochs: int, optimizer = ch.optimizers.Adam(), device=-1):
