@@ -4,7 +4,7 @@ import os
 import numpy as np
 import subprocess
 import chainer as ch
-from typing import List, Tuple, Union, Dict, Callable, Set
+from typing import List, Union, Dict, Callable, Set
 from .dataset import Example, Dataset, prior_distribution
 from .chainer_dataset import encode_example
 from .model import ExampleEmbed, Encoder, Decoder, InferenceModel
@@ -55,7 +55,7 @@ def search(search: str, timeout_second: int, value_range: int,
         # Dump {input|output}_{types|values}.txt
         with open(os.path.join(name, "input_types.txt"), "w") as f:
             intypes = []
-            for input in examples[0][0]:
+            for input in examples[0].inputs:
                 inarr = np.array(input)
                 if inarr.shape == ():
                     # Int
@@ -66,9 +66,9 @@ def search(search: str, timeout_second: int, value_range: int,
             f.write(" ".join(intypes))
         with open(os.path.join(name, "input_values.txt"), "w") as f:
             values = []
-            for inputs, _ in examples:
+            for example in examples:
                 value = []
-                for input in inputs:
+                for input in example.inputs:
                     inarr = np.array(input)
                     if inarr.shape == ():
                         value.append(str(input))
@@ -78,7 +78,7 @@ def search(search: str, timeout_second: int, value_range: int,
             f.write("\n".join(values))
         with open(os.path.join(name, "output_types.txt"), "w") as f:
             outtypes = []
-            output = examples[0][1]
+            output = examples[0].output
             outarr = np.array(output)
             if outarr.shape == ():
                 # Int
@@ -89,11 +89,11 @@ def search(search: str, timeout_second: int, value_range: int,
             f.write(" ".join(outtypes))
         with open(os.path.join(name, "output_values.txt"), "w") as f:
             values = []
-            for _, output in examples:
+            for example in examples:
                 value = []
-                outarr = np.array(output)
+                outarr = np.array(example.output)
                 if outarr.shape == ():
-                    value.append(str(output))
+                    value.append(str(example.output))
                 else:
                     value.append(" ".join(list(map(str, outarr))))
                 values.append(" | ".join(value))

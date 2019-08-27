@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from src.dataset import Dataset, Entry
+from src.dataset import Dataset, Entry, Example
 from src.chainer_dataset import encode_primitive, encode_attribute, PrimitiveEncoding, ChainerDataset
 
 
@@ -31,12 +31,12 @@ class Test_ChainerDataset(unittest.TestCase):
         dataset = Dataset([])
         dataset.entries.append(Entry(
             "entry1",
-            [(([10, 20, 30],), 10)],
+            [Example(([10, 20, 30],), 10)],
             dict([["HEAD", True], ["SORT", False]])
         ))
         dataset.entries.append(Entry(
             "entry2",
-            [(([30, 20, 10],), [10, 20, 30])],
+            [Example(([30, 20, 10],), [10, 20, 30])],
             dict([["HEAD", False], ["SORT", True]])
         ))
 

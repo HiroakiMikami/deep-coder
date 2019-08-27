@@ -1,10 +1,23 @@
 import dataclasses
 import numpy as np
-from typing import List, Union, Tuple, Dict
+from typing import List, Union, Dict
 from .dsl import Function
 
 Primitive = Union[int, List[int]]
-Example = Tuple[List[Primitive], Primitive]
+
+
+@dataclasses.dataclass
+class Example:
+    """
+    An I/O example
+
+    Attributes
+    ----------
+    inputs : List[Primitive]
+    output : Primitive
+    """
+    inputs: List[Primitive]
+    output: Primitive
 
 
 @dataclasses.dataclass

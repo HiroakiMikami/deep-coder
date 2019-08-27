@@ -2,7 +2,7 @@ import dataclasses
 import numpy as np
 from typing import List, Set, Union
 import copy
-from .dsl import Function, Type, Variable, Expression, Program
+from .dsl import Function, Type, Variable, Expression, Program, Statement
 
 
 class IdGenerator:
@@ -117,18 +117,18 @@ def source_code(functions: List[Function], min_length: int, max_length: int):
             continue
 
         # Create a set of variables
-        vars = set(p.inputs + list(map(lambda x: x[0], p.body)))
+        vars = set(p.inputs + list(map(lambda x: x.variable, p.body)))
 
         # Enumerate functions
         for func in functions:
             # Enumerate arguments
-            for a in arguments(g, vars, func.signature[0]):
+            for a in arguments(g, vars, func.signature.input_types):
                 p_new = copy.deepcopy(p)
                 for v in a.new_variables:
                     p_new.inputs.append(v)
                 generator = copy.deepcopy(a.generator)
                 p_new.body.append(
-                    (Variable(generator.generate(), func.signature[1]), Expression(func, a.arguments)))
+                    Statement(Variable(generator.generate(), func.signature.output_type), Expression(func, a.arguments)))
                 s.append((p_new, generator))
 
 
@@ -166,20 +166,20 @@ def random_source_code(functions: List[Function], min_length: int, max_length: i
         for i in range(length):
             # Create a set of variables
             vars = set(program.inputs +
-                       list(map(lambda x: x[0], program.body)))
+                       list(map(lambda x: x.variable, program.body)))
 
             # Decide the functions
             func = rng.choice(functions)
 
             # Decide the arguments
             arg = rng.choice(
-                list(arguments(generator, vars, func.signature[0])))
+                list(arguments(generator, vars, func.signature.input_types)))
 
             # Add the function call
             for v in arg.new_variables:
                 program.inputs.append(v)
             generator = arg.generator
-            program.body.append((Variable(generator.generate(
-            ), func.signature[1]), Expression(func, arg.arguments)))
+            program.body.append(Statement(Variable(generator.generate(
+            ), func.signature.output_type), Expression(func, arg.arguments)))
 
         yield program

@@ -7,7 +7,7 @@ import numpy as np
 from typing import List, Tuple, Union, Dict, Callable
 from .dataset import Primitive, Example, Entry, Dataset
 from .deepcoder_utils import generate_io_samples
-from .dsl import Function, Program, Type, to_function
+from .dsl import Function, Program, Type, to_function, Signature
 from .source_code_simplifier import normalize
 from .source_code_generator import source_code
 
@@ -115,16 +115,13 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
         input = []
         for i in program.inputs:
             input.append(i.t)
-        output = program.body[-1][1].function.signature[-1] if len(
+        output = program.body[-1].expression.function.signature.output_type if len(
             program.body) > 0 else None
-        return (input, output)
-
-    def signature_to_string(signature):
-        return "{}".format(signature)
+        return Signature(input, output)
 
     functions_dsl = [to_function(f) for f in functions]
     invalid_program = set()
-    entries = dict()  # signature -> dict(str -> IntermidiateEntry)
+    entries = dict()  # Signature -> dict(str -> IntermidiateEntry)
 
     # Enumerate source code
     n_programs = 0
@@ -134,7 +131,7 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
             # If the length of simplified program is out of range, discard the program
             continue
 
-        signature = signature_to_string(get_signature(program))
+        signature = get_signature(program)
         if not signature in entries:
             entries[signature] = dict()
 
@@ -166,8 +163,8 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
 
         # Generate binary attributes
         fs = set()
-        for _, exp in program.body:
-            for name in exp.function.name.split(" "):
+        for statement in program.body:
+            for name in statement.expression.function.name.split(" "):
                 fs.add(name)
         attributes = dict()
         for f in functions_dsl:
@@ -180,7 +177,7 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
             callback.on_generate_program(program)
         n_programs += 1
         entries[signature][code] = IntermidiateEntry(
-            code, p, examples, attributes)
+            code, p, list(map(lambda x: Example(x[0], x[1]), examples)), attributes)
 
     if callback is not None:
         callback.on_finish_enumeration(n_programs)
@@ -206,14 +203,14 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
             indexes = set(rng.choice(list(range(spec.num_examples)),
                                      from_all_entries, replace=False))
             for index in indexes:
-                examples.append(entry.examples[index][0])
+                examples.append(entry.examples[index].inputs)
             not_used[entry.source_code] = [i for i in range(
                 spec.num_examples) if not (i in indexes)]
         # Extract examples from partial entries
         if from_partial_entries != 0:
             for entry in rng.choice(list(ientries.values()), from_partial_entries, replace=False):
                 index = rng.choice(not_used[entry.source_code])
-                examples.append(entry.examples[index][0])
+                examples.append(entry.examples[index].inputs)
 
         # Execute programs
         es = dict()  # Tuple[Primitive] -> IntermidiateEntry

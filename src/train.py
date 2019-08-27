@@ -1,5 +1,5 @@
 import dataclasses
-from typing import List, Union, Tuple, Dict, Set
+from typing import List, Union, Dict, Set
 import chainer as ch
 from chainer import training
 from .dataset import Dataset
@@ -39,7 +39,7 @@ def dataset_stats(dataset: Dataset) -> DatasetStats:
     num_inputs = 0
     names = set([])
     for entry in dataset.entries:
-        num_inputs = max(num_inputs, len(entry.examples[0][0]))
+        num_inputs = max(num_inputs, len(entry.examples[0].inputs))
         if len(names) == 0:
             for name in entry.attributes.keys():
                 names.add(name)

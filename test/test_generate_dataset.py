@@ -30,8 +30,8 @@ class Test_generate_dataset(unittest.TestCase):
                             entry.source_code, 50, 5)
                         self.assertNotEqual(None, p)
                         for example in entry.examples:
-                            output = p.fun(example[0])
-                            self.assertEqual(output, example[1])
+                            output = p.fun(example.inputs)
+                            self.assertEqual(output, example.output)
             self.assertEqual(
                 set(["a <- int\nb <- [int]\nc <- TAKE a b", "a <- [int]\nb <- HEAD a"]), srcs)
 
@@ -54,8 +54,8 @@ class Test_generate_dataset(unittest.TestCase):
                             entry.source_code, 50, 5)
                         self.assertNotEqual(None, p)
                         for example in entry.examples:
-                            output = p.fun(example[0])
-                            self.assertEqual(output, example[1])
+                            output = p.fun(example.inputs)
+                            self.assertEqual(output, example.output)
             self.assertEqual(set([
                 "a <- [int]\nb <- HEAD a\nc <- TAKE b a",
                 "a <- int\nb <- [int]\nc <- TAKE a b\nd <- TAKE a c",
@@ -85,8 +85,8 @@ class Test_generate_dataset(unittest.TestCase):
                             entry.source_code, 50, 5)
                         self.assertNotEqual(None, p)
                         for example in entry.examples:
-                            output = p.fun(example[0])
-                            self.assertEqual(output, example[1])
+                            output = p.fun(example.inputs)
+                            self.assertEqual(output, example.output)
             self.assertEqual(
                 set(["a <- [int]\nb <- HEAD a", "a <- [int]\nb <- LAST a"]), srcs)
 

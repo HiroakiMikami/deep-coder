@@ -5,6 +5,7 @@ import chainer.functions as F
 
 from src.model import ExampleEmbed, Encoder, Decoder, TrainingClassifier, tupled_binary_accuracy
 from src.chainer_dataset import ExampleEncoding, encode_example
+from src.dataset import Example
 
 
 class TestExampleEmbed(unittest.TestCase):
@@ -20,8 +21,8 @@ class TestExampleEmbed(unittest.TestCase):
           4 (NULL) -> 5
         """
 
-        e1 = encode_example(([[0, 1]], 0), 2, 2)
-        e2 = encode_example(([[1]], 1), 2, 2)
+        e1 = encode_example(Example([[0, 1]], 0), 2, 2)
+        e2 = encode_example(Example([[1]], 1), 2, 2)
         minibatch = np.array([[e1, e2]])
 
         N = 1
@@ -58,10 +59,10 @@ class TestExampleEmbed(unittest.TestCase):
           4 (NULL) -> 5
         """
 
-        e00 = encode_example(([[0, 1]], 0), 2, 2)
-        e01 = encode_example(([[1]], 1), 2, 2)
-        e10 = encode_example(([1, [0, 1]], [0]), 2, 2)
-        e11 = encode_example(([0, [0, 1]], []), 2, 2)
+        e00 = encode_example(Example([[0, 1]], 0), 2, 2)
+        e01 = encode_example(Example([[1]], 1), 2, 2)
+        e10 = encode_example(Example([1, [0, 1]], [0]), 2, 2)
+        e11 = encode_example(Example([0, [0, 1]], []), 2, 2)
         minibatch = np.array([[e00, e01], [e10, e11]])
 
         N = 1
@@ -103,8 +104,8 @@ class TestExampleEmbed(unittest.TestCase):
 
     def test_throw_error_if_num_inputs_is_too_large(self):
         embed = ExampleEmbed(1, 2, 1, (np.arange(5) + 1).reshape((5, 1)))
-        e0 = encode_example(([1, [0, 1]], [0]), 2, 2)
-        e1 = encode_example(([0, [0, 1]], []), 2, 2)
+        e0 = encode_example(Example([1, [0, 1]], [0]), 2, 2)
+        e1 = encode_example(Example([0, [0, 1]], []), 2, 2)
         minibatch = np.array([[e0, e1]])
 
         self.assertRaises(RuntimeError, lambda: embed(minibatch))
@@ -121,8 +122,8 @@ class TestEncoder(unittest.TestCase):
         state_embeddings: (N, e, 2, 4) -> h1: (N, e, 1) -> h2: (N, e, 2) -> output: (N, e, 2)
         """
 
-        e1 = encode_example(([[0, 1]], 0), 2, 2)
-        e2 = encode_example(([[1]], 1), 2, 2)
+        e1 = encode_example(Example([[0, 1]], 0), 2, 2)
+        e2 = encode_example(Example([[1]], 1), 2, 2)
         minibatch = np.array([[e1, e2]])
 
         state_embeddings = embed(minibatch)
@@ -162,8 +163,8 @@ class TestTrainingClassifier(unittest.TestCase):
         decoder = Decoder(2)
         classifier = TrainingClassifier(embed, encoder, decoder)
 
-        e1 = encode_example(([[0, 1]], 0), 2, 2)
-        e2 = encode_example(([[1]], 1), 2, 2)
+        e1 = encode_example(Example([[0, 1]], 0), 2, 2)
+        e2 = encode_example(Example([[1]], 1), 2, 2)
         minibatch = np.array([[e1, e2]])
         labels = np.array([[1, 1]])
         loss = classifier(minibatch, labels)

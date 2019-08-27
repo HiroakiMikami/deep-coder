@@ -6,7 +6,7 @@ from matplotlib import colors
 import matplotlib.cm as cm
 import pandas as pd
 import argparse
-from typing import List, Tuple, Union, Dict, Callable, Set
+from typing import List, Union, Dict, Callable, Set
 from src.dataset import Dataset, prior_distribution
 from src.inference import SearchResult
 
@@ -118,21 +118,21 @@ for index in indexes:
     ax_examples.axis("tight")
     ax_examples.axis("off")
     ax_examples.set_title("Examples")
-    num_inputs = max(map(lambda x: len(x[0]), entry.examples))
+    num_inputs = max(map(lambda x: len(x.inputs), entry.examples))
     colLabels = []
     for i in range(num_inputs):
         colLabels.append("Input {}".format(i + 1))
     colLabels.append("Output")
     rowLabels = []
     text = []
-    for i, (ins, out) in enumerate(entry.examples):
+    for i, example in enumerate(entry.examples):
         rowLabels.append("Example {}".format(i))
         row = []
-        for i in ins:
+        for i in example.inputs:
             row.append(i)
-        for i in range(len(ins), num_inputs):
+        for i in range(len(example.inputs), num_inputs):
             row.append("")
-        row.append(out)
+        row.append(example.output)
         text.append(row)
     ax_examples.table(cellText=text, colLabels=colLabels,
                       rowLabels=rowLabels, loc="center")

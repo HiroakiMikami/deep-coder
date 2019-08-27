@@ -1,6 +1,6 @@
 import dataclasses
 from enum import Enum
-from typing import List, Tuple, TypeVar
+from typing import List
 import copy
 from src.deepcoder_utils import generate_io_samples
 
@@ -8,6 +8,26 @@ from src.deepcoder_utils import generate_io_samples
 class Type(Enum):
     Int = 1
     IntList = 2
+
+
+@dataclasses.dataclass
+class Signature:
+    """
+    The function signature of DSL programs
+
+    Attributes
+    ----------
+    input_types: List[Type]
+    output_type: Type
+    """
+    input_types: List[Type]
+    output_type: Type
+
+    def __eq__(self, rhs):
+        return self.input_types == rhs.input_types and self.output_type == rhs.output_type
+
+    def __hash__(self):
+        return hash((tuple(self.input_types), self.output_type))
 
 
 @dataclasses.dataclass
@@ -19,18 +39,17 @@ class Function:
     ----------
     name : str
         The name of this function
-    signature : tuple of Type list and Type
-        The first element represents the input types and
-        the second element represents the output type.
+    signature : Signature
+        The signature of this function
     """
     name: str
-    signature: Tuple[List[Type], Type]
+    signature: Signature
 
     def __eq__(self, rhs):
         return self.name == rhs.name and self.signature == rhs.signature
 
     def __hash__(self):
-        return hash((self.name, (tuple(self.signature[0]), self.signature[1])))
+        return hash((self.name, (tuple(self.signature.input_types), self.signature.output_type)))
 
 
 @dataclasses.dataclass
@@ -74,10 +93,25 @@ class Expression:
 
 
 @dataclasses.dataclass
+class Statement:
+    """
+    The statement of DSL
+
+    Attributes
+    ----------
+    variable : Variable
+        The variable defined in this statement
+    expression : Expression
+    """
+
+    variable: Variable
+    expression: Expression
+
+
+@dataclasses.dataclass
 class Program:
     """
     The program of DSL
-
 
     Attributes
     ----------
@@ -90,7 +124,7 @@ class Program:
     """
 
     inputs: List[Variable]
-    body: List[Tuple[Variable, Expression]]
+    body: List[Statement]
 
     def to_string(self) -> str:
         """
@@ -117,9 +151,9 @@ class Program:
         for input in self.inputs:
             code += "{} <- {}\n".format(id_to_name(input.id),
                                         "int" if input.t == Type.Int else "[int]")
-        for v, exp in self.body:
-            code += "{} <- {} {}\n".format(id_to_name(v.id), exp.function.name, " ".join(
-                map(lambda x: id_to_name(x.id), exp.arguments)))
+        for statement in self.body:
+            code += "{} <- {} {}\n".format(id_to_name(statement.variable.id), statement.expression.function.name, " ".join(
+                map(lambda x: id_to_name(x.id), statement.expression.arguments)))
 
         return code
 
@@ -139,11 +173,12 @@ class Program:
         body = []
         for input in self.inputs:
             inputs.append(copy.deepcopy(input))
-        for var, exp in self.body:
+        for statement in self.body:
             args = []
-            for arg in exp.arguments:
+            for arg in statement.expression.arguments:
                 args.append(copy.deepcopy(arg))
-            body.append((copy.deepcopy(var), Expression(exp.function, args)))
+            body.append(Statement(copy.deepcopy(statement.variable),
+                                  Expression(statement.expression.function, args)))
 
         return Program(inputs, body)
 
@@ -166,4 +201,4 @@ def to_function(f: generate_io_samples.Function) -> Function:
     for s in f.sig[:-1]:
         intype.append(Type.Int if s == int else Type.IntList)
     outtype = Type.Int if f.sig[-1] == int else Type.IntList
-    return Function(f.src, (intype, outtype))
+    return Function(f.src, Signature(intype, outtype))

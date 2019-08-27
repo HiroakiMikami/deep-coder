@@ -1,5 +1,5 @@
 import copy
-from .dsl import Function, Type, Variable, Expression, Program
+from .dsl import Function, Type, Variable, Expression, Program, Statement
 
 
 def normalize(program: Program):
@@ -35,11 +35,11 @@ def normalize(program: Program):
         old_id = i.id
         i.id = len(old_id_to_new_id)
         old_id_to_new_id[old_id] = i.id
-    for v, exp in program.body:
-        old_id = v.id
-        v.id = len(old_id_to_new_id)
-        old_id_to_new_id[old_id] = v.id
-        for arg in exp.arguments:
+    for statement in program.body:
+        old_id = statement.variable.id
+        statement.variable.id = len(old_id_to_new_id)
+        old_id_to_new_id[old_id] = statement.variable.id
+        for arg in statement.expression.arguments:
             arg.id = old_id_to_new_id[arg.id]
 
     return program
@@ -82,12 +82,12 @@ def remove_redundant_variables(program: Program) -> Program:
         return program
 
     # Last line is always used (because it is output value)
-    v_used = set([program.body[-1][0]])
-    for v, exp in program.body[::-1]:
-        if v in v_used:
+    v_used = set([program.body[-1].variable])
+    for statement in program.body[::-1]:
+        if statement.variable in v_used:
             # v is not a redundant variable
-            body.append((v, exp))
-            for a in exp.arguments:
+            body.append(statement)
+            for a in statement.expression.arguments:
                 v_used.add(a)
     body.reverse()
 
@@ -165,30 +165,31 @@ def remove_redundant_expressions(program: Program) -> Program:
     variable_to_expression = dict()  # Variable -> Expression
 
     body = []
-    for v, exp in program.body:
-        if (exp.function.name, tuple(exp.arguments)) in expression_to_variable:
+    for statement in program.body:
+        if (statement.expression.function.name, tuple(statement.expression.arguments)) in expression_to_variable:
             # Rule1
-            replacement[v] = expression_to_variable[(
-                exp.function.name, tuple(exp.arguments))]
+            replacement[statement.variable] = expression_to_variable[(
+                statement.expression.function.name, tuple(statement.expression.arguments))]
             continue
-        if len(exp.arguments) > 0 and exp.arguments[0] in variable_to_expression:
-            exp_arg1 = variable_to_expression[exp.arguments[0]]
-            if exp.function.name == "SORT" and (exp_arg1.function.name == "SORT"):
+        if len(statement.expression.arguments) > 0 and statement.expression.arguments[0] in variable_to_expression:
+            exp_arg1 = variable_to_expression[statement.expression.arguments[0]]
+            if statement.expression.function.name == "SORT" and (exp_arg1.function.name == "SORT"):
                 # Rule2
-                replacement[v] = exp.arguments[0]
+                replacement[statement.variable] = statement.expression.arguments[0]
                 continue
-            if exp.function.name == "REVERSE" and (exp_arg1.function.name == "REVERSE"):
+            if statement.expression.function.name == "REVERSE" and (exp_arg1.function.name == "REVERSE"):
                 # Rule3
-                replacement[v] = variable_to_expression[exp.arguments[0]].arguments[0]
+                replacement[statement.variable] = variable_to_expression[statement.expression.arguments[0]].arguments[0]
                 continue
 
-        for i, arg in enumerate(exp.arguments):
+        for i, arg in enumerate(statement.expression.arguments):
             if arg in replacement:
-                exp.arguments[i] = replacement[arg]
-        body.append((v, exp))
+                statement.expression.arguments[i] = replacement[arg]
+        body.append(statement)
 
-        expression_to_variable[(exp.function.name, tuple(exp.arguments))] = v
-        variable_to_expression[v] = exp
+        expression_to_variable[(statement.expression.function.name, tuple(
+            statement.expression.arguments))] = statement.variable
+        variable_to_expression[statement.variable] = statement.expression
     program.body = body
 
     return program
@@ -260,33 +261,33 @@ def remove_dependency_between_variables(program: Program, minimum: Function, max
     variable_to_expression = dict()  # Variable -> Expression
 
     body = []
-    for v, exp in program.body:
-        if len(exp.arguments) > 0 and exp.arguments[0] in variable_to_expression:
-            exp_arg1 = variable_to_expression[exp.arguments[0]]
-            if (exp_arg1.function.name == "SORT" or exp_arg1.function.name == "REVERSE") and (exp.function.name == "SUM" or exp.function.name == "MAXIMUM" or exp.function.name == "MINIMUM"):
+    for statement in program.body:
+        if len(statement.expression.arguments) > 0 and statement.expression.arguments[0] in variable_to_expression:
+            exp_arg1 = variable_to_expression[statement.expression.arguments[0]]
+            if (exp_arg1.function.name == "SORT" or exp_arg1.function.name == "REVERSE") and (statement.expression.function.name == "SUM" or statement.expression.function.name == "MAXIMUM" or statement.expression.function.name == "MINIMUM"):
                 # Rule1
                 x = exp_arg1.arguments[0]
-                exp = Expression(exp.function, [x])
-                body.append((v, exp))
-                variable_to_expression[v] = exp
+                exp = Expression(statement.expression.function, [x])
+                body.append(Statement(statement.variable, exp))
+                variable_to_expression[statement.variable] = statement.expression
                 continue
-            if exp_arg1.function.name == "SORT" and (exp.function.name == "HEAD"):
+            if exp_arg1.function.name == "SORT" and (statement.expression.function.name == "HEAD"):
                 # Rule2
                 x = exp_arg1.arguments[0]
                 exp = Expression(minimum, [x])
-                body.append((v, exp))
-                variable_to_expression[v] = exp
+                body.append(Statement(statement.variable, exp))
+                variable_to_expression[statement.variable] = exp
                 continue
-            if exp_arg1.function.name == "SORT" and (exp.function.name == "LAST"):
+            if exp_arg1.function.name == "SORT" and (statement.expression.function.name == "LAST"):
                 # Rule3
                 x = exp_arg1.arguments[0]
                 exp = Expression(maximum, [x])
-                body.append((v, exp))
-                variable_to_expression[v] = exp
+                body.append(Statement(statement.variable, exp))
+                variable_to_expression[statement.variable] = exp
                 continue
 
-        body.append((v, exp))
-        variable_to_expression[v] = exp
+        body.append(statement)
+        variable_to_expression[statement.variable] = statement.expression
 
     program.body = body
     return program

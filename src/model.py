@@ -5,7 +5,7 @@ import chainer.links as L
 import chainer.functions as F
 from chainer import backend
 from chainer import reporter
-from typing import List, Union, Tuple, Dict
+from typing import List, Union, Dict
 
 from .chainer_dataset import PrimitiveEncoding
 

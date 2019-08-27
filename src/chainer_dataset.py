@@ -1,7 +1,7 @@
 import dataclasses
 from chainer import datasets
 import numpy as np
-from typing import List, Union, Tuple, Dict
+from typing import List, Union, Dict
 
 from .dataset import Dataset, Primitive, Example
 from .dsl import Function
@@ -67,10 +67,9 @@ def encode_primitive(p: Primitive, value_range: int, max_list_length: int) -> Pr
 
 
 def encode_example(example: Example, value_range: int, max_list_length: int) -> ExampleEncoding:
-    inputs, output = example
     enc_inputs = [encode_primitive(
-        ins, value_range, max_list_length) for ins in inputs]
-    enc_output = encode_primitive(output, value_range, max_list_length)
+        ins, value_range, max_list_length) for ins in example.inputs]
+    enc_output = encode_primitive(example.output, value_range, max_list_length)
     return ExampleEncoding(enc_inputs, enc_output)
 
 

@@ -1,14 +1,14 @@
 import unittest
 
-from src.dataset import Entry, Dataset
+from src.dataset import Entry, Dataset, Example
 import src.train as T
 
 
 class Test_train(unittest.TestCase):
     def test_dataset_stats(self):
-        e0 = Entry("HEAD", [([[10, 20]], 10)], dict(
+        e0 = Entry("HEAD", [Example([[10, 20]], 10)], dict(
             [["HEAD", True], ["TAKE", False]]))
-        e1 = Entry("TAKE", [([1, [10, 20]], 10)], dict(
+        e1 = Entry("TAKE", [Example([1, [10, 20]], 10)], dict(
             [["HEAD", False], ["TAKE", True]]))
         dataset = Dataset([e0, e1])
         stats = T.dataset_stats(dataset)

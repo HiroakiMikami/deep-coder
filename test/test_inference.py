@@ -2,7 +2,7 @@ import unittest
 import os
 import numpy as np
 
-from src.dataset import Entry, Dataset
+from src.dataset import Entry, Dataset, Example
 from src.deepcoder_utils import generate_io_samples
 from src.chainer_dataset import encode_example
 from src.train import ModelShapeParameters, DatasetStats
@@ -13,8 +13,8 @@ class Test_inferense(unittest.TestCase):
     def test_search(self):
         # example of access
         examples = [
-            ([2, [10, 20, 30]], 30),
-            ([1, [-10, 30, 40]], 30)
+            Example([2, [10, 20, 30]], 30),
+            Example([1, [-10, 30, 40]], 30)
         ]
 
         def pred(examples):
@@ -43,8 +43,8 @@ class Test_inferense(unittest.TestCase):
     def test_search_when_pred_throws_error(self):
         # example that do not correspond to any programs
         examples = [
-            ([2, [10, 20, 30]], -255),
-            ([1, [-10, 30, 40]], -255)
+            Example([2, [10, 20, 30]], -255),
+            Example([1, [-10, 30, 40]], -255)
         ]
 
         def pred(examples):
@@ -63,8 +63,8 @@ class Test_inferense(unittest.TestCase):
     def test_search_with_invalid_examples(self):
         # example that do not correspond to any programs
         examples = [
-            ([2, [10, 20, 30]], -255),
-            ([1, [-10, 30, 40]], -255)
+            Example([2, [10, 20, 30]], -255),
+            Example([1, [-10, 30, 40]], -255)
         ]
 
         def pred(examples):
@@ -99,8 +99,8 @@ class Test_inferense(unittest.TestCase):
 
     def test_predict_with_neural_network(self):
         examples = [
-            ([2, [10, 20, 30]], 30),
-            ([1, [-10, 30, 40]], 30)
+            Example([2, [10, 20, 30]], 30),
+            Example([1, [-10, 30, 40]], 30)
         ]
         model_shape = ModelShapeParameters(DatasetStats(
             2, set(["MAP", "HEAD"])), 256, 5, 3, 2, 10)
