@@ -66,10 +66,10 @@ class TestExampleEmbed(unittest.TestCase):
         state_embeddings = embed.forward(minibatch)
         self.assertEqual((2, 2, 3, 2 + 2 * 1), state_embeddings.shape)
         self.assertTrue(np.allclose([0, 1, 3, 4], state_embeddings.array[0, 0, 0])) # Input of e00
-        self.assertTrue(np.allclose([0, 0, 0, 0], state_embeddings.array[0, 0, 1])) # Input of e00
+        self.assertTrue(np.allclose([0, 0, 5, 5], state_embeddings.array[0, 0, 1])) # Input of e00
         self.assertTrue(np.allclose([1, 0, 3, 5], state_embeddings.array[0, 0, 2])) # Output of e00
         self.assertTrue(np.allclose([0, 1, 4, 5], state_embeddings.array[0, 1, 0])) # Input of e01
-        self.assertTrue(np.allclose([0, 0, 0, 0], state_embeddings.array[0, 1, 1])) # Input of e01
+        self.assertTrue(np.allclose([0, 0, 5, 5], state_embeddings.array[0, 1, 1])) # Input of e01
         self.assertTrue(np.allclose([1, 0, 4, 5], state_embeddings.array[0, 1, 2])) # Output of e01
         self.assertTrue(np.allclose([1, 0, 4, 5], state_embeddings.array[1, 0, 0])) # Input of e10
         self.assertTrue(np.allclose([0, 1, 3, 4], state_embeddings.array[1, 0, 1])) # Input of e10

@@ -107,14 +107,6 @@ class ExampleEmbed(link.Chain):
         values_embeddings = F.reshape(values_embeddings, (N, e, num_inputs + 1, -1)) # (N, e, (num_inputs + 1), max_list_length * n_embed)
         state_embeddings = F.concat([types, values_embeddings], axis=3) # (N, e, (num_inputs + 1), 2 + max_list_length * n_embed)
 
-        # Mask the empty types and values
-        mask = np.zeros((N, e, num_inputs + 1, 1))
-        for i, example_encodings in enumerate(examples):
-            for j, example in enumerate(example_encodings):
-                mask[i, j, :len(example.inputs), :] = 1.0
-                mask[i, j, num_inputs, :] = 1
-        state_embeddings = state_embeddings * mask # (N, e, (num_inputs + 1), 2 + max_list_length * n_embed)
-
         return state_embeddings
 
 class Encoder(link.Chain):
