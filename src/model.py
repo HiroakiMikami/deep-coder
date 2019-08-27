@@ -115,6 +115,7 @@ class Encoder(link.Chain):
     The encoder neural network of DeepCoder
     """
     def __init__(self, n_units: int,
+                 num_hidden_layers: int = 3,
                  initialW: Union[None, ch.Initializer] = None,
                  initial_bias: Union[None, ch.Initializer] = None):
         """
@@ -124,6 +125,8 @@ class Encoder(link.Chain):
         ----------
         n_units : int
             The number of units in the hidden layers. 256 was used in the paper.
+        num_hidden_layers : int
+            The number of hidden layers. 3 was used in the paper.
         initialW : ch.Initializer or None
             The initial value of the weights
         initial_bias : ch.Initializer or None
@@ -137,7 +140,7 @@ class Encoder(link.Chain):
                 L.Linear(n_units, initialW=initialW, initial_bias=initial_bias),
                 F.sigmoid
             )
-            self._hidden = layer.repeat(3)
+            self._hidden = layer.repeat(num_hidden_layers)
 
     def forward(self, state_embeddings: np.array):
         """
