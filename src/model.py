@@ -53,6 +53,7 @@ class ExampleEmbed(link.Chain):
 
         with self.init_scope():
             self._embed_integer = L.EmbedID(2 * value_range + 1, n_embed, initialW=initialW)
+        self._value_range = value_range
         self._num_inputs = num_inputs
 
     def forward(self, examples: np.array):
@@ -92,7 +93,7 @@ class ExampleEmbed(link.Chain):
                 types[i, j, num_inputs, :] = np.identity(2)[example.output.t]
 
         ## The array of type values (N, e, num_inputs + 1, max_list_length)
-        values = np.zeros((N, e, self._num_inputs + 1, max_list_length), dtype=np.int32)
+        values = np.ones((N, e, self._num_inputs + 1, max_list_length), dtype=np.int32) * (2 * self._value_range)
         for i, example_encodings in enumerate(examples):
             for j, example in enumerate(example_encodings):
                 values[i, j, :len(example.inputs), :] = np.array(list(map(lambda x: x.value_arr, example.inputs)))
