@@ -1,28 +1,26 @@
 import unittest
 
-from src.dsl import Function, Type, Variable, Expression, Program, to_string, clone
+from src.dsl import Function, Type, Variable, Expression, Program
 
 
-class Test_to_string(unittest.TestCase):
+class Test_Program(unittest.TestCase):
     def test_to_string(self):
-        self.assertEqual("a <- int\nb <- [int]\n", to_string(
-            Program([Variable(0, Type.Int), Variable(1, Type.IntList)], [])))
+        self.assertEqual("a <- int\nb <- [int]\n",
+                         Program([Variable(0, Type.Int), Variable(1, Type.IntList)], []).to_string())
         F = Function("FUNC", ([Type.Int], Type.IntList))
-        self.assertEqual("a <- int\nb <- [int]\nc <- FUNC b a\n", to_string(Program(
+        self.assertEqual("a <- int\nb <- [int]\nc <- FUNC b a\n", Program(
             [Variable(0, Type.Int), Variable(1, Type.IntList)],
             [(Variable(2, Type.Int), Expression(
                 F, [Variable(1, Type.Int), Variable(0, Type.Int)]))]
-        )))
+        ).to_string())
 
-
-class Test_clone(unittest.TestCase):
     def test_clone(self):
         F = Function("FUNC", ([Type.Int, Type.IntList], Type.IntList))
         a = Variable(0, Type.Int)
         b = Variable(1, Type.IntList)
         c = Variable(1, Type.IntList)
         p = Program([a, b], [(c, Expression(F, [a, b]))])
-        p_clone = clone(p)
+        p_clone = p.clone()
         self.assertEqual(p, p_clone)
 
         p_clone.inputs[0].id = 2

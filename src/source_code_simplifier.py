@@ -1,5 +1,5 @@
 import copy
-from .dsl import Function, Type, Variable, Expression, Program, to_string, clone
+from .dsl import Function, Type, Variable, Expression, Program
 
 
 def normalize(program: Program):
@@ -24,8 +24,7 @@ def normalize(program: Program):
     This function modify the program object of the argument
     to reduce runtime overhead.
     """
-    program = clone(
-        program)  # Clone program to isolate the argument from modifications
+    program = program.clone()  # Clone program to isolate the argument from modifications
 
     # inputs should be sorted by id
     program.inputs.sort(key=lambda i: i.id)
@@ -73,8 +72,7 @@ def remove_redundant_variables(program: Program) -> Program:
         The simplified program
     """
 
-    # Clone program to isolate the argument from modifications
-    program = clone(program)
+    program = program.clone()  # Clone program to isolate the argument from modifications
 
     inputs = []
     body = []
@@ -160,8 +158,7 @@ def remove_redundant_expressions(program: Program) -> Program:
     Program
         The simplified program
     """
-    program = clone(
-        program)  # Clone program to isolate the argument from modifications
+    program = program.clone()  # Clone program to isolate the argument from modifications
 
     replacement = dict()  # Variable -> Variable
     expression_to_variable = dict()  # (str, [Variable]) -> Variable
@@ -258,8 +255,7 @@ def remove_dependency_between_variables(program: Program, minimum: Function, max
     Program
         The simplified program
     """
-    program = clone(
-        program)  # Clone program to isolate the argument from modifications
+    program = program.clone()  # Clone program to isolate the argument from modifications
 
     variable_to_expression = dict()  # Variable -> Expression
 

@@ -7,7 +7,7 @@ import numpy as np
 from typing import List, Tuple, Union, Dict, Callable
 from .dataset import Primitive, Example, Entry, Dataset
 from .deepcoder_utils import generate_io_samples
-from .dsl import Function, Program, to_string, clone, Type, to_function
+from .dsl import Function, Program, Type, to_function
 from .source_code_simplifier import normalize
 from .source_code_generator import source_code
 
@@ -102,11 +102,11 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
 
     def simplify_and_normalize(program: Program) -> Program:
         while True:
-            p_old = to_string(program)
+            p_old = program.to_string()
             if simplify is not None:
                 program = simplify(program)
 
-            if to_string(program) == p_old:
+            if program.to_string() == p_old:
                 break
         program = normalize(program)
         return program
@@ -139,7 +139,7 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
             entries[signature] = dict()
 
         # last newline should be removed to compile source code
-        code = to_string(program)[:-1]
+        code = program.to_string()[:-1]
 
         if code in entries[signature]:
             # the program is already added to the dataset

@@ -4,7 +4,7 @@ import pickle
 import os
 import numpy as np
 from src.deepcoder_utils import generate_io_samples
-from src.dsl import Function, Type, Variable, Expression, Program, to_string, clone
+from src.dsl import Function, Type, Variable, Expression, Program
 from src.generate_dataset import generate_dataset, DatasetSpec, EquivalenceCheckingSpec, ProgressCallback
 from src.source_code_simplifier import remove_redundant_variables
 

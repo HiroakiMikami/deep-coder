@@ -92,72 +92,60 @@ class Program:
     inputs: List[Variable]
     body: List[Tuple[Variable, Expression]]
 
+    def to_string(self) -> str:
+        """
+        Return the source code of the program
 
-def to_string(program: Program) -> str:
-    """
-    Return the source code of the program
+        Returns
+        -------
+        code : string
+            The source code of this program
+        """
 
-    Parameters
-    ----------
-    program : Program
-        The program that will be converted to the string
+        code = ""
 
-    Returns
-    -------
-    code : string
-        The source code of `program`
-    """
+        def id_to_name(id: int) -> str:
+            name = ""
+            while True:
+                x = id % 26
+                id //= 26
+                name += chr(x + ord('a'))
+                if id == 0:
+                    break
+            return name
 
-    code = ""
+        for input in self.inputs:
+            code += "{} <- {}\n".format(id_to_name(input.id),
+                                        "int" if input.t == Type.Int else "[int]")
+        for v, exp in self.body:
+            code += "{} <- {} {}\n".format(id_to_name(v.id), exp.function.name, " ".join(
+                map(lambda x: id_to_name(x.id), exp.arguments)))
 
-    def id_to_name(id: int) -> str:
-        name = ""
-        while True:
-            x = id % 26
-            id //= 26
-            name += chr(x + ord('a'))
-            if id == 0:
-                break
-        return name
+        return code
 
-    for input in program.inputs:
-        code += "{} <- {}\n".format(id_to_name(input.id),
-                                    "int" if input.t == Type.Int else "[int]")
-    for v, exp in program.body:
-        code += "{} <- {} {}\n".format(id_to_name(v.id), exp.function.name, " ".join(
-            map(lambda x: id_to_name(x.id), exp.arguments)))
+    def clone(self):
+        """
+        Return the copy of the program
+        The self and the return value will not share any objects.
+        Thus we can freely modify the return value.
 
-    return code
+        Returns
+        -------
+        cloned_program : Program
+            The program that is same as this program
+        """
 
+        inputs = []
+        body = []
+        for input in self.inputs:
+            inputs.append(copy.deepcopy(input))
+        for var, exp in self.body:
+            args = []
+            for arg in exp.arguments:
+                args.append(copy.deepcopy(arg))
+            body.append((copy.deepcopy(var), Expression(exp.function, args)))
 
-def clone(program: Program) -> Program:
-    """
-    Return the copy of the program
-    The argument and the return value will not share any objects.
-    Thus we can freely modify the return value.
-
-    Parameters
-    ----------
-    program : Program
-        The program to be cloned
-
-    Returns
-    -------
-    cloned_program : Program
-        The program that is same as `program`
-    """
-
-    inputs = []
-    body = []
-    for input in program.inputs:
-        inputs.append(copy.deepcopy(input))
-    for var, exp in program.body:
-        args = []
-        for arg in exp.arguments:
-            args.append(copy.deepcopy(arg))
-        body.append((copy.deepcopy(var), Expression(exp.function, args)))
-
-    return Program(inputs, body)
+        return Program(inputs, body)
 
 
 def to_function(f: generate_io_samples.Function) -> Function:

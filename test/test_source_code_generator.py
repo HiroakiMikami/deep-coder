@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from src.dsl import Function, Type, Variable, Expression, Program, to_string
+from src.dsl import Function, Type, Variable, Expression, Program
 from src.source_code_generator import arguments, source_code, random_source_code, IdGenerator, Variable, Type
 
 
@@ -48,7 +48,8 @@ class Test_source_code(unittest.TestCase):
     def test_source_code(self):
         TAKE = Function("TAKE", ([Type.Int, Type.IntList], Type.IntList))
         HEAD = Function("HEAD", ([Type.IntList], Type.Int))
-        srcs = set(map(to_string, source_code([TAKE, HEAD], 1, 1)))
+        srcs = set(map(lambda x: x.to_string(),
+                       source_code([TAKE, HEAD], 1, 1)))
         self.assertEqual(
             set(["a <- int\nb <- [int]\nc <- TAKE a b\n",
                  "a <- [int]\nb <- HEAD a\n"]),

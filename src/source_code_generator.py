@@ -2,7 +2,7 @@ import dataclasses
 import numpy as np
 from typing import List, Set, Union
 import copy
-from .dsl import Function, Type, Variable, Expression, Program, clone
+from .dsl import Function, Type, Variable, Expression, Program
 
 
 class IdGenerator:

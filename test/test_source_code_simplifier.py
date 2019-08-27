@@ -1,6 +1,6 @@
 import unittest
 
-from src.dsl import Function, Type, Variable, Expression, Program, to_string
+from src.dsl import Function, Type, Variable, Expression, Program
 from src.source_code_simplifier import normalize, remove_redundant_variables, remove_redundant_expressions, remove_dependency_between_variables
 
 
