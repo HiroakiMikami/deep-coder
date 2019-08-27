@@ -2,7 +2,19 @@ import unittest
 import chainer as ch
 import numpy as np
 
-from src.dataset import Example, Entry, prior_distribution, encode_primitive, encode_attribute, EncodedDataset
+from src.dataset import Example, Entry, prior_distribution, encode_primitive, encode_attribute, EncodedDataset, dataset_stats
+
+
+class Test_dataset_stats(unittest.TestCase):
+    def test_dataset_stats(self):
+        e0 = Entry("HEAD", [Example([[10, 20]], 10)], dict(
+            [["HEAD", True], ["TAKE", False]]))
+        e1 = Entry("TAKE", [Example([1, [10, 20]], 10)], dict(
+            [["HEAD", False], ["TAKE", True]]))
+        dataset = ch.datasets.TupleDataset([e0, e1])
+        stats = dataset_stats(dataset)
+        self.assertEqual(2, stats.max_num_inputs)
+        self.assertEqual(set(["HEAD", "TAKE"]), stats.names)
 
 
 class Test_prior_distribution(unittest.TestCase):

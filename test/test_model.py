@@ -160,7 +160,7 @@ class TestTrainingClassifier(unittest.TestCase):
         embed = ExampleEmbed(1, 2, 2)
         encoder = Encoder(10)
         decoder = Decoder(2)
-        classifier = TrainingClassifier(embed, encoder, decoder)
+        classifier = TrainingClassifier(ch.Sequential(embed, encoder, decoder))
 
         e1 = encode_example(Example([[0, 1]], 0), 2, 2)
         e2 = encode_example(Example([[1]], 1), 2, 2)

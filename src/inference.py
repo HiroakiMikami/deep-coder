@@ -4,10 +4,34 @@ import os
 import numpy as np
 import subprocess
 import chainer as ch
+import chainer.functions as F
 from typing import List, Union, Dict, Callable, Set
 from .dataset import Example, prior_distribution, encode_example
-from .model import ExampleEmbed, Encoder, Decoder, InferenceModel
-from .train import ModelShapeParameters
+from .model import Predictor, ModelShapeParameters
+
+
+class InferenceModel:
+    """
+    The model for inference
+
+    Attributes
+    ----------
+    predictor : ch.Link
+        The attribute predictor of DeepCoder
+    model : ch.Link
+        The model that outputs probabilities of each symbols
+    """
+
+    def __init__(self, params: ModelShapeParameters):
+        """
+        Constructor
+
+        Parameters
+        ----------
+        params : ModelShapeParameters
+        """
+        self.predictor = Predictor(params)
+        self.model = ch.Sequential(self.predictor, F.sigmoid)
 
 
 @dataclasses.dataclass
@@ -150,26 +174,6 @@ def predict_with_prior_distribution(dataset):
     return lambda x: prior
 
 
-def model(params: ModelShapeParameters) -> ch.Link:
-    """
-    Return the model of DeepCoder
-
-    Parameters
-    ----------
-    params : ModelShapeParameters
-
-    Returns
-    -------
-    ch.Link
-        The model of DeepCoder
-    """
-    embed = ExampleEmbed(params.dataset_stats.max_num_inputs,
-                         params.value_range, params.n_embed)
-    encoder = Encoder(params.n_units)
-    decoder = Decoder(len(params.dataset_stats.names))
-    return InferenceModel(embed, encoder, decoder)
-
-
 def predict_with_neural_network(model_shape: ModelShapeParameters, model: InferenceModel):
     """
     Predict by using the neural network
@@ -192,7 +196,7 @@ def predict_with_neural_network(model_shape: ModelShapeParameters, model: Infere
         example_encodings = [encode_example(
             example, model_shape.value_range, model_shape.max_list_length) for example in examples]
         example_encodings = np.array([example_encodings])
-        pred = model(example_encodings).array[0]
+        pred = model.model(example_encodings).array[0]
         retval = dict()
         for name, p in zip(ns, pred):
             retval[name] = p

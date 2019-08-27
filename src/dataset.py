@@ -2,7 +2,7 @@ import dataclasses
 import numpy as np
 import chainer as ch
 from chainer import datasets
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Set
 from .dsl import Function
 
 Primitive = Union[int, List[int]]
@@ -42,6 +42,37 @@ class Entry:
     source_code: str
     examples: List[Example]
     attributes: Dict[str, bool]
+
+
+@dataclasses.dataclass
+class DatasetStats:
+    max_num_inputs: int
+    names: Set[str]
+
+
+def dataset_stats(dataset) -> DatasetStats:
+    """
+    Return the values for specifying the model shape
+
+    Parameters
+    ----------
+    dataset : chainer.dataset
+
+    Returns
+    -------
+    DatasetStats
+        The maximum number of inputs and the number of functions
+        in the dataset.
+    """
+    num_inputs = 0
+    names = set([])
+    for entry in dataset:
+        entry = entry[0]
+        num_inputs = max(num_inputs, len(entry.examples[0].inputs))
+        if len(names) == 0:
+            for name in entry.attributes.keys():
+                names.add(name)
+    return DatasetStats(num_inputs, names)
 
 
 def prior_distribution(dataset) -> Dict[str, float]:

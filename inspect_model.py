@@ -6,6 +6,7 @@ import pandas as pd
 import chainer as ch
 import argparse
 import src.train as T
+from src.model import ModelShapeParameters
 
 SEED_MAX = 2**32 - 1
 
@@ -25,7 +26,7 @@ np.random.seed(root_rng.randint(SEED_MAX))
 
 # Load model
 with open(args.modelshape, "rb") as f:
-    model_shape: T.ModelShapeParameters = pickle.load(f)
+    model_shape: ModelShapeParameters = pickle.load(f)
 model = T.model(model_shape)
 ch.serializers.load_npz(args.model, model.predictor)
 

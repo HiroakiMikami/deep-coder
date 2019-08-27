@@ -8,8 +8,9 @@ import argparse
 import chainer as ch
 from chainer import datasets
 from chainer.training import extensions
-from src.dataset import EncodedDataset
+from src.dataset import EncodedDataset, dataset_stats
 import src.train as T
+from src.model import ModelShapeParameters
 
 SEED_MAX = 2**32 - 1
 
@@ -57,10 +58,9 @@ if args.num_train:
     dataset, _ = datasets.split_dataset_random(
         dataset, args.num_train + num_test, seed=root_rng.randint(SEED_MAX))
 
-dataset_stats = T.dataset_stats(dataset)
-model_shape = T.ModelShapeParameters(dataset_stats, args.value_range, args.max_list_length,
-                                     args.num_hidden_layers, args.n_embed, args.n_units)
-model = T.model(model_shape, args.weight_label_false)
+dataset_stats = dataset_stats(dataset)
+model_shape = ModelShapeParameters(dataset_stats, args.value_range, args.max_list_length,
+                                   args.num_hidden_layers, args.n_embed, args.n_units)
 
 # Save model shape
 if not os.path.exists(args.output):
@@ -85,23 +85,25 @@ if test is not None:
 else:
     test_iter = None
 
-trainer = T.trainer(train_iter, args.output, model,
-                    args.num_epochs, device=args.device)
+train = T.Training(train_iter, args.output, model_shape, args.weight_label_false,
+                   args.num_epochs, device=args.device)
+
 if test_iter is not None:
-    trainer.extend(extensions.Evaluator(test_iter, model, device=args.device))
-trainer.extend(extensions.LogReport())
+    train.trainer.extend(extensions.Evaluator(
+        test_iter, train.model, device=args.device))
+train.trainer.extend(extensions.LogReport())
 if test_iter is not None:
-    trainer.extend(extensions.PrintReport(
+    train.trainer.extend(extensions.PrintReport(
         ['epoch',
          'main/loss', 'validation/main/loss',
          'main/accuracy', 'main/accuracy_false', 'main/accuracy_true',
          'validation/main/accuracy', 'validation/main/accuracy_false', 'validation/main/accuracy_true',
          'elapsed_time']))
 else:
-    trainer.extend(extensions.PrintReport(
+    train.trainer.extend(extensions.PrintReport(
         ['epoch', 'main/loss', 'main/accuracy', 'main/accuracy_false', 'main/accuracy_true', 'elapsed_time']))
-trainer.extend(extensions.snapshot(
+train.trainer.extend(extensions.snapshot(
     filename="snapshot_{.updater.epoch}"), trigger=(10, 'epoch'))
-trainer.extend(extensions.snapshot_object(model.predictor,
-                                          "model_{.updater.epoch}"), trigger=(10, 'epoch'))
-trainer.run()
+train.trainer.extend(extensions.snapshot_object(train.predictor,
+                                                "model_{.updater.epoch}"), trigger=(10, 'epoch'))
+train.trainer.run()

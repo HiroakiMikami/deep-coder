@@ -1,3 +1,4 @@
+import dataclasses
 import numpy as np
 import chainer as ch
 from chainer import link
@@ -6,6 +7,17 @@ import chainer.functions as F
 from chainer import backend
 from chainer import reporter
 from typing import List, Union, Dict
+from src.dataset import DatasetStats
+
+
+@dataclasses.dataclass
+class ModelShapeParameters:
+    dataset_stats: DatasetStats
+    value_range: int
+    max_list_length: int
+    num_hidden_layers: int
+    n_embed: int
+    n_units: int
 
 
 def weighted_sigmoid_cross_entropy(y, t, w_0: float = 0.5):
@@ -242,17 +254,35 @@ def Decoder(n_functions: int, initialW: Union[None, ch.Initializer, np.array] = 
     )
 
 
-def TrainingClassifier(embed: ExampleEmbed, encoder: Encoder, decoder: Decoder, w_0: float = -1):
+def Predictor(params: ModelShapeParameters) -> ch.Link:
+    """
+    Return the model of DeepCoder
+
+    Parameters
+    ----------
+    params : ModelShapeParameters
+
+    Returns
+    -------
+    ch.Link
+        The model of DeepCoder
+    """
+    embed = ExampleEmbed(params.dataset_stats.max_num_inputs,
+                         params.value_range, params.n_embed)
+    encoder = Encoder(
+        params.n_units, num_hidden_layers=params.num_hidden_layers)
+    decoder = Decoder(len(params.dataset_stats.names))
+
+    return ch.Sequential(embed, encoder, decoder)
+
+
+def TrainingClassifier(predictor: ch.Link, w_0: float = -1):
     """
     Return the classifier for training DeepCoder
 
     Parameters
     ----------
-    embed : ExampleEmbed
-    encoder : Encoder
-        The encoder of DeepCoder
-    decoder : Decoder
-        The decoder of DeepCoder
+    predictor : ch.Link
     w_0 : float
         The weight for label=False
 
@@ -262,7 +292,6 @@ def TrainingClassifier(embed: ExampleEmbed, encoder: Encoder, decoder: Decoder, 
         The classifier used for training
     """
 
-    predictor = ch.Sequential(embed, encoder, decoder)
     classifier = L.Classifier(
         predictor,
         lossfun=lambda y, t: weighted_sigmoid_cross_entropy(y, t, w_0),
@@ -276,24 +305,3 @@ def TrainingClassifier(embed: ExampleEmbed, encoder: Encoder, decoder: Decoder, 
         return F.binary_accuracy(y, t)
     classifier.accfun = accuracy
     return classifier
-
-
-def InferenceModel(embed: ExampleEmbed, encoder: Encoder, decoder: Decoder):
-    """
-    Return the model for inference
-
-    Parameters
-    ----------
-    embed : ExampleEmbed
-    encoder : Encoder
-        The encoder of DeepCoder
-    decoder : Decoder
-        The decoder of DeepCoder
-
-    Returns
-    -------
-    chainer.Link
-        The predcictor used for inference
-    """
-
-    return ch.Sequential(embed, encoder, decoder, F.sigmoid)

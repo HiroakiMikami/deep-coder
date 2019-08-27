@@ -7,6 +7,7 @@ from tqdm import tqdm
 import chainer as ch
 import src.inference as I
 import src.train as T
+from src.model import ModelShapeParameters
 
 SEED_MAX = 2**32 - 1
 
@@ -40,9 +41,9 @@ with open(args.dataset, "rb") as f:
 
 # Load model
 with open(args.modelshape, "rb") as f:
-    model_shape: T.ModelShapeParameters = pickle.load(f)
-model = I.model(model_shape)
-ch.serializers.load_npz(args.model, model)
+    model_shape: ModelShapeParameters = pickle.load(f)
+model = I.InferenceModel(model_shape)
+ch.serializers.load_npz(args.model, model.predictor)  # TODO
 
 if args.use_prior:
     with open(args.use_prior, "rb") as f:
