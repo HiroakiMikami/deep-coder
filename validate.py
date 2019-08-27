@@ -52,6 +52,7 @@ for i, entry in enumerate(tqdm(dataset.entries)):
     result = I.search(
         os.path.join(os.getcwd(), "DeepCoder_Utils", "enumerative-search", "search"),
         args.timeout_second,
+        model_shape.value_range,
         entry.examples,
         args.max_program_length,
         pred

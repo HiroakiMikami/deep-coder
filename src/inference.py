@@ -18,7 +18,7 @@ class SearchResult:
     explored_nodes: int
     time_seconds: float
 
-def search(search: str, timeout_second: int,
+def search(search: str, timeout_second: int, value_range: int,
            examples: List[Example], max_program_length: int, pred: Callable[[List[Example]], Dict[str, float]]) -> SearchResult:
     """
     Search over program space and return the result of the search process
@@ -29,6 +29,8 @@ def search(search: str, timeout_second: int,
         The abosolute path of `search` command.
     timeout_second : int
         The timeout second
+    value_range : int
+        The largest absolute value used in the dataset.
     examples : List[Example]
         The I/O examples used in the search process.
         This function find the program that matches the I/O examples.
@@ -109,7 +111,7 @@ def search(search: str, timeout_second: int,
         # Execute search command
         try:
             res = subprocess.run(
-                [search, "search", str(len(examples)), str(max_program_length), "0", "0", "-1"],
+                [search, "search", str(len(examples)), str(max_program_length), "0", "0", "-1", str(value_range)],
                 stdout=subprocess.PIPE,
                 timeout=timeout_second, cwd=tmpdir)
             lines = res.stdout.decode().split("\n")

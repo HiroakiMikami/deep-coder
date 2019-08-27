@@ -28,7 +28,7 @@ class Test_inferense(unittest.TestCase):
             return prob
 
         result = search(
-            os.path.join(os.getcwd(), "DeepCoder_Utils", "enumerative-search", "search"), 1000,
+            os.path.join(os.getcwd(), "DeepCoder_Utils", "enumerative-search", "search"), 1000, 256,
             examples, 2, pred)
 
         self.assertTrue(result.is_solved)
@@ -47,7 +47,7 @@ class Test_inferense(unittest.TestCase):
             raise RuntimeError("test")
 
         result = search(
-            os.path.join(os.getcwd(), "DeepCoder_Utils", "enumerative-search", "search"), 1000,
+            os.path.join(os.getcwd(), "DeepCoder_Utils", "enumerative-search", "search"), 1000, 256,
             examples, 2, pred)
 
         self.assertFalse(result.is_solved)
@@ -71,7 +71,7 @@ class Test_inferense(unittest.TestCase):
             return prob
 
         result = search(
-            os.path.join(os.getcwd(), "DeepCoder_Utils", "enumerative-search", "search"), 1000,
+            os.path.join(os.getcwd(), "DeepCoder_Utils", "enumerative-search", "search"), 1000, 256,
             examples, 2, pred)
 
         self.assertFalse(result.is_solved)
@@ -95,7 +95,7 @@ class Test_inferense(unittest.TestCase):
             ([2, [10, 20, 30]], 30),
             ([1, [-10, 30, 40]], 30)
         ]
-        model_shape = ModelShapeParameters(DatasetStats(2, set(["MAP", "HEAD"])), 256, 5, 2, 10)
+        model_shape = ModelShapeParameters(DatasetStats(2, set(["MAP", "HEAD"])), 256, 5, 3, 2, 10)
         m = model(model_shape)
         pred = predict_with_neural_network(model_shape, m)
         prob = pred(examples)
