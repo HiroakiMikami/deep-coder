@@ -6,3 +6,4 @@
 !/*.py
 !/src/*.py
 !/test/*.py
+!/bin/*.bash
