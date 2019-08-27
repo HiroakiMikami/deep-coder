@@ -1,10 +1,10 @@
 import unittest
 import os
 import numpy as np
+import chainer as ch
 
-from src.dataset import Entry, Dataset, Example
+from src.dataset import Entry, Example, encode_example
 from src.deepcoder_utils import generate_io_samples
-from src.chainer_dataset import encode_example
 from src.train import ModelShapeParameters, DatasetStats
 from src.inference import search, predict_with_prior_distribution, predict_with_neural_network, model
 
@@ -86,13 +86,10 @@ class Test_inferense(unittest.TestCase):
         self.assertEqual("", result.solution)
 
     def test_predict_with_prior_distribution(self):
-        dataset = Dataset([])
-        dataset.entries.append(Entry(
-            "e0", [], dict([["MAP", True], ["HEAD", True]])
-        ))
-        dataset.entries.append(Entry(
-            "e1", [], dict([["MAP", False], ["HEAD", True]])
-        ))
+        dataset = ch.datasets.TupleDataset([
+            Entry("e0", [], dict([["MAP", True], ["HEAD", True]])),
+            Entry("e1", [], dict([["MAP", False], ["HEAD", True]]))
+        ])
         pred = predict_with_prior_distribution(dataset)
         prob = pred([])
         self.assertEqual(dict([["MAP", 0.5], ["HEAD", 1.0]]), prob)

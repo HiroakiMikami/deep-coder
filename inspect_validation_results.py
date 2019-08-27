@@ -6,8 +6,9 @@ from matplotlib import colors
 import matplotlib.cm as cm
 import pandas as pd
 import argparse
+import chainer as ch
 from typing import List, Union, Dict, Callable, Set
-from src.dataset import Dataset, prior_distribution
+from src.dataset import prior_distribution
 from src.inference import SearchResult
 
 SEED_MAX = 2**32 - 1
@@ -30,7 +31,7 @@ random.seed(root_rng.randint(SEED_MAX))
 np.random.seed(root_rng.randint(SEED_MAX))
 
 with open(args.dataset, "rb") as f:
-    dataset: Dataset = pickle.load(f)
+    dataset: ch.datasets.TupleDataset = pickle.load(f)
 with open(args.baseline, "rb") as f:
     baseline: Dict[int, SearchResult] = pickle.load(f)
 with open(args.result, "rb") as f:
@@ -95,7 +96,7 @@ ax_time.set_title("The Search Time")
 m = cm.ScalarMappable(norm=colors.Normalize(vmin=0, vmax=1), cmap=cm.Greens)
 indexes = map(int, args.entries)
 for index in indexes:
-    entry = dataset.entries[index]
+    entry = dataset[index][0]
     baseline_result = baseline[index]
     dnn_result = result[index]
 

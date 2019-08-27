@@ -1,6 +1,7 @@
 import unittest
+import chainer as ch
 
-from src.dataset import Entry, Dataset, Example
+from src.dataset import Entry, Example
 import src.train as T
 
 
@@ -10,7 +11,7 @@ class Test_train(unittest.TestCase):
             [["HEAD", True], ["TAKE", False]]))
         e1 = Entry("TAKE", [Example([1, [10, 20]], 10)], dict(
             [["HEAD", False], ["TAKE", True]]))
-        dataset = Dataset([e0, e1])
+        dataset = ch.datasets.TupleDataset([e0, e1])
         stats = T.dataset_stats(dataset)
         self.assertEqual(2, stats.max_num_inputs)
         self.assertEqual(set(["HEAD", "TAKE"]), stats.names)

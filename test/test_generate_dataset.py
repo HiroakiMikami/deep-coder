@@ -24,7 +24,7 @@ class Test_generate_dataset(unittest.TestCase):
             for p in os.listdir(name):
                 with open(os.path.join(name, p), "rb") as fp:
                     dataset = pickle.load(fp)
-                    for entry in dataset.entries:
+                    for entry, in dataset:
                         srcs.add(entry.source_code)
                         p = generate_io_samples.compile(
                             entry.source_code, 50, 5)
@@ -48,7 +48,7 @@ class Test_generate_dataset(unittest.TestCase):
             for p in os.listdir(name):
                 with open(os.path.join(name, p), "rb") as fp:
                     dataset = pickle.load(fp)
-                    for entry in dataset.entries:
+                    for entry, in dataset:
                         srcs.add(entry.source_code)
                         p = generate_io_samples.compile(
                             entry.source_code, 50, 5)
@@ -79,7 +79,7 @@ class Test_generate_dataset(unittest.TestCase):
             for p in os.listdir(name):
                 with open(os.path.join(name, p), "rb") as fp:
                     dataset = pickle.load(fp)
-                    for entry in dataset.entries:
+                    for entry, in dataset:
                         srcs.add(entry.source_code)
                         p = generate_io_samples.compile(
                             entry.source_code, 50, 5)
@@ -136,7 +136,7 @@ class Test_generate_dataset(unittest.TestCase):
             for p in os.listdir(name):
                 with open(os.path.join(name, p), "rb") as fp:
                     dataset = pickle.load(fp)
-                    for entry in dataset.entries:
+                    for entry, in dataset:
                         for name in entry.attributes.keys():
                             attribute_keys.add(name)
             self.assertEqual(set(["HEAD", "MAP", "INC"]), attribute_keys)

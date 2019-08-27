@@ -8,8 +8,7 @@ import argparse
 import chainer as ch
 from chainer import datasets
 from chainer.training import extensions
-from src.chainer_dataset import ChainerDataset
-from src.dataset import Dataset
+from src.dataset import EncodedDataset
 import src.train as T
 
 SEED_MAX = 2**32 - 1
@@ -50,14 +49,13 @@ random.seed(root_rng.randint(SEED_MAX))
 np.random.seed(root_rng.randint(SEED_MAX))
 
 with open(args.dataset, "rb") as f:
-    dataset: Dataset = pickle.load(f)
+    dataset: ch.datasets.TupleDataset = pickle.load(f)
 
 if args.num_train:
     num_test = int(args.num_train *
                    (args.ratio_test if args.ratio_test is not None else 0.0))
-    random_indexes = root_rng.choice(
-        len(dataset.entries), args.num_train + num_test, replace=False)
-    dataset = Dataset([dataset.entries[index] for index in random_indexes])
+    dataset, _ = datasets.split_dataset_random(
+        dataset, args.num_train + num_test, seed=root_rng.randint(SEED_MAX))
 
 dataset_stats = T.dataset_stats(dataset)
 model_shape = T.ModelShapeParameters(dataset_stats, args.value_range, args.max_list_length,
@@ -71,8 +69,8 @@ assert(os.path.isdir(args.output))
 with open(os.path.join(args.output, "model-shape.pickle"), "wb") as f:
     pickle.dump(model_shape, f)
 
-n_entries = len(dataset.entries)
-dataset = ChainerDataset(dataset, args.value_range, args.max_list_length)
+n_entries = len(dataset)
+dataset = EncodedDataset(dataset, args.value_range, args.max_list_length)
 if args.ratio_test is None or args.ratio_test == 0:
     train = dataset
     test = None

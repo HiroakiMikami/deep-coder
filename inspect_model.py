@@ -5,8 +5,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import chainer as ch
 import argparse
-from src.dataset import Dataset
-from src.chainer_dataset import ChainerDataset
 import src.train as T
 
 SEED_MAX = 2**32 - 1

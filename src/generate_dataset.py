@@ -4,8 +4,9 @@ import pickle
 import os
 import contextlib
 import numpy as np
+import chainer as ch
 from typing import List, Tuple, Union, Dict, Callable
-from .dataset import Primitive, Example, Entry, Dataset
+from .dataset import Primitive, Example, Entry
 from .deepcoder_utils import generate_io_samples
 from .dsl import Function, Program, Type, to_function, Signature
 from .source_code_simplifier import normalize
@@ -182,7 +183,7 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
     if callback is not None:
         callback.on_finish_enumeration(n_programs)
 
-    dataset = Dataset([])
+    dataset = []
     # Prune entries
     rng = equivalence_spec.rng if equivalence_spec.rng is not None else np.random
     for signature, ientries in entries.items():
@@ -234,7 +235,7 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
 
         # Create dataset instance
         for entry in es.values():
-            dataset.entries.append(Entry(
+            dataset.append(Entry(
                 entry.source_code, entry.examples, entry.attributes
             ))
         if callback is not None:
@@ -242,4 +243,4 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
 
     # Dump the dataset to the file
     with open(os.path.join(destinationDir, "dataset.pickle"), "wb") as f:
-        pickle.dump(dataset, f)
+        pickle.dump(ch.datasets.TupleDataset(dataset), f)

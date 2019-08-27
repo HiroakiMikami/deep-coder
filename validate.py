@@ -5,7 +5,6 @@ import os
 import argparse
 from tqdm import tqdm
 import chainer as ch
-from src.dataset import Dataset
 import src.inference as I
 import src.train as T
 
@@ -37,7 +36,7 @@ if not os.path.exists(args.output):
 assert(os.path.isdir(args.output))
 
 with open(args.dataset, "rb") as f:
-    dataset: Dataset = pickle.load(f)
+    dataset: ch.datasets.TupleDataset = pickle.load(f)
 
 # Load model
 with open(args.modelshape, "rb") as f:
@@ -47,14 +46,14 @@ ch.serializers.load_npz(args.model, model)
 
 if args.use_prior:
     with open(args.use_prior, "rb") as f:
-        train_dataset: Dataset = pickle.load(f)
+        train_dataset: ch.datasets.TupleDataset = pickle.load(f)
     pred = I.predict_with_prior_distribution(train_dataset)
 else:
     pred = I.predict_with_neural_network(model_shape, model)
 
 results = dict([])
 num_succ = 0
-for i, entry in enumerate(tqdm(dataset.entries)):
+for i, (entry,) in enumerate(tqdm(dataset)):
     result = I.search(
         os.path.join(os.getcwd(), "DeepCoder_Utils",
                      "enumerative-search", "search"),
@@ -68,7 +67,7 @@ for i, entry in enumerate(tqdm(dataset.entries)):
     if result.is_solved:
         num_succ += 1
 
-print("Solved: {} of {} examples".format(num_succ, len(dataset.entries)))
+print("Solved: {} of {} examples".format(num_succ, len(dataset)))
 
 with open(os.path.join(args.output, "validation_results.pickle"), "wb") as f:
     pickle.dump(results, f)

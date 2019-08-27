@@ -7,8 +7,6 @@ from chainer import backend
 from chainer import reporter
 from typing import List, Union, Dict
 
-from .chainer_dataset import PrimitiveEncoding
-
 
 def weighted_sigmoid_cross_entropy(y, t, w_0: float = 0.5):
     """

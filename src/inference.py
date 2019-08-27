@@ -5,8 +5,7 @@ import numpy as np
 import subprocess
 import chainer as ch
 from typing import List, Union, Dict, Callable, Set
-from .dataset import Example, Dataset, prior_distribution
-from .chainer_dataset import encode_example
+from .dataset import Example, prior_distribution, encode_example
 from .model import ExampleEmbed, Encoder, Decoder, InferenceModel
 from .train import ModelShapeParameters
 
@@ -133,13 +132,13 @@ def search(search: str, timeout_second: int, value_range: int,
         return SearchResult(False, prob, "", -1, -1)
 
 
-def predict_with_prior_distribution(dataset: Dataset):
+def predict_with_prior_distribution(dataset):
     """
     Predict by using the prior distribution of the dataset
 
     Parameters
     ----------
-    dataset : Dataset
+    dataset : chainer.dataset
         The training dataset
 
     Returns

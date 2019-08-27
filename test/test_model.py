@@ -4,8 +4,7 @@ import chainer as ch
 import chainer.functions as F
 
 from src.model import ExampleEmbed, Encoder, Decoder, TrainingClassifier, tupled_binary_accuracy
-from src.chainer_dataset import ExampleEncoding, encode_example
-from src.dataset import Example
+from src.dataset import Example, encode_example
 
 
 class TestExampleEmbed(unittest.TestCase):

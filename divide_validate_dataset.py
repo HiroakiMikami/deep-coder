@@ -4,7 +4,6 @@ import pickle
 import os
 import argparse
 import chainer as ch
-from src.dataset import Dataset, divide
 import src.inference as I
 import src.train as T
 
@@ -29,15 +28,15 @@ if not os.path.exists(args.output):
 assert(os.path.isdir(args.output))
 
 with open(args.dataset, "rb") as f:
-    dataset: Dataset = pickle.load(f)
+    dataset: ch.datasets.TupleDataset = pickle.load(f)
 
 num_valid = args.num_valid
-num_train = len(dataset.entries) - num_valid
+num_train = len(dataset) - num_valid
 
-subdatasets = divide(dataset, dict([["train", num_train], [
-                     "valid", num_valid]]), rng=np.random.RandomState(root_rng.randint(SEED_MAX)))
+train, valid = ch.datasets.split_dataset_random(
+    dataset, num_train, seed=root_rng.randint(SEED_MAX))
 
 with open(os.path.join(args.output, "train.pickle"), "wb") as f:
-    pickle.dump(subdatasets["train"], f)
+    pickle.dump(train, f)
 with open(os.path.join(args.output, "valid.pickle"), "wb") as f:
-    pickle.dump(subdatasets["valid"], f)
+    pickle.dump(valid, f)

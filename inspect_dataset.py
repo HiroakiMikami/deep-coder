@@ -5,8 +5,9 @@ from matplotlib import colors
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import pandas as pd
+import chainer as ch
 import argparse
-from src.dataset import Dataset, prior_distribution
+from src.dataset import prior_distribution
 
 SEED_MAX = 2**32 - 1
 
@@ -26,7 +27,7 @@ random.seed(root_rng.randint(SEED_MAX))
 np.random.seed(root_rng.randint(SEED_MAX))
 
 with open(args.dataset, "rb") as f:
-    dataset: Dataset = pickle.load(f)
+    dataset: ch.datasets.TupleDataset = pickle.load(f)
 
 plt.ion()
 
@@ -52,7 +53,7 @@ ax.set_title("Prior Distribution")
 m = cm.ScalarMappable(norm=colors.Normalize(vmin=0, vmax=1), cmap=cm.Greens)
 indexes = map(int, args.entries)
 for index in indexes:
-    entry = dataset.entries[index]
+    entry = dataset[index][0]
 
     fig, [ax_code, ax_examples, ax_attributes] = plt.subplots(
         3, 1, figsize=(args.width, args.height))

@@ -2,7 +2,6 @@ import dataclasses
 from typing import List, Union, Dict, Set
 import chainer as ch
 from chainer import training
-from .dataset import Dataset
 from .model import ExampleEmbed, Encoder, Decoder, TrainingClassifier
 
 
@@ -22,13 +21,13 @@ class ModelShapeParameters:
     n_units: int
 
 
-def dataset_stats(dataset: Dataset) -> DatasetStats:
+def dataset_stats(dataset) -> DatasetStats:
     """
     Return the values for specifying the model shape
 
     Parameters
     ----------
-    dataset : Dataset
+    dataset : chainer.dataset
 
     Returns
     -------
@@ -38,7 +37,8 @@ def dataset_stats(dataset: Dataset) -> DatasetStats:
     """
     num_inputs = 0
     names = set([])
-    for entry in dataset.entries:
+    for entry in dataset:
+        entry = entry[0]
         num_inputs = max(num_inputs, len(entry.examples[0].inputs))
         if len(names) == 0:
             for name in entry.attributes.keys():

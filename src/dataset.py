@@ -1,5 +1,7 @@
 import dataclasses
 import numpy as np
+import chainer as ch
+from chainer import datasets
 from typing import List, Union, Dict
 from .dsl import Function
 
@@ -42,27 +44,15 @@ class Entry:
     attributes: Dict[str, bool]
 
 
-@dataclasses.dataclass
-class Dataset:
-    """
-    The dataset
-
-    Attributes
-    ----------
-    entries : list of Entry
-        The entries of this dataset.
-    """
-    entries: List[Entry]
-
-
-def prior_distribution(dataset: Dataset) -> Dict[str, float]:
+def prior_distribution(dataset) -> Dict[str, float]:
     """
     Return the prior distribution over functions
 
     Parameters
     ----------
-    dataset : Dataset
-        The dataset to calculate the prior distribution
+    dataset : chainer.dataset
+        The dataset to calculate the prior distribution.
+        Each element of the dataset should be Tuple[Entry].
 
     Returns
     -------
@@ -71,54 +61,155 @@ def prior_distribution(dataset: Dataset) -> Dict[str, float]:
     """
 
     prior: Dict[Function, float] = dict()
-    for entry in dataset.entries:
+    for entry in dataset:
+        entry = entry[0]
         for function, value in entry.attributes.items():
             if not function in prior:
                 prior[function] = 0
             prior[function] += 1 if value else 0
 
     for function in prior.keys():
-        prior[function] /= len(dataset.entries)
+        prior[function] /= len(dataset)
 
     return prior
 
 
-def divide(dataset: Dataset, separators: Dict[str, int], rng: Union[None, np.random.RandomState] = None) -> Dict[str, Dataset]:
+@dataclasses.dataclass
+class PrimitiveEncoding:
     """
-    Divide the dataset into some sub-datasets and return the set of sub-datasets
+    A encoding of Primitive
 
     Attributes
     ----------
-    dataset : Dataset
-        The dataset to be divided
-    separators : Dict[str, int]
-        The dictionary used to specify how to divide the dataset.
-        The keys represent the name of the sub-datasets, and the values represent
-        the number of entries contained in the sub-datasets.
-    rng : None or np.random.RandomState
-        The generator of random numbers.
+    t : int
+        It represents the type of the primitive.
+        0 means that the type is Int, and 1 means that the type is List[Int]
+    value_arr : np.array
+        The array of the values.
+        The empty elements are filled with Null value.
+    """
+    t: int
+    value_arr: np.array
+
+
+@dataclasses.dataclass
+class ExampleEncoding:
+    """
+    A encoding of Example
+
+    Attributes
+    ----------
+    inputs : List[PrimitiveEncoding]
+    output : PrimitiveEncoding
+    """
+    inputs: List[PrimitiveEncoding]
+    output: PrimitiveEncoding
+
+
+@dataclasses.dataclass
+class EntryEncoding:
+    """
+    A encoding of Entry
+
+    Attributes
+    ----------
+    examples: List[ExampleEncoding]
+    attribute: np.array
+    """
+    examples: List[ExampleEncoding]
+    attribute: np.array
+
+
+def encode_primitive(p: Primitive, value_range: int, max_list_length: int) -> PrimitiveEncoding:
+    """
+    Parameters
+    ----------
+    p : Primitive
+        The primitive to encode
+    value_range : int
+        The largest absolute value used in the dataset
+    max_list_length : int
+        The maximum length of the list used in the dataset
 
     Returns
     -------
-    sub_datasets: Dict[str, Dataset]
-        The set of sub-datasets.
+    PrimitiveEncoding
+        The encoding of the primitive
+    """
+    Null = value_range
+    arr = np.array(p)
+
+    t = 0 if arr.shape == () else 1
+    value_arr = np.ones((max_list_length,)) * Null
+    value_arr[:arr.size] = arr
+
+    # Add offset of value_range because the range of integers is [-value_range:value_range-1]
+    return PrimitiveEncoding(t, value_arr + value_range)
+
+
+def encode_example(example: Example, value_range: int, max_list_length: int) -> ExampleEncoding:
+    enc_inputs = [encode_primitive(
+        ins, value_range, max_list_length) for ins in example.inputs]
+    enc_output = encode_primitive(example.output, value_range, max_list_length)
+    return ExampleEncoding(enc_inputs, enc_output)
+
+
+def encode_attribute(attribute: Dict[Function, bool]) -> np.array:
+    """
+    Parameters
+    ----------
+    attribute : Dict[Function, bool]
+        The binary attribute
+    value_range : int
+        The largest absolute value used in the dataset
+    max_list_length : int
+        The maximum length of the list used in the dataset
+
+    Returns
+    -------
+    PrimitiveEntry
+        The encoding of the entry
+    """
+    func_names = list(attribute.keys())
+    func_names = sorted(func_names)
+    arr = []
+    for func in func_names:
+        arr.append(1 if attribute[func] else 0)
+
+    return np.array(arr)
+
+
+def encode_entry(entry: Entry, value_range: int, max_list_length: int) -> EntryEncoding:
+    example_encoding = [encode_example(example, value_range, max_list_length)
+                        for example in entry.examples]
+    example_attribute = encode_attribute(entry.attributes)
+    return EntryEncoding(example_encoding, example_attribute)
+
+
+class EncodedDataset(datasets.TransformDataset):
+    """
+    The dataset of the entry encodings for DeepCoder
+    This instance stores each entry as the tuple of
+    (the encoding of examples, the encoding of attribute).
     """
 
-    if rng is None:
-        rng = np.random
+    def __init__(self, dataset, value_range: int, max_list_length: int):
+        """
+        Constructor
 
-    total = sum(map(lambda x: x[1], separators.items()))
-    assert(total <= len(dataset.entries))
+        Parameters
+        ----------
+        dataset : chainer.dataset
+            The instance contains the entries of the program, examples, and attributes
+        value_range : int
+            The largest absolute value used in the dataset
+        max_list_length : int
+            The maximum length of the list used in the dataset
+        """
 
-    random_indexes = np.random.choice(
-        len(dataset.entries), len(dataset.entries), replace=False)
-    offset = 0
-    retval = dict()
-    for name, num in separators.items():
-        d = Dataset([])
-        for index in range(offset, offset + num):
-            d.entries.append(dataset.entries[random_indexes[index]])
-        retval[name] = d
-        offset += num
+        def transform(in_data):
+            entry = in_data[0]
+            encoding = encode_entry(entry, value_range, max_list_length)
+            return encoding.examples, encoding.attribute
 
-    return retval
+        super(EncodedDataset, self).__init__(dataset, transform)
