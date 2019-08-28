@@ -5,7 +5,6 @@ import chainer as ch
 from chainer import training
 from chainer import cuda
 from .model import ModelShapeParameters, Predictor, TrainingClassifier
-from .dataset import ExamplesEncoding
 
 def convert_entry(batch, device):
     if device is None:
@@ -17,11 +16,9 @@ def convert_entry(batch, device):
         def to_device(x):
             return cuda.to_gpu(x, device, cuda.Stream.null)
 
-    def convert_examples(examples: ExamplesEncoding):
-        return ExamplesEncoding(to_device(examples.types), to_device(examples.values))
-
-    return (np.array([convert_examples(examples) for examples, _ in batch]),
-            np.array([attribute for _, attribute in batch]))
+    return (to_device(np.array([types for types, _, _ in batch])),
+            to_device(np.array([values for _, values, _ in batch])),
+            np.array([attribute for _, _, attribute in batch]))
 
 class Training:
     """

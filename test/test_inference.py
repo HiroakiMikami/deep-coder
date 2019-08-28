@@ -107,7 +107,7 @@ class Test_inferense(unittest.TestCase):
         prob = pred(examples)
 
         encoding = examples_encoding(examples, metadata)
-        prob_dnn = m.model(np.array([encoding])).array[0]
+        prob_dnn = m.model(np.array([encoding.types]), np.array([encoding.values])).array[0]
 
         self.assertAlmostEqual(prob_dnn[0], prob["HEAD"])
         self.assertAlmostEqual(prob_dnn[1], prob["MAP"])

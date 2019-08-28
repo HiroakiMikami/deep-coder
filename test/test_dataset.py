@@ -58,22 +58,22 @@ class Test_dataset(unittest.TestCase):
         ])
 
         cdataset = EncodedDataset(Dataset(dataset, DatasetMetadata(1, set(["HEAD", "SORT"]), 256, 5)))
-        [(examples0, attribute0), (examples1, attribute1)] = list(cdataset)
+        [(types0, values0, attribute0), (types1, values1, attribute1)] = list(cdataset)
 
-        self.assertTrue(np.all([[[0, 1], [1, 0]]] == examples0.types))
+        self.assertTrue(np.all([[[0, 1], [1, 0]]] == types0))
         self.assertTrue(
             np.all([[
                 [266, 276, 286, 512, 512],
                 [266, 512, 512, 512, 512]
-            ]] == examples0.values))
+            ]] == values0))
         self.assertTrue(np.all(np.array([1, 0]) == attribute0))
 
-        self.assertTrue(np.all([[[0, 1], [0, 1]]] == examples1.types))
+        self.assertTrue(np.all([[[0, 1], [0, 1]]] == types1))
         self.assertTrue(
             np.all([[
                 [286, 276, 266, 512, 512],
                 [266, 276, 286, 512, 512]
-            ]] == examples1.values))
+            ]] == values1))
         self.assertTrue(np.all(np.array([0, 1]) == attribute1))
 
 

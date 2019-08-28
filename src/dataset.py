@@ -242,7 +242,7 @@ class EncodedDataset(datasets.TransformDataset):
     """
     The dataset of the entry encodings for DeepCoder
     This instance stores each entry as the tuple of
-    (the encoding of examples, the encoding of attribute).
+    (the encoding of types, the encoding of values, the encoding of attribute).
     """
 
     def __init__(self, dataset: Dataset):
@@ -258,6 +258,6 @@ class EncodedDataset(datasets.TransformDataset):
         def transform(in_data):
             entry = in_data[0]
             encoding = entry_encoding(entry, dataset.metadata)
-            return encoding.examples, encoding.attribute
+            return encoding.examples.types, encoding.examples.values, encoding.attribute
 
         super(EncodedDataset, self).__init__(dataset.dataset, transform)

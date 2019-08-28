@@ -108,14 +108,16 @@ class ExampleEmbed(link.Chain):
         self._value_range = value_range
         self._num_inputs = num_inputs
 
-    def forward(self, examples: np.array):
+    def forward(self, types: np.array, values: np.array):
         """
         Computes the hidden layer encoding
 
         Parameters
         ----------
-        examples : np.array
-            Each element contains ExamplesEncoding
+        types : np.array
+            Each element contains one-hot vectors of inputs and output types
+        values : np.array
+            Each element contains encodings of primitives
 
         Returns
         -------
@@ -129,17 +131,10 @@ class ExampleEmbed(link.Chain):
                 n_embed is the dimension of integer embedding.
         """
 
-        N = examples.shape[0]  # minibatch size
-        e = examples[0].types.shape[0]  # num of I/O examples
-        num_inputs = examples[0].types.shape[1] - 1
-        max_list_length = examples[0].values.shape[-1]
-
-        # Concatenate types and values of minibatch
-        types = F.concat(list(map(lambda x: x.types, examples)), axis=0) # (N, e, num_inputs + 1, 2)
-        values = F.concat(list(map(lambda x: x.values, examples)), axis=0) # (N, e, num_inputs + 1, max_list_length)
-        types = F.reshape(types, (N, e, num_inputs + 1, -1))
-        types = F.cast(types, np.float32)
-        values = F.reshape(values, (N, e, num_inputs + 1, -1))
+        N = types.shape[0]  # minibatch size
+        e = types.shape[1]  # num of I/O examples
+        num_inputs = types.shape[2] - 1
+        max_list_length = values.shape[-1]
 
         # Convert the integer into the learned embeddings
         # (N, e, (num_inputs + 1), max_list_length, n_embed)
@@ -151,6 +146,7 @@ class ExampleEmbed(link.Chain):
         values_embeddings = F.reshape(
             values_embeddings, (N, e, num_inputs + 1, -1))
         # (N, e, (num_inputs + 1), 2 + max_list_length * n_embed)
+        types = F.cast(types, np.float32)
         state_embeddings = F.concat([types, values_embeddings], axis=3)
 
         return state_embeddings

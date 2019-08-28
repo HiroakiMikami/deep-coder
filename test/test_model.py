@@ -24,9 +24,8 @@ class Test_model(unittest.TestCase):
             [Example([[0, 1]], 0), Example([[1]], 1)],
             DatasetMetadata(1, set([]), 2, 2)
         )
-        minibatch = np.array([e])
 
-        state_embeddings = embed.forward(minibatch)
+        state_embeddings = embed.forward(np.array([e.types]), np.array([e.values]))
         self.assertEqual((1, 2, 2, 2 + 2 * 1), state_embeddings.shape)
         self.assertTrue(np.allclose(
             [0, 1, 3, 4], state_embeddings.array[0, 0, 0]))  # Input of e1
@@ -57,15 +56,8 @@ class Test_model(unittest.TestCase):
         metadata = DatasetMetadata(2, set([]), 2, 2)
         e0 = examples_encoding([Example([[0, 1]], 0), Example([[1]], 1)], metadata)
         e1 = examples_encoding([Example([1, [0, 1]], [0]), Example([0, [0, 1]], [])], metadata)
-        minibatch = np.array([e0, e1])
 
-        N = 1
-        e = 2
-        I = 2
-        value_range = 2
-        max_list_length = 2
-
-        state_embeddings = embed.forward(minibatch)
+        state_embeddings = embed.forward(np.array([e0.types, e1.types]), np.array([e0.values, e1.values]))
         self.assertEqual((2, 2, 3, 2 + 2 * 1), state_embeddings.shape)
         self.assertTrue(np.allclose(
             [0, 1, 3, 4], state_embeddings.array[0, 0, 0]))  # Input of e00
@@ -108,9 +100,8 @@ class Test_model(unittest.TestCase):
 
         metadata = DatasetMetadata(1, set([]), 2, 2)
         e = examples_encoding([Example([[0, 1]], 0), Example([[1]], 1)], metadata)
-        minibatch = np.array([e])
 
-        state_embeddings = embed(minibatch)
+        state_embeddings = embed(np.array([e.types]), np.array([e.values]))
         layer_encodings = encoder(state_embeddings)
 
         self.assertEqual((1, 2, 1), layer_encodings.shape)
@@ -145,9 +136,8 @@ class Test_model(unittest.TestCase):
 
         metadata = DatasetMetadata(1, set([]), 2, 2)
         e = examples_encoding([Example([[0, 1]], 0), Example([[1]], 1)], metadata)
-        minibatch = np.array([e])
         labels = np.array([[1, 1]])
-        loss = classifier(minibatch, labels)
+        loss = classifier(np.array([e.types]), np.array([e.values]), labels)
         loss.grad = np.ones(loss.shape, dtype=np.float32)
 
         # backward does not throw an error
