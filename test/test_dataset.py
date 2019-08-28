@@ -2,7 +2,7 @@ import unittest
 import chainer as ch
 import numpy as np
 
-from src.dataset import Example, Entry, prior_distribution, encode_primitive, encode_attribute, EncodedDataset, dataset_metadata, DatasetMetadata, Dataset
+from src.dataset import Example, Entry, prior_distribution, primitive_encoding, attribute_encoding, EncodedDataset, dataset_metadata, DatasetMetadata, Dataset
 
 
 class Test_dataset(unittest.TestCase):
@@ -25,19 +25,19 @@ class Test_dataset(unittest.TestCase):
         self.assertAlmostEqual(1.0, prior["F1"])
         self.assertAlmostEqual(0.5, prior["F2"])
 
-    def test_encode_primitive(self):
-        encoding = encode_primitive(-10, DatasetMetadata(0, set([]), 256, 2))
+    def test_primitive_encoding(self):
+        encoding = primitive_encoding(-10, DatasetMetadata(0, set([]), 256, 2))
         self.assertEqual(0, encoding.t)
         self.assertTrue(
             np.all(np.array([-10 + 256, 512] == encoding.value_arr)))
 
-        encoding = encode_primitive([1, 2], DatasetMetadata(0, set([]), 256, 3))
+        encoding = primitive_encoding([1, 2], DatasetMetadata(0, set([]), 256, 3))
         self.assertEqual(1, encoding.t)
         self.assertTrue(
             np.all(np.array([257, 258, 512] == encoding.value_arr)))
 
-    def test_encode_attribute(self):
-        encoding = encode_attribute(dict([
+    def test_attribute_encoding(self):
+        encoding = attribute_encoding(dict([
             ["A", True],
             ["B", False]]))
         self.assertTrue(np.all(np.array([1, 0]) == encoding))

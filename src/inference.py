@@ -6,7 +6,7 @@ import subprocess
 import chainer as ch
 import chainer.functions as F
 from typing import List, Union, Dict, Callable, Set
-from .dataset import Example, prior_distribution, encode_example
+from .dataset import Example, prior_distribution, example_encoding
 from .model import Predictor, ModelShapeParameters
 
 
@@ -192,7 +192,7 @@ def predict_with_neural_network(model_shape: ModelShapeParameters, model: Infere
         The predict function
     """
     def pred(examples: List[Example]):
-        example_encodings = [encode_example(
+        example_encodings = [example_encoding(
             example, model_shape.dataset_metadata) for example in examples]
         example_encodings = np.array([example_encodings])
         pred = model.model(example_encodings).array[0]

@@ -159,7 +159,7 @@ class EntryEncoding:
     attribute: np.array
 
 
-def encode_primitive(p: Primitive, metadata: DatasetMetadata) -> PrimitiveEncoding:
+def primitive_encoding(p: Primitive, metadata: DatasetMetadata) -> PrimitiveEncoding:
     """
     Parameters
     ----------
@@ -183,13 +183,13 @@ def encode_primitive(p: Primitive, metadata: DatasetMetadata) -> PrimitiveEncodi
     return PrimitiveEncoding(t, value_arr + metadata.value_range)
 
 
-def encode_example(example: Example, metadata: DatasetMetadata) -> ExampleEncoding:
-    enc_inputs = [encode_primitive(ins, metadata) for ins in example.inputs]
-    enc_output = encode_primitive(example.output, metadata)
+def example_encoding(example: Example, metadata: DatasetMetadata) -> ExampleEncoding:
+    enc_inputs = [primitive_encoding(ins, metadata) for ins in example.inputs]
+    enc_output = primitive_encoding(example.output, metadata)
     return ExampleEncoding(enc_inputs, enc_output)
 
 
-def encode_attribute(attribute: Dict[Function, bool]) -> np.array:
+def attribute_encoding(attribute: Dict[Function, bool]) -> np.array:
     """
     Parameters
     ----------
@@ -210,11 +210,11 @@ def encode_attribute(attribute: Dict[Function, bool]) -> np.array:
     return np.array(arr)
 
 
-def encode_entry(entry: Entry, metadata: DatasetMetadata) -> EntryEncoding:
-    example_encoding = [encode_example(example, metadata)
+def entry_encoding(entry: Entry, metadata: DatasetMetadata) -> EntryEncoding:
+    example = [example_encoding(example, metadata)
                         for example in entry.examples]
-    example_attribute = encode_attribute(entry.attribute)
-    return EntryEncoding(example_encoding, example_attribute)
+    attribute = attribute_encoding(entry.attribute)
+    return EntryEncoding(example, attribute)
 
 
 class EncodedDataset(datasets.TransformDataset):
@@ -236,7 +236,7 @@ class EncodedDataset(datasets.TransformDataset):
 
         def transform(in_data):
             entry = in_data[0]
-            encoding = encode_entry(entry, dataset.metadata)
+            encoding = entry_encoding(entry, dataset.metadata)
             return encoding.examples, encoding.attribute
 
         super(EncodedDataset, self).__init__(dataset.dataset, transform)
