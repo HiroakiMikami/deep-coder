@@ -6,6 +6,7 @@ import argparse
 import chainer as ch
 import src.inference as I
 import src.train as T
+from src.dataset import Dataset
 
 SEED_MAX = 2**32 - 1
 
@@ -28,15 +29,15 @@ if not os.path.exists(args.output):
 assert(os.path.isdir(args.output))
 
 with open(args.dataset, "rb") as f:
-    dataset: ch.datasets.TupleDataset = pickle.load(f)
+    dataset: Dataset = pickle.load(f)
 
 num_valid = args.num_valid
-num_train = len(dataset) - num_valid
+num_train = len(dataset.dataset) - num_valid
 
 train, valid = ch.datasets.split_dataset_random(
-    dataset, num_train, seed=root_rng.randint(SEED_MAX))
+    dataset.dataset, num_train, seed=root_rng.randint(SEED_MAX))
 
 with open(os.path.join(args.output, "train.pickle"), "wb") as f:
-    pickle.dump(train, f)
+    pickle.dump(Dataset(train, dataset.metadata), f)
 with open(os.path.join(args.output, "valid.pickle"), "wb") as f:
-    pickle.dump(valid, f)
+    pickle.dump(Dataset(valid, dataset.metadata), f)

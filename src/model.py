@@ -7,14 +7,12 @@ import chainer.functions as F
 from chainer import backend
 from chainer import reporter
 from typing import List, Union, Dict
-from src.dataset import DatasetStats
+from src.dataset import DatasetMetadata
 
 
 @dataclasses.dataclass
 class ModelShapeParameters:
-    dataset_stats: DatasetStats
-    value_range: int
-    max_list_length: int
+    dataset_metadata: DatasetMetadata
     num_hidden_layers: int
     n_embed: int
     n_units: int
@@ -267,11 +265,11 @@ def Predictor(params: ModelShapeParameters) -> ch.Link:
     ch.Link
         The model of DeepCoder
     """
-    embed = ExampleEmbed(params.dataset_stats.max_num_inputs,
-                         params.value_range, params.n_embed)
+    embed = ExampleEmbed(params.dataset_metadata.max_num_inputs,
+                         params.dataset_metadata.value_range, params.n_embed)
     encoder = Encoder(
         params.n_units, num_hidden_layers=params.num_hidden_layers)
-    decoder = Decoder(len(params.dataset_stats.symbols))
+    decoder = Decoder(len(params.dataset_metadata.symbols))
 
     return ch.Sequential(embed, encoder, decoder)
 

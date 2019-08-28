@@ -6,7 +6,7 @@ import contextlib
 import numpy as np
 import chainer as ch
 from typing import List, Tuple, Union, Dict, Callable
-from .dataset import Primitive, Example, Entry
+from .dataset import Primitive, Example, Entry, Dataset, dataset_metadata
 from .deepcoder_utils import generate_io_samples
 from .dsl import Function, Program, Type, to_function, Signature
 from .program_simplifier import normalize
@@ -241,6 +241,10 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
         if callback is not None:
             callback.on_dump_dataset(len(ientries))
 
+    # Create metadata
+    dataset = ch.datasets.TupleDataset(dataset)
+    metadata = dataset_metadata(dataset, spec.value_range, spec.max_list_length)
+
     # Dump the dataset to the file
     with open(destination, "wb") as f:
-        pickle.dump(ch.datasets.TupleDataset(dataset), f)
+        pickle.dump(Dataset(dataset, metadata), f)

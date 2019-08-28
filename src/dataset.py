@@ -45,24 +45,32 @@ class Entry:
 
 
 @dataclasses.dataclass
-class DatasetStats:
+class DatasetMetadata:
     max_num_inputs: int
     symbols: Set[str]
+    value_range: int
+    max_list_length: int
 
 
-def dataset_stats(dataset) -> DatasetStats:
+@dataclasses.dataclass
+class Dataset:
+    dataset: ch.datasets.TupleDataset
+    metadata: DatasetMetadata
+
+def dataset_metadata(dataset, value_range: int = -1, max_list_length: int = -1) -> DatasetMetadata: # TODO
     """
     Return the values for specifying the model shape
 
     Parameters
     ----------
     dataset : chainer.dataset
+    value_range : int
+        The largest absolute value used in the dataset
+    max_list_length: int
 
     Returns
     -------
-    DatasetStats
-        The maximum number of inputs and the number of functions
-        in the dataset.
+    DatasetMetadata
     """
     num_inputs = 0
     symbols = set([])
@@ -72,7 +80,7 @@ def dataset_stats(dataset) -> DatasetStats:
         if len(symbols) == 0:
             for symbol in entry.attribute.keys():
                 symbols.add(symbol)
-    return DatasetStats(num_inputs, symbols)
+    return DatasetMetadata(num_inputs, symbols, value_range, max_list_length)
 
 
 def prior_distribution(dataset) -> Dict[str, float]:
@@ -151,37 +159,33 @@ class EntryEncoding:
     attribute: np.array
 
 
-def encode_primitive(p: Primitive, value_range: int, max_list_length: int) -> PrimitiveEncoding:
+def encode_primitive(p: Primitive, metadata: DatasetMetadata) -> PrimitiveEncoding:
     """
     Parameters
     ----------
     p : Primitive
         The primitive to encode
-    value_range : int
-        The largest absolute value used in the dataset
-    max_list_length : int
-        The maximum length of the list used in the dataset
+    metadata : DatasetMetadata
 
     Returns
     -------
     PrimitiveEncoding
         The encoding of the primitive
     """
-    Null = value_range
+    Null = metadata.value_range
     arr = np.array(p)
 
     t = 0 if arr.shape == () else 1
-    value_arr = np.ones((max_list_length,)) * Null
+    value_arr = np.ones((metadata.max_list_length,)) * Null
     value_arr[:arr.size] = arr
 
     # Add offset of value_range because the range of integers is [-value_range:value_range-1]
-    return PrimitiveEncoding(t, value_arr + value_range)
+    return PrimitiveEncoding(t, value_arr + metadata.value_range)
 
 
-def encode_example(example: Example, value_range: int, max_list_length: int) -> ExampleEncoding:
-    enc_inputs = [encode_primitive(
-        ins, value_range, max_list_length) for ins in example.inputs]
-    enc_output = encode_primitive(example.output, value_range, max_list_length)
+def encode_example(example: Example, metadata: DatasetMetadata) -> ExampleEncoding:
+    enc_inputs = [encode_primitive(ins, metadata) for ins in example.inputs]
+    enc_output = encode_primitive(example.output, metadata)
     return ExampleEncoding(enc_inputs, enc_output)
 
 
@@ -191,10 +195,6 @@ def encode_attribute(attribute: Dict[Function, bool]) -> np.array:
     ----------
     attribute : Dict[Function, bool]
         The binary attribute
-    value_range : int
-        The largest absolute value used in the dataset
-    max_list_length : int
-        The maximum length of the list used in the dataset
 
     Returns
     -------
@@ -210,8 +210,8 @@ def encode_attribute(attribute: Dict[Function, bool]) -> np.array:
     return np.array(arr)
 
 
-def encode_entry(entry: Entry, value_range: int, max_list_length: int) -> EntryEncoding:
-    example_encoding = [encode_example(example, value_range, max_list_length)
+def encode_entry(entry: Entry, metadata: DatasetMetadata) -> EntryEncoding:
+    example_encoding = [encode_example(example, metadata)
                         for example in entry.examples]
     example_attribute = encode_attribute(entry.attribute)
     return EntryEncoding(example_encoding, example_attribute)
@@ -224,23 +224,19 @@ class EncodedDataset(datasets.TransformDataset):
     (the encoding of examples, the encoding of attribute).
     """
 
-    def __init__(self, dataset, value_range: int, max_list_length: int):
+    def __init__(self, dataset: Dataset):
         """
         Constructor
 
         Parameters
         ----------
-        dataset : chainer.dataset
-            The instance contains the entries of the program, examples, and attribute
-        value_range : int
-            The largest absolute value used in the dataset
-        max_list_length : int
-            The maximum length of the list used in the dataset
+        dataset : Dataset
+            The dataset and its metadata
         """
 
         def transform(in_data):
             entry = in_data[0]
-            encoding = encode_entry(entry, value_range, max_list_length)
+            encoding = encode_entry(entry, dataset.metadata)
             return encoding.examples, encoding.attribute
 
-        super(EncodedDataset, self).__init__(dataset, transform)
+        super(EncodedDataset, self).__init__(dataset.dataset, transform)

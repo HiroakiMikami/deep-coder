@@ -5,6 +5,7 @@ import os
 import numpy as np
 from src.deepcoder_utils import generate_io_samples
 from src.dsl import Function, Type, Variable, Expression, Program
+from src.dataset import DatasetMetadata
 from src.generate_dataset import generate_dataset, DatasetSpec, EquivalenceCheckingSpec, ProgressCallback
 from src.program_simplifier import remove_redundant_variables
 
@@ -23,7 +24,9 @@ class Test_generate_dataset(unittest.TestCase):
             # Check the dataset
             srcs = set()
             with open(name, "rb") as fp:
-                dataset = pickle.load(fp)
+                d = pickle.load(fp)
+                dataset = d.dataset
+                metadata = d.metadata
                 for entry, in dataset:
                     srcs.add(entry.source_code)
                     p = generate_io_samples.compile(
@@ -34,6 +37,7 @@ class Test_generate_dataset(unittest.TestCase):
                         self.assertEqual(output, example.output)
             self.assertEqual(
                 set(["a <- int\nb <- [int]\nc <- TAKE a b", "a <- [int]\nb <- HEAD a"]), srcs)
+            self.assertEqual(DatasetMetadata(2, set(["TAKE", "HEAD"]), 50, 20), metadata)
 
         # Generate the program with the length of 2
         with tempfile.NamedTemporaryFile() as f:
@@ -48,7 +52,9 @@ class Test_generate_dataset(unittest.TestCase):
             # Check the dataset
             srcs = set()
             with open(name, "rb") as fp:
-                dataset = pickle.load(fp)
+                d = pickle.load(fp)
+                dataset = d.dataset
+                metadata = d.metadata
                 for entry, in dataset:
                     srcs.add(entry.source_code)
                     p = generate_io_samples.compile(
@@ -64,6 +70,7 @@ class Test_generate_dataset(unittest.TestCase):
                 "a <- int\nb <- [int]\nc <- TAKE a b\nd <- HEAD c",
                 "a <- [int]\nb <- [int]\nc <- HEAD a\nd <- TAKE c b"
             ]), srcs)
+            self.assertEqual(DatasetMetadata(3, set(["TAKE", "HEAD"]), 50, 20), metadata)
 
     def test_generate_dataset_can_relax_equivalence_checking(self):
         LINQ, _ = generate_io_samples.get_language(50)
@@ -79,7 +86,9 @@ class Test_generate_dataset(unittest.TestCase):
             # Check the dataset
             srcs = set()
             with open(name, "rb") as fp:
-                dataset = pickle.load(fp)
+                d = pickle.load(fp)
+                dataset = d.dataset
+                metadata = d.metadata
                 for entry, in dataset:
                     srcs.add(entry.source_code)
                     p = generate_io_samples.compile(
@@ -90,6 +99,7 @@ class Test_generate_dataset(unittest.TestCase):
                         self.assertEqual(output, example.output)
             self.assertEqual(
                 set(["a <- [int]\nb <- HEAD a", "a <- [int]\nb <- LAST a"]), srcs)
+            self.assertEqual(DatasetMetadata(1, set(["HEAD", "LAST"]), 50, 20), metadata)
 
     def test_generate_dataset_invoke_callbacks(self):
         LINQ, _ = generate_io_samples.get_language(50)
@@ -137,11 +147,14 @@ class Test_generate_dataset(unittest.TestCase):
             # Check the dataset
             attribute_keys = set()
             with open(name, "rb") as fp:
-                dataset = pickle.load(fp)
+                d = pickle.load(fp)
+                dataset = d.dataset
+                metadata = d.metadata
                 for entry, in dataset:
                     for symbol in entry.attribute.keys():
                         attribute_keys.add(symbol)
             self.assertEqual(set(["HEAD", "MAP", "INC"]), attribute_keys)
+            self.assertEqual(DatasetMetadata(1, set(["HEAD", "MAP", "INC"]), 50, 20), metadata)
 
 
 if __name__ == "__main__":

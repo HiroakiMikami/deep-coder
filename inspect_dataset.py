@@ -27,7 +27,7 @@ random.seed(root_rng.randint(SEED_MAX))
 np.random.seed(root_rng.randint(SEED_MAX))
 
 with open(args.dataset, "rb") as f:
-    dataset: ch.datasets.TupleDataset = pickle.load(f)
+    dataset: ch.datasets.TupleDataset = pickle.load(f).dataset
 
 plt.ion()
 

@@ -8,7 +8,7 @@ import argparse
 import chainer as ch
 from chainer import datasets
 from chainer.training import extensions
-from src.dataset import EncodedDataset, dataset_stats
+from src.dataset import EncodedDataset, Dataset
 import src.train as T
 from src.model import ModelShapeParameters
 
@@ -17,10 +17,6 @@ SEED_MAX = 2**32 - 1
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--num-train", help="The number of entries used for training", type=int, default=None)
-parser.add_argument(
-    "--value-range", help="The largest absolute value used in the dataset", type=int, default=256)
-parser.add_argument("--max-list-length",
-                    help="The maximum length of the list used in the dataset", type=int, default=20)
 parser.add_argument(
     "--num-epochs", help="The number of epoch", type=int, default=50)
 parser.add_argument("--seed", help="The random seed", type=int, default=24649)
@@ -50,7 +46,10 @@ random.seed(root_rng.randint(SEED_MAX))
 np.random.seed(root_rng.randint(SEED_MAX))
 
 with open(args.dataset, "rb") as f:
-    dataset: ch.datasets.TupleDataset = pickle.load(f)
+    d: Dataset = pickle.load(f)
+dataset = d.dataset
+metadata = d.metadata
+    
 
 if args.num_train:
     num_test = int(args.num_train *
@@ -58,9 +57,7 @@ if args.num_train:
     dataset, _ = datasets.split_dataset_random(
         dataset, args.num_train + num_test, seed=root_rng.randint(SEED_MAX))
 
-dataset_stats = dataset_stats(dataset)
-model_shape = ModelShapeParameters(dataset_stats, args.value_range, args.max_list_length,
-                                   args.num_hidden_layers, args.n_embed, args.n_units)
+model_shape = ModelShapeParameters(metadata, args.num_hidden_layers, args.n_embed, args.n_units)
 
 # Save model shape
 if not os.path.exists(args.output):
@@ -70,7 +67,7 @@ with open(os.path.join(args.output, "model-shape.pickle"), "wb") as f:
     pickle.dump(model_shape, f)
 
 n_entries = len(dataset)
-dataset = EncodedDataset(dataset, args.value_range, args.max_list_length)
+dataset = EncodedDataset(Dataset(dataset, metadata))
 if args.ratio_test is None or args.ratio_test == 0:
     train = dataset
     test = None
