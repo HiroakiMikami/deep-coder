@@ -2,7 +2,7 @@ import unittest
 import chainer as ch
 import numpy as np
 
-from src.dataset import Example, Entry, prior_distribution, primitive_encoding, attribute_encoding, EncodedDataset, dataset_metadata, DatasetMetadata, Dataset
+from src.dataset import Example, Entry, prior_distribution, primitive_encoding, attribute_encoding, examples_encoding, EncodedDataset, dataset_metadata, DatasetMetadata, Dataset
 
 
 class Test_dataset(unittest.TestCase):
@@ -42,6 +42,10 @@ class Test_dataset(unittest.TestCase):
             ["B", False]]))
         self.assertTrue(np.all(np.array([1, 0]) == encoding))
 
+    def test_examples_encoding_if_num_inputs_is_too_large(self):
+        metadata = DatasetMetadata(0, set([]), 2, 2)
+        self.assertRaises(RuntimeError, lambda: examples_encoding([Example([1, [0, 1]], [0]), Example([0, [0, 1]], [])], metadata))
+
     def test_EncodedDataset_constructor(self):
         dataset = ch.datasets.TupleDataset([
             Entry("entry1", [Example(([10, 20, 30],), 10)],
@@ -54,22 +58,22 @@ class Test_dataset(unittest.TestCase):
         ])
 
         cdataset = EncodedDataset(Dataset(dataset, DatasetMetadata(1, set(["HEAD", "SORT"]), 256, 5)))
-        [(example0, attribute0), (example1, attribute1)] = list(cdataset)
+        [(examples0, attribute0), (examples1, attribute1)] = list(cdataset)
 
-        self.assertEqual(1, example0[0].inputs[0].t)
+        self.assertTrue(np.all([[[0, 1], [1, 0]]] == examples0.types))
         self.assertTrue(
-            np.all(np.array([266, 276, 286, 512, 512]) == example0[0].inputs[0].value_arr))
-        self.assertEqual(0, example0[0].output.t)
-        self.assertTrue(
-            np.all(np.array([266, 512, 512, 512, 512]) == example0[0].output.value_arr))
+            np.all([[
+                [266, 276, 286, 512, 512],
+                [266, 512, 512, 512, 512]
+            ]] == examples0.values))
         self.assertTrue(np.all(np.array([1, 0]) == attribute0))
 
-        self.assertEqual(1, example1[0].inputs[0].t)
+        self.assertTrue(np.all([[[0, 1], [0, 1]]] == examples1.types))
         self.assertTrue(
-            np.all(np.array([286, 276, 266, 512, 512]) == example1[0].inputs[0].value_arr))
-        self.assertEqual(1, example1[0].output.t)
-        self.assertTrue(
-            np.all(np.array([266, 276, 286, 512, 512]) == example1[0].output.value_arr))
+            np.all([[
+                [286, 276, 266, 512, 512],
+                [266, 276, 286, 512, 512]
+            ]] == examples1.values))
         self.assertTrue(np.all(np.array([0, 1]) == attribute1))
 
 

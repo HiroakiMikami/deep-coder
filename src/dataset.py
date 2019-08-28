@@ -130,20 +130,27 @@ class PrimitiveEncoding:
     t: int
     value_arr: np.array
 
-
 @dataclasses.dataclass
-class ExampleEncoding:
+class ExamplesEncoding:
     """
-    A encoding of Example
+    A encoding of the list of Example
 
     Attributes
     ----------
-    inputs : List[PrimitiveEncoding]
-    output : PrimitiveEncoding
+    types : np.array
+        The encoding of inputs and output types.
+        The shape is (E, I + 1, 2) where
+            E is the number of examples and
+            I is the maximum number of inputs
+    values: np.array
+        The encoding of inputs and output values.
+        The shape is (E, I + 1, max_list_length) where
+            E is the number of examples,
+            I is the maximum number of inputs, and
+            max_list_length is the maximum length of the list.
     """
-    inputs: List[PrimitiveEncoding]
-    output: PrimitiveEncoding
-
+    types: np.array
+    values: np.array
 
 @dataclasses.dataclass
 class EntryEncoding:
@@ -152,10 +159,10 @@ class EntryEncoding:
 
     Attributes
     ----------
-    examples: List[ExampleEncoding]
+    examples: ExamplesEncoding
     attribute: np.array
     """
-    examples: List[ExampleEncoding]
+    examples: ExamplesEncoding
     attribute: np.array
 
 
@@ -183,11 +190,26 @@ def primitive_encoding(p: Primitive, metadata: DatasetMetadata) -> PrimitiveEnco
     return PrimitiveEncoding(t, value_arr + metadata.value_range)
 
 
-def example_encoding(example: Example, metadata: DatasetMetadata) -> ExampleEncoding:
-    enc_inputs = [primitive_encoding(ins, metadata) for ins in example.inputs]
-    enc_output = primitive_encoding(example.output, metadata)
-    return ExampleEncoding(enc_inputs, enc_output)
+def examples_encoding(examples: List[Example], metadata: DatasetMetadata) -> ExamplesEncoding:
+    E = len(examples)
+    I = metadata.max_num_inputs
+    max_list_length = metadata.max_list_length
+    Null = metadata.value_range * 2
 
+    types = np.zeros((E, I + 1, 2), dtype=np.int32)
+    values = np.ones((E, I + 1, max_list_length), dtype=np.int32) * Null
+    for i, example in enumerate(examples):
+        if len(example.inputs) > I:
+            raise RuntimeError("The number of inputs ({}) exceeds the limits ({})".format(
+                len(example.inputs), I))
+        enc_inputs = [primitive_encoding(ins, metadata) for ins in example.inputs]
+        enc_output = primitive_encoding(example.output, metadata)
+        types[i, :len(example.inputs), :] = [np.identity(2)[enc_input.t] for enc_input in enc_inputs]
+        values[i, :len(example.inputs), :] = [enc_input.value_arr for enc_input in enc_inputs]
+        types[i, I, :] = np.identity(2)[enc_output.t]
+        values[i, I, :] = enc_output.value_arr
+
+    return ExamplesEncoding(types, values)
 
 def attribute_encoding(attribute: Dict[Function, bool]) -> np.array:
     """
@@ -207,14 +229,13 @@ def attribute_encoding(attribute: Dict[Function, bool]) -> np.array:
     for symbol in symbols:
         arr.append(1 if attribute[symbol] else 0)
 
-    return np.array(arr)
+    return np.array(arr, dtype=np.int32)
 
 
 def entry_encoding(entry: Entry, metadata: DatasetMetadata) -> EntryEncoding:
-    example = [example_encoding(example, metadata)
-                        for example in entry.examples]
+    examples = examples_encoding(entry.examples, metadata)
     attribute = attribute_encoding(entry.attribute)
-    return EntryEncoding(example, attribute)
+    return EntryEncoding(examples, attribute)
 
 
 class EncodedDataset(datasets.TransformDataset):

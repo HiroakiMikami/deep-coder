@@ -87,7 +87,7 @@ train = T.Training(train_iter, args.output, model_shape, args.weight_label_false
 
 if test_iter is not None:
     train.trainer.extend(extensions.Evaluator(
-        test_iter, train.model, device=args.device))
+        test_iter, train.model, device=args.device, converter=T.convert_entry))
 train.trainer.extend(extensions.LogReport())
 if test_iter is not None:
     train.trainer.extend(extensions.PrintReport(

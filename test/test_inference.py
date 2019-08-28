@@ -3,7 +3,7 @@ import os
 import numpy as np
 import chainer as ch
 
-from src.dataset import Entry, Example, example_encoding, DatasetMetadata
+from src.dataset import Entry, Example, examples_encoding, DatasetMetadata
 from src.deepcoder_utils import generate_io_samples
 from src.model import ModelShapeParameters
 from src.inference import search, predict_with_prior_distribution, predict_with_neural_network, InferenceModel
@@ -106,9 +106,8 @@ class Test_inferense(unittest.TestCase):
         pred = predict_with_neural_network(model_shape, m)
         prob = pred(examples)
 
-        example_encodings = np.array(
-            [[example_encoding(example, metadata) for example in examples]])
-        prob_dnn = m.model(example_encodings).array[0]
+        encoding = examples_encoding(examples, metadata)
+        prob_dnn = m.model(np.array([encoding])).array[0]
 
         self.assertAlmostEqual(prob_dnn[0], prob["HEAD"])
         self.assertAlmostEqual(prob_dnn[1], prob["MAP"])

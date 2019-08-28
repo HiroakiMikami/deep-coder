@@ -4,7 +4,7 @@ import chainer as ch
 import chainer.functions as F
 
 from src.model import ExampleEmbed, Encoder, Decoder, TrainingClassifier, tupled_binary_accuracy
-from src.dataset import Example, example_encoding, DatasetMetadata
+from src.dataset import Example, examples_encoding, DatasetMetadata
 
 
 class Test_model(unittest.TestCase):
@@ -20,15 +20,11 @@ class Test_model(unittest.TestCase):
           4 (NULL) -> 5
         """
 
-        e1 = example_encoding(Example([[0, 1]], 0), DatasetMetadata(0, set([]), 2, 2))
-        e2 = example_encoding(Example([[1]], 1), DatasetMetadata(0, set([]), 2, 2))
-        minibatch = np.array([[e1, e2]])
-
-        N = 1
-        e = 2
-        I = 1
-        value_range = 2
-        max_list_length = 2
+        e = examples_encoding(
+            [Example([[0, 1]], 0), Example([[1]], 1)],
+            DatasetMetadata(1, set([]), 2, 2)
+        )
+        minibatch = np.array([e])
 
         state_embeddings = embed.forward(minibatch)
         self.assertEqual((1, 2, 2, 2 + 2 * 1), state_embeddings.shape)
@@ -58,12 +54,10 @@ class Test_model(unittest.TestCase):
           4 (NULL) -> 5
         """
 
-        metadata = DatasetMetadata(0, set([]), 2, 2)
-        e00 = example_encoding(Example([[0, 1]], 0), metadata)
-        e01 = example_encoding(Example([[1]], 1), metadata)
-        e10 = example_encoding(Example([1, [0, 1]], [0]), metadata)
-        e11 = example_encoding(Example([0, [0, 1]], []), metadata)
-        minibatch = np.array([[e00, e01], [e10, e11]])
+        metadata = DatasetMetadata(2, set([]), 2, 2)
+        e0 = examples_encoding([Example([[0, 1]], 0), Example([[1]], 1)], metadata)
+        e1 = examples_encoding([Example([1, [0, 1]], [0]), Example([0, [0, 1]], [])], metadata)
+        minibatch = np.array([e0, e1])
 
         N = 1
         e = 2
@@ -102,15 +96,6 @@ class Test_model(unittest.TestCase):
         self.assertTrue(np.allclose(
             [0, 1, 5, 5], state_embeddings.array[1, 1, 2]))
 
-    def test_example_embed_if_num_inputs_is_too_large(self):
-        embed = ExampleEmbed(1, 2, 1, (np.arange(5) + 1).reshape((5, 1)))
-        metadata = DatasetMetadata(0, set([]), 2, 2)
-        e0 = example_encoding(Example([1, [0, 1]], [0]), metadata)
-        e1 = example_encoding(Example([0, [0, 1]], []), metadata)
-        minibatch = np.array([[e0, e1]])
-
-        self.assertRaises(RuntimeError, lambda: embed(minibatch))
-
     def test_Encoder(self):
         embed = ExampleEmbed(1, 2, 1, (np.arange(5) + 1).reshape((5, 1)))
 
@@ -121,10 +106,9 @@ class Test_model(unittest.TestCase):
         state_embeddings: (N, e, 2, 4) -> h1: (N, e, 1) -> h2: (N, e, 2) -> output: (N, e, 2)
         """
 
-        metadata = DatasetMetadata(0, set([]), 2, 2)
-        e1 = example_encoding(Example([[0, 1]], 0), metadata)
-        e2 = example_encoding(Example([[1]], 1), metadata)
-        minibatch = np.array([[e1, e2]])
+        metadata = DatasetMetadata(1, set([]), 2, 2)
+        e = examples_encoding([Example([[0, 1]], 0), Example([[1]], 1)], metadata)
+        minibatch = np.array([e])
 
         state_embeddings = embed(minibatch)
         layer_encodings = encoder(state_embeddings)
@@ -159,10 +143,9 @@ class Test_model(unittest.TestCase):
         decoder = Decoder(2)
         classifier = TrainingClassifier(ch.Sequential(embed, encoder, decoder))
 
-        metadata = DatasetMetadata(0, set([]), 2, 2)
-        e1 = example_encoding(Example([[0, 1]], 0), metadata)
-        e2 = example_encoding(Example([[1]], 1), metadata)
-        minibatch = np.array([[e1, e2]])
+        metadata = DatasetMetadata(1, set([]), 2, 2)
+        e = examples_encoding([Example([[0, 1]], 0), Example([[1]], 1)], metadata)
+        minibatch = np.array([e])
         labels = np.array([[1, 1]])
         loss = classifier(minibatch, labels)
         loss.grad = np.ones(loss.shape, dtype=np.float32)

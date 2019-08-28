@@ -4,6 +4,7 @@ import chainer as ch
 from chainer import link
 import chainer.links as L
 import chainer.functions as F
+from chainer import cuda
 from chainer import backend
 from chainer import reporter
 from typing import List, Union, Dict
@@ -37,13 +38,17 @@ def weighted_sigmoid_cross_entropy(y, t, w_0: float = 0.5):
     ch.Variable
         computed cross entropy
     """
+    xp = backend.get_array_module(y)
     if w_0 < 0:
-        return F.sigmoid_cross_entropy(y, t)
+        return F.sigmoid_cross_entropy(y, xp.array(t))
 
-    t_0 = t.copy()
-    t_1 = t.copy()
+    t_0 = cuda.to_cpu(t.copy())
+    t_1 = cuda.to_cpu(t.copy())
     t_0[t_0 == 1] = -1
     t_1[t_0 == 0] = -1
+    t_0 = xp.array(t_0)
+    t_1 = xp.array(t_1)
+
     l0 = F.sigmoid_cross_entropy(y, t_0)
     l1 = F.sigmoid_cross_entropy(y, t_1)
     return w_0 * l0 + (1.0 - w_0) * l1
@@ -61,10 +66,13 @@ def tupled_binary_accuracy(y, t):
         The ground truth label
     """
 
-    t_0 = t.copy()
-    t_1 = t.copy()
+    xp = backend.get_array_module(y)
+    t_0 = cuda.to_cpu(t.copy())
+    t_1 = cuda.to_cpu(t.copy())
     t_0[t_0 == 1] = -1
     t_1[t_0 == 0] = -1
+    t_0 = xp.array(t_0)
+    t_1 = xp.array(t_1)
     acc_0 = F.binary_accuracy(y, t_0)
     acc_1 = F.binary_accuracy(y, t_1)
 
@@ -107,7 +115,7 @@ class ExampleEmbed(link.Chain):
         Parameters
         ----------
         examples : np.array
-            Each element contains the list of PrimitiveExample
+            Each element contains ExamplesEncoding
 
         Returns
         -------
@@ -122,31 +130,16 @@ class ExampleEmbed(link.Chain):
         """
 
         N = examples.shape[0]  # minibatch size
-        e = max(map(lambda x: len(x), examples))  # num of I/O examples
-        num_inputs = self._num_inputs
-        max_list_length = max(
-            map(lambda x: x[0].inputs[0].value_arr.size, examples))  # max_list_length
+        e = examples[0].types.shape[0]  # num of I/O examples
+        num_inputs = examples[0].types.shape[1] - 1
+        max_list_length = examples[0].values.shape[-1]
 
-        # Concatenate all values (inputs and output)
-        # The one-hot array of type integers (N, e, (num_inputs + 1), 2)
-        types = np.zeros((N, e, num_inputs + 1, 2), dtype=np.float32)
-        for i, example_encodings in enumerate(examples):
-            for j, example in enumerate(example_encodings):
-                if len(example.inputs) > num_inputs:
-                    raise RuntimeError("The number of inputs ({}) exceeds the limits ({})".format(
-                        len(example.inputs), num_inputs))
-                types[i, j, :len(example.inputs), :] = np.array(
-                    list(map(lambda x: np.identity(2)[x.t], example.inputs)))
-                types[i, j, num_inputs, :] = np.identity(2)[example.output.t]
-
-        # The array of type values (N, e, num_inputs + 1, max_list_length)
-        values = np.ones((N, e, self._num_inputs + 1, max_list_length),
-                         dtype=np.int32) * (2 * self._value_range)
-        for i, example_encodings in enumerate(examples):
-            for j, example in enumerate(example_encodings):
-                values[i, j, :len(example.inputs), :] = np.array(
-                    list(map(lambda x: x.value_arr, example.inputs)))
-                values[i, j, num_inputs, :] = example.output.value_arr
+        # Concatenate types and values of minibatch
+        types = F.concat(list(map(lambda x: x.types, examples)), axis=0) # (N, e, num_inputs + 1, 2)
+        values = F.concat(list(map(lambda x: x.values, examples)), axis=0) # (N, e, num_inputs + 1, max_list_length)
+        types = F.reshape(types, (N, e, num_inputs + 1, -1))
+        types = F.cast(types, np.float32)
+        values = F.reshape(values, (N, e, num_inputs + 1, -1))
 
         # Convert the integer into the learned embeddings
         # (N, e, (num_inputs + 1), max_list_length, n_embed)
@@ -297,9 +290,10 @@ def TrainingClassifier(predictor: ch.Link, w_0: float = -1):
     )
 
     def accuracy(y, t):
+        xp = backend.get_array_module(y)
         acc_0, acc_1 = tupled_binary_accuracy(y, t)
         reporter.report(
             {"accuracy_false": acc_0, "accuracy_true": acc_1}, classifier)
-        return F.binary_accuracy(y, t)
+        return F.binary_accuracy(y, xp.array(t))
     classifier.accfun = accuracy
     return classifier
