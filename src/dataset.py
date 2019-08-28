@@ -57,7 +57,8 @@ class Dataset:
     dataset: ch.datasets.TupleDataset
     metadata: DatasetMetadata
 
-def dataset_metadata(dataset, value_range: int = -1, max_list_length: int = -1) -> DatasetMetadata: # TODO
+
+def dataset_metadata(dataset, value_range: int = -1, max_list_length: int = -1) -> DatasetMetadata:  # TODO
     """
     Return the values for specifying the model shape
 
@@ -130,6 +131,7 @@ class PrimitiveEncoding:
     t: int
     value_arr: np.array
 
+
 @dataclasses.dataclass
 class ExamplesEncoding:
     """
@@ -151,6 +153,7 @@ class ExamplesEncoding:
     """
     types: np.array
     values: np.array
+
 
 @dataclasses.dataclass
 class EntryEncoding:
@@ -202,14 +205,18 @@ def examples_encoding(examples: List[Example], metadata: DatasetMetadata) -> Exa
         if len(example.inputs) > I:
             raise RuntimeError("The number of inputs ({}) exceeds the limits ({})".format(
                 len(example.inputs), I))
-        enc_inputs = [primitive_encoding(ins, metadata) for ins in example.inputs]
+        enc_inputs = [primitive_encoding(ins, metadata)
+                      for ins in example.inputs]
         enc_output = primitive_encoding(example.output, metadata)
-        types[i, :len(example.inputs), :] = [np.identity(2)[enc_input.t] for enc_input in enc_inputs]
-        values[i, :len(example.inputs), :] = [enc_input.value_arr for enc_input in enc_inputs]
+        types[i, :len(example.inputs), :] = [np.identity(2)[enc_input.t]
+                                             for enc_input in enc_inputs]
+        values[i, :len(example.inputs), :] = [
+            enc_input.value_arr for enc_input in enc_inputs]
         types[i, I, :] = np.identity(2)[enc_output.t]
         values[i, I, :] = enc_output.value_arr
 
     return ExamplesEncoding(types, values)
+
 
 def attribute_encoding(attribute: Dict[Function, bool]) -> np.array:
     """

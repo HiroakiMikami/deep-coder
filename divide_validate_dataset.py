@@ -38,6 +38,8 @@ train, valid = ch.datasets.split_dataset_random(
     dataset.dataset, num_train, seed=root_rng.randint(SEED_MAX))
 
 with open(os.path.join(args.output, "train.pickle"), "wb") as f:
-    pickle.dump(Dataset(ch.datasets.TupleDataset(list([d[0] for d in train])), dataset.metadata), f)
+    pickle.dump(Dataset(ch.datasets.TupleDataset(
+        list([d[0] for d in train])), dataset.metadata), f)
 with open(os.path.join(args.output, "valid.pickle"), "wb") as f:
-    pickle.dump(Dataset(ch.datasets.TupleDataset(list([d[0] for d in valid])), dataset.metadata), f)
+    pickle.dump(Dataset(ch.datasets.TupleDataset(
+        list([d[0] for d in valid])), dataset.metadata), f)

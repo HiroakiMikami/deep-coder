@@ -31,7 +31,8 @@ class Test_dataset(unittest.TestCase):
         self.assertTrue(
             np.all(np.array([-10 + 256, 512] == encoding.value_arr)))
 
-        encoding = primitive_encoding([1, 2], DatasetMetadata(0, set([]), 256, 3))
+        encoding = primitive_encoding(
+            [1, 2], DatasetMetadata(0, set([]), 256, 3))
         self.assertEqual(1, encoding.t)
         self.assertTrue(
             np.all(np.array([257, 258, 512] == encoding.value_arr)))
@@ -44,7 +45,8 @@ class Test_dataset(unittest.TestCase):
 
     def test_examples_encoding_if_num_inputs_is_too_large(self):
         metadata = DatasetMetadata(0, set([]), 2, 2)
-        self.assertRaises(RuntimeError, lambda: examples_encoding([Example([1, [0, 1]], [0]), Example([0, [0, 1]], [])], metadata))
+        self.assertRaises(RuntimeError, lambda: examples_encoding(
+            [Example([1, [0, 1]], [0]), Example([0, [0, 1]], [])], metadata))
 
     def test_EncodedDataset_constructor(self):
         dataset = ch.datasets.TupleDataset([
@@ -57,8 +59,10 @@ class Test_dataset(unittest.TestCase):
             )
         ])
 
-        cdataset = EncodedDataset(Dataset(dataset, DatasetMetadata(1, set(["HEAD", "SORT"]), 256, 5)))
-        [(types0, values0, attribute0), (types1, values1, attribute1)] = list(cdataset)
+        cdataset = EncodedDataset(
+            Dataset(dataset, DatasetMetadata(1, set(["HEAD", "SORT"]), 256, 5)))
+        [(types0, values0, attribute0),
+         (types1, values1, attribute1)] = list(cdataset)
 
         self.assertTrue(np.all([[[0, 1], [1, 0]]] == types0))
         self.assertTrue(

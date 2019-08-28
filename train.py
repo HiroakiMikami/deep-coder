@@ -49,7 +49,7 @@ with open(args.dataset, "rb") as f:
     d: Dataset = pickle.load(f)
 dataset = d.dataset
 metadata = d.metadata
-    
+
 
 if args.num_train:
     num_test = int(args.num_train *
@@ -57,7 +57,8 @@ if args.num_train:
     dataset, _ = datasets.split_dataset_random(
         dataset, args.num_train + num_test, seed=root_rng.randint(SEED_MAX))
 
-model_shape = ModelShapeParameters(metadata, args.num_hidden_layers, args.n_embed, args.n_units)
+model_shape = ModelShapeParameters(
+    metadata, args.num_hidden_layers, args.n_embed, args.n_units)
 
 # Save model shape
 if not os.path.exists(args.output):
@@ -82,12 +83,9 @@ if test is not None:
 else:
     test_iter = None
 
-train = T.Training(train_iter, args.output, model_shape, args.weight_label_false,
+train = T.Training(train_iter, test_iter, args.output, model_shape, args.weight_label_false,
                    args.num_epochs, device=args.device)
 
-if test_iter is not None:
-    train.trainer.extend(extensions.Evaluator(
-        test_iter, train.model, device=args.device, converter=T.convert_entry))
 train.trainer.extend(extensions.LogReport())
 if test_iter is not None:
     train.trainer.extend(extensions.PrintReport(

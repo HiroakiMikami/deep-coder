@@ -193,7 +193,8 @@ def predict_with_neural_network(model_shape: ModelShapeParameters, model: Infere
     """
     def pred(examples: List[Example]):
         encodings = examples_encoding(examples, model_shape.dataset_metadata)
-        pred = model.model(np.array([encodings.types]), np.array([encodings.values])).array[0]
+        pred = model.model(np.array([encodings.types]), np.array(
+            [encodings.values])).array[0]
         retval = dict()
         for name, p in zip(sorted(list(model_shape.dataset_metadata.symbols)), pred):
             retval[name] = p

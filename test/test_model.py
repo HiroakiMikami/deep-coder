@@ -25,7 +25,8 @@ class Test_model(unittest.TestCase):
             DatasetMetadata(1, set([]), 2, 2)
         )
 
-        state_embeddings = embed.forward(np.array([e.types]), np.array([e.values]))
+        state_embeddings = embed.forward(
+            np.array([e.types]), np.array([e.values]))
         self.assertEqual((1, 2, 2, 2 + 2 * 1), state_embeddings.shape)
         self.assertTrue(np.allclose(
             [0, 1, 3, 4], state_embeddings.array[0, 0, 0]))  # Input of e1
@@ -54,10 +55,13 @@ class Test_model(unittest.TestCase):
         """
 
         metadata = DatasetMetadata(2, set([]), 2, 2)
-        e0 = examples_encoding([Example([[0, 1]], 0), Example([[1]], 1)], metadata)
-        e1 = examples_encoding([Example([1, [0, 1]], [0]), Example([0, [0, 1]], [])], metadata)
+        e0 = examples_encoding(
+            [Example([[0, 1]], 0), Example([[1]], 1)], metadata)
+        e1 = examples_encoding(
+            [Example([1, [0, 1]], [0]), Example([0, [0, 1]], [])], metadata)
 
-        state_embeddings = embed.forward(np.array([e0.types, e1.types]), np.array([e0.values, e1.values]))
+        state_embeddings = embed.forward(
+            np.array([e0.types, e1.types]), np.array([e0.values, e1.values]))
         self.assertEqual((2, 2, 3, 2 + 2 * 1), state_embeddings.shape)
         self.assertTrue(np.allclose(
             [0, 1, 3, 4], state_embeddings.array[0, 0, 0]))  # Input of e00
@@ -99,7 +103,8 @@ class Test_model(unittest.TestCase):
         """
 
         metadata = DatasetMetadata(1, set([]), 2, 2)
-        e = examples_encoding([Example([[0, 1]], 0), Example([[1]], 1)], metadata)
+        e = examples_encoding(
+            [Example([[0, 1]], 0), Example([[1]], 1)], metadata)
 
         state_embeddings = embed(np.array([e.types]), np.array([e.values]))
         layer_encodings = encoder(state_embeddings)
@@ -135,7 +140,8 @@ class Test_model(unittest.TestCase):
         classifier = TrainingClassifier(ch.Sequential(embed, encoder, decoder))
 
         metadata = DatasetMetadata(1, set([]), 2, 2)
-        e = examples_encoding([Example([[0, 1]], 0), Example([[1]], 1)], metadata)
+        e = examples_encoding(
+            [Example([[0, 1]], 0), Example([[1]], 1)], metadata)
         labels = np.array([[1, 1]])
         loss = classifier(np.array([e.types]), np.array([e.values]), labels)
         loss.grad = np.ones(loss.shape, dtype=np.float32)

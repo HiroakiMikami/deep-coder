@@ -243,7 +243,8 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
 
     # Create metadata
     dataset = ch.datasets.TupleDataset(dataset)
-    metadata = dataset_metadata(dataset, spec.value_range, spec.max_list_length)
+    metadata = dataset_metadata(
+        dataset, spec.value_range, spec.max_list_length)
 
     # Dump the dataset to the file
     with open(destination, "wb") as f:
