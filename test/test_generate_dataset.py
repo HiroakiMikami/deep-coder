@@ -6,7 +6,7 @@ import numpy as np
 from src.deepcoder_utils import generate_io_samples
 from src.dsl import Function, Type, Variable, Expression, Program
 from src.dataset import DatasetMetadata
-from src.generate_dataset import generate_dataset, DatasetSpec, EquivalenceCheckingSpec, ProgressCallback
+from src.generate_dataset import generate_dataset, DatasetSpec, EquivalenceCheckingSpec, IteratorDecorator
 from src.program_simplifier import remove_redundant_variables
 
 
@@ -104,37 +104,30 @@ class Test_generate_dataset(unittest.TestCase):
             self.assertEqual(DatasetMetadata(
                 1, set(["HEAD", "LAST"]), 50, 20), metadata)
 
-    def test_generate_dataset_invoke_callbacks(self):
+    def test_generate_dataset_with_decorators(self):
         LINQ, _ = generate_io_samples.get_language(50)
         HEAD = [f for f in LINQ if f.src == "HEAD"][0]
         LAST = [f for f in LINQ if f.src == "LAST"][0]
 
-        class Callback:
+        class Decorator:
             def __init__(self):
-                self.num_programs = 0
-                self.num_entries = []
-
-            def on_generate_program(self, program):
-                self.num_programs += 1
-
-            def on_finish_enumeration(self, n_programs):
-                self.n_programs = n_programs
-
-            def on_dump_dataset(self, entries):
-                self.num_entries.append(entries)
-        c = Callback()
-        callback = ProgressCallback(lambda p: c.on_generate_program(
-            p), lambda x: c.on_finish_enumeration(x), lambda x: c.on_dump_dataset(x))
+                self.items = []
+            def __call__(self, generator):
+                for item in generator:
+                    self.items.append(item)
+                    yield item
+        program = Decorator()
+        entries = Decorator()
+        decorator = IteratorDecorator(program, entries)
 
         # Generate the program with the length of 1
         with tempfile.NamedTemporaryFile() as f:
             name = f.name
             np.random.seed(0)
             generate_dataset([HEAD, LAST], DatasetSpec(
-                50, 20, 5, 1, 1), EquivalenceCheckingSpec(1, 1, None), name, callback=callback)
-            self.assertEqual(2, c.num_programs)
-            self.assertEqual(2, c.n_programs)
-            self.assertEqual([2], c.num_entries)
+                50, 20, 5, 1, 1), EquivalenceCheckingSpec(1, 1, None), name, decorator=decorator)
+            self.assertEqual(2, len(program.items))
+            self.assertEqual(1, len(entries.items))
 
     def test_generate_dataset_separate_higher_order_function_and_lambda(self):
         LINQ, _ = generate_io_samples.get_language(50)

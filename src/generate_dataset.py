@@ -5,7 +5,7 @@ import os
 import contextlib
 import numpy as np
 import chainer as ch
-from typing import List, Tuple, Union, Dict, Callable
+from typing import List, Tuple, Union, Dict, Callable, Iterator
 from .dataset import Primitive, Example, Entry, Dataset, dataset_metadata
 from .deepcoder_utils import generate_io_samples
 from .dsl import Function, Program, Type, to_function, Signature
@@ -53,25 +53,24 @@ SimplifyFunction = Callable[[Program], Program]
 
 
 @dataclasses.dataclass
-class ProgressCallback:
+class IteratorDecorator:
     """
-    The callback functions to receive the progress of data generation
+    The functions to wrap the iterators (such as tqdm)
 
-    Attribute
-    ---
-    on_generate_program : Callable[[Program], None]
-    on_finish_enumeration : Callabke[[int], None]
-    on_dump_dataset : Callable[[int], None]
+    Attributes:
+    program_decorator : Callable[[Iterator], Iterator]
+        The function to generate a decorator of an iterator of programs
+    entry_decorator : Callable[[Iterator], Iterator]
+        The function to generate a decorator of an iterator of entries
     """
-    on_generate_program: Callable[[Program], None]
-    on_finish_enumeration: Callable[[int], None]
-    on_dump_dataset: Callable[[int], None]
 
+    program_decorator: Callable[[Iterator], Iterator]
+    entry_decorator: Callable[[Iterator], Iterator]
 
 def generate_dataset(functions: List[generate_io_samples.Function], spec: DatasetSpec,
                      equivalence_spec: EquivalenceCheckingSpec,
                      destination: str, simplify: Union[None, SimplifyFunction] = None,
-                     callback: Union[None, ProgressCallback] = None):
+                     decorator: Union[None, IteratorDecorator] = None):
     """
     Generate dataset to the file
 
@@ -87,6 +86,8 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
         The destination of the dataset file
     simplify : function or None
         The function to simplify the source code
+    decorator: IteratorDecorator or None
+        The decorator of iterators. It is maily used to show the progress (e.g., tqdm)
 
     Notes
     -----
@@ -125,8 +126,8 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
     entries = dict()  # Signature -> dict(str -> IntermidiateEntry)
 
     # Enumerate source code
-    n_programs = 0
-    for program in programs(functions_dsl, spec.min_program_length, spec.max_program_length):
+    d = decorator.program_decorator if decorator is not None else lambda x: x
+    for program in d(programs(functions_dsl, spec.min_program_length, spec.max_program_length)):
         program = simplify_and_normalize(program)  # Simplify the program
         if not (spec.min_program_length <= len(program.body) <= spec.max_program_length):
             # If the length of simplified program is out of range, discard the program
@@ -174,19 +175,14 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
                     attribute[symbol] = False
                 attribute[symbol] |= symbol in ss
 
-        if callback is not None:
-            callback.on_generate_program(program)
-        n_programs += 1
         entries[signature][code] = IntermidiateEntry(
             code, p, list(map(lambda x: Example(x[0], x[1]), examples)), attribute)
 
-    if callback is not None:
-        callback.on_finish_enumeration(n_programs)
-
     dataset = []
     # Prune entries
+    d = decorator.entry_decorator if decorator is not None else lambda x: x
     rng = equivalence_spec.rng if equivalence_spec.rng is not None else np.random
-    for signature, ientries in entries.items():
+    for signature, ientries in d(entries.items()):
         examples: List[List[Primitive]] = list()
         # Extract examples for checking equivalence
         num = max(
@@ -238,8 +234,6 @@ def generate_dataset(functions: List[generate_io_samples.Function], spec: Datase
             dataset.append(Entry(
                 entry.source_code, entry.examples, entry.attribute
             ))
-        if callback is not None:
-            callback.on_dump_dataset(len(ientries))
 
     # Create metadata
     dataset = ch.datasets.TupleDataset(dataset)
