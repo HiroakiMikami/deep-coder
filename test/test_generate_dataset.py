@@ -153,6 +153,26 @@ class Test_generate_dataset(unittest.TestCase):
             self.assertEqual(DatasetMetadata(
                 1, set(["HEAD", "MAP", "INC"]), 50, 20), metadata)
 
+    def test_generate_dataset_fix_number_of_dataset(self):
+        LINQ, _ = generate_io_samples.get_language(50)
+        HEAD = [f for f in LINQ if f.src == "HEAD"][0]
+        LAST = [f for f in LINQ if f.src == "LAST"][0]
+        MAXIMUM = [f for f in LINQ if f.src == "MAXIMUM"][0]
+
+        # Generate the program with the length of 1
+        with tempfile.NamedTemporaryFile() as f:
+            name = f.name
+            np.random.seed(0)
+            generate_dataset([HEAD, LAST, MAXIMUM], DatasetSpec(
+                50, 20, 5, 1, 1), EquivalenceCheckingSpec(1, 1, None), name, 2)
+            # Check the dataset
+            attribute_keys = set()
+            with open(name, "rb") as fp:
+                d = pickle.load(fp)
+                dataset = d.dataset
+                metadata = d.metadata
+            self.assertEqual(2, len(dataset))
+            self.assertTrue(dataset[0][0].source_code != dataset[1][0].source_code)
 
 if __name__ == "__main__":
     unittest.main()
