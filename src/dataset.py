@@ -199,7 +199,7 @@ def examples_encoding(examples: List[Example], metadata: DatasetMetadata) -> Exa
     max_list_length = metadata.max_list_length
     Null = metadata.value_range * 2
 
-    types = np.zeros((E, I + 1, 2), dtype=np.int32)
+    types = np.zeros((E, I + 1, 2), dtype=np.float32)
     values = np.ones((E, I + 1, max_list_length), dtype=np.int32) * Null
     for i, example in enumerate(examples):
         if len(example.inputs) > I:

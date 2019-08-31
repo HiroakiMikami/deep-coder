@@ -146,7 +146,6 @@ class ExampleEmbed(link.Chain):
         values_embeddings = F.reshape(
             values_embeddings, (N, e, num_inputs + 1, -1))
         # (N, e, (num_inputs + 1), 2 + max_list_length * n_embed)
-        types = F.cast(types, np.float32)
         state_embeddings = F.concat([types, values_embeddings], axis=3)
 
         return state_embeddings
