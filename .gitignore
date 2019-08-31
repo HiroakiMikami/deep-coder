@@ -3,7 +3,8 @@
 !/.gitignore
 !/DeepCoder_Utils
 !/requirements.txt
-!/*.py
+!/*.ipynb
 !/src/*.py
 !/test/*.py
 !/bin/*.bash
+!/examples/**/*.ipynb
