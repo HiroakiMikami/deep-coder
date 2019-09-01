@@ -1,6 +1,8 @@
 *
 !*/
 !/.gitignore
+!/README.md
+!/images/*.png
 !/DeepCoder_Utils
 !/requirements.txt
 !/*.ipynb
@@ -8,3 +10,5 @@
 !/test/*.py
 !/bin/*.bash
 !/examples/**/*.ipynb
+!/examples/**/trained-model/*.npz
+!/examples/**/trained-model/*.pickle
