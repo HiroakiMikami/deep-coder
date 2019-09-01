@@ -1,6 +1,8 @@
 *
 !*/
 !/.gitignore
+!/README.md
+!/images/*.png
 !/DeepCoder_Utils
 !/requirements.txt
 !/*.ipynb
