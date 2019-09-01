@@ -8,3 +8,5 @@
 !/test/*.py
 !/bin/*.bash
 !/examples/**/*.ipynb
+!/examples/**/trained-model/*.npz
+!/examples/**/trained-model/*.pickle
